@@ -1,0 +1,23 @@
+// cx stands for Compile & Execute.
+import_code("/root/std.src")
+import_code("/root/pth.src")
+import_code("/root/fs.src")
+
+main = function()
+    if params.len == 0 or params[0] == "-h" then throw("<b>Usage: "+programName+" [sourceToRun]</b>")
+
+    filePath = params[0]
+
+    file = fs.getFile(filePath)
+
+    outDir = "/root/tmp"
+    outFile = pth.join(outDir, file.name)
+    ensureDirRes = fs.ensureDir(outDir)
+
+    buildResult = get_shell.build(file.path, outDir, false)
+	if (buildResult) then throw("Error building the file "+file.path+": " + buildResult)
+
+    get_shell.launch(outFile, params[1:])
+end function
+
+main()

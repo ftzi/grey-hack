@@ -1,0 +1,130 @@
+// Main hacking tool. Eithers run remotely using an IP or locally for local exploits.
+import_code("/root/compile.src")
+selfCompile("/root")
+
+import_code("/root/std")
+import_code("/root/obj")
+
+dbLib = {
+	"kernel_router.so": {
+		"1.1.0": ["0x52F80728"],
+		"1.1.1": ["0x4BA8C7F7"],
+		"1.1.6": ["0x2E5976E0"],
+		"1.1.9": ["0x336ED160", "0x23D08330"],
+		"1.3.7": ["0x4DBC13B7", "0x2ADF9ED3", "0x39A95BD3", "0x4CFBC1BD", "0x26637A66"],
+		"1.3.9": ["0x4DBC13B7", "0x2ADF9ED3", "0x4CFBC1BD", "0x26637A66"],
+		"1.4.5": ["0x34A59B5B", "0x3D60A9C2", "0x6B5CED43", "0x4CFBC1BD", "0x30427D5D", "0x188E73AE"],
+		"1.4.6": ["0x34A59B5B", "0x3D60A9C2", "0x6B5CED43", "0x4CFBC1BD", "0x30427D5D", "0x188E73AE"],
+		"1.5.1": ["0x34A59B5B", "0x2A98420B", "0x2A3E79A2", "0x4CFBC1BD", "0x5B8747", "0x5A351C34"],
+		"1.5.2": ["0x34A59B5B", "0x2A98420B", "0x2A3E79A2", "0x4CFBC1BD", "0x5B8747", "0x5A351C34"],
+		"1.5.9": ["0x6665DF26", "0x4FDF1089", "0x526E9AD2"],
+		"1.6.6": ["0x40179F04", "0x7BED3BBE"],
+		"1.6.7": ["0x7BED3BBE"],
+		"1.7.3": ["0x6C5BB612"],
+		"1.7.8": ["0x42ECAE9C"],
+		"1.7.9": ["0x42ECAE9C"],
+		"1.8.4": ["0x6C262E54", "0x6B77D50A"],
+	},
+	"libssh.so": {
+		"1.0.3": ["0x41D54B6F", "0x150DD09D", "0x311F7AF2", "0x61DF7223"],
+		"1.5.0": ["0x231404D8", "0x10DCA0C2", "0x5F14F656"],
+	},
+	"libftp.so": {
+		"1.0.0": ["0x2FDE73E", "0x6E7502EF", "0x4FF2BF81", "0x6580FEDA", "0xD3C3164"],
+		"1.0.2": ["0x2FDE73E", "0x25F98742", "0x4A93D6AA"],
+	},
+	"libhttp.so": {
+		"1.0.2": ["0x3EA33B42", "0x43051C85", "0x84998BE", "0x34F2F64B", "0x2934F618"],
+		"1.0.5": ["0x292F648B", "0x43051C85", "0x84998BE", "0x95A4F21", "0x514F6CD2", "0x77FB8049", "0x2B8F6622"],
+		"1.1.1": ["0x292F648B", "0x380FD8D9", "0x59F29980", "0x7EDC1D0F", "0x66085944", "0x408F18B7"],
+		"1.1.5": ["0x7D764A89", "0x380FD8D9", "0x59F29980", "0x60409C2C", "0x36D92FDF"],
+	},
+	"libsql.so": {
+		"1.0.0": ["0x19D49D84", "0x71F79E26", "0x21783512", "0x1524AFA2", "0x53BC7040", "0x2A5F0D95"],
+		"1.0.1": ["0x19D49D84", "0x71F79E26", "0x21783512", "0x621B11F1", "0x446B029"],
+		"1.0.2": ["0x19D49D84", "0x71F79E26", "0x21783512", "0x3E24079", "0xAF73C0D"],
+		"1.0.5": ["0x19D49D84", "0x71F79E26", "0x21783512"],
+	},
+	"init.so": {
+		"1.0.1": ["0x620DB87D", "0x43EDFC09", "0xA218F88", "0x5F3544B6", "0x3D58284C", "0x1D52F812"],
+		"1.0.2": ["0x620DB87D", "0x43EDFC09", "0x39D4A95B", "0x6E56E2B0", "0x1359B6E5"],
+		"1.0.4": ["0x620DB87D", "0x43EDFC09"],
+		"1.0.6": ["0x7698B165", "0x43EDFC09", "0x12706822"],
+		"1.0.7": ["0x7698B165", "0x43EDFC09", "0x12706822"],
+	},
+	"kernel_module.so": {
+	},
+	"net.so": {
+	},
+}
+
+getAddresses = function (lib)
+	addresses = dbLib.get([lib.lib_name, lib.version])
+	if not addresses then
+		print("Scanning Addresses for Library <b>" + lib.lib_name + " " + lib.version + "</b> using Metaxploit "+libs.versionOf("metaxploit"))
+		addresses = libs.metaxploit.scan(lib)
+	end if
+	print("Addresses for <b>" + lib.lib_name + " " + lib.version + "</b>: <b>" + addresses + "</b>\n")
+	return addresses
+end function
+
+getRemote = function (ip)
+	if (not is_valid_ip(ip)) then exit("Invalid ip: " + ip)
+	if (not get_shell.ping(ip)) then exit("IP address not found")
+
+	remote = {
+		"ip": ip,
+		"isLanIp": is_lan_ip(ip),
+		"router": null,
+		"ports": null,
+	}
+
+	if remote.isLanIp then
+		remote.router = get_router
+	else
+		remote.router = get_router(ip)
+	end if
+
+	if remote.isLanIp then
+		remote.ports = remote.router.device_ports(ip)
+	else
+		remote.ports = remote.router.used_ports
+	end if
+	if typeof(remote.ports) == "string" then exit(remote.ports)
+
+	return remote
+end function
+
+args = {
+	"ipOrLibName": params.get(0),
+	"extraArgs": params.get(1, ""),
+	"port": getParamsOptionInt("-p", 0),
+}
+
+main = function ()
+	clear_screen()
+	lib = null
+	remote = null
+
+	if (is_valid_ip(args.ipOrLibName)) then
+		remote = getRemote(args.ipOrLibName)
+		lib = getRemoteLib(remote.ip, args.port)
+		print("IP=" + remote.ip + " Port=" + args.port)
+	else
+		lib = libs.metaxploit.load("/lib/"+args.ipOrLibName)
+	end if
+
+	addresses = getAddresses(lib)
+	objs = newObjs(addresses, lib, args.extraArgs)
+
+	passwd = searchPasswd(objs)
+
+	objs.print()
+	if (objs.passwd) then
+		print("Found passwd. Enter 'p' to decipher it.\n" + passwd)
+	end if
+
+	objs.handleInput(remote)
+end function
+
+main()

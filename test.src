@@ -1,0 +1,30 @@
+// Add quick functions to this map and they will be executed in the end.
+// Ensures the functions are working as expected.
+Test = {}
+Test.currentTest = null
+
+// Call this at the end of your file.
+Test.run = function ()
+	for kv in self
+		skip = ["__isa", "run", "currentTest", "throw"]
+		if (skip.indexOf(kv.key) != null) then continue
+		self.currentTest = kv.key
+		kv.value()
+	end for
+end function
+
+Test.throw = function (message)
+	exit("<color=red>Error in test <b>"+test.currentTest+"</b>: "+message+"</color>")
+end function
+
+prettyValue = function (value, bold = true)
+	pretty = value
+	if (value == null) then pretty = "null"
+	if (bold) then pretty = "<b>"+pretty+"</b>"
+	if (value isa string) then pretty = char(34)+pretty+char(34) // quotes
+	return pretty
+end function
+
+Test.expectToBe = function (value, expected)
+	if (value != expected) then self.throw("Expected "+prettyValue(expected)+" but received "+prettyValue(value)+".")
+end function

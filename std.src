@@ -1,0 +1,194 @@
+// Common functions and utils.
+
+import_code("/root/pth")
+// import_code("/root/test")
+// test = new Test
+
+// Exits and prints the message in a pretty way.
+// @param {string} message
+// @returns never
+throw = function (message)
+    exit("<color=red>" + message + "</color>")
+end function
+
+// Safely accesses a list item by the index.
+// Returns null if the index is invalid.
+list.get = function (index, default = null)
+	if (self.hasIndex(index)) then return self[index] else return default
+end function
+
+// Returns true if the string has the given substring.
+string.has = function (item)
+	return self.indexOf(item) != null
+end function
+
+// Returns true if the list has the given item.
+list.includes = function (item)
+	return self.indexOf(item) != null
+end function
+
+// Removes the items of a list when the given function returns not-true for each item.
+list.filter = function (fn)
+	newList = []
+	for item in self
+		if (fn(item)) then newList.push(item)
+	end for
+	return newList
+end function
+
+// Transforms each item of a list by using the given function.
+list.map = function (fn)
+	newList = []
+	for item in self
+		newList.push(fn(item))
+	end for
+	return newList
+end function
+
+// Safely gets the value of an object by passing the keys to access it.
+// Pass either a string or a list of keys to deeply access it.
+// Returns null if the final property is not found.
+map.get = function (keys)
+	if not (keys isa list) then keys = [keys]
+	data = self
+	for key in keys
+		if (data.hasIndex(key)) then data = data[key] else return null
+	end for
+	return data
+end function
+
+// Returns the substring between two other substrings
+// If null is given to close, it will consider either a NewLine
+// or the end of the string.
+string.valueBetween = function (open, close = null)
+	self = self.replace(char(10), "\n") // Files such as passwd uses char(10) instead "\n"
+	if (close == null) then
+		self = self + "\n"
+		close = "\n"
+	end if
+
+	head = self.indexOf(open)
+	if (head != null) then
+		tail = self.indexOf(close, head + open.len)
+		if (tail != null) then return self[head + open.len:tail]
+	end if
+end function
+
+// test.stringValueBetween = function ()
+// 	str = "root:123"+char(10)
+// 	test.expectToBe(str.valueBetween("root:"), "123")
+// end function
+
+// Returns all the occurrences as a list of the substrings
+// between two other substrings
+string.valuesBetween = function (open, close)
+	array = []
+	head = 0
+	tail = 0
+	while true
+		head = self.indexOf(open, tail)
+		tail = self.indexOf(close, head + open.len)
+		if head == null or tail == null then
+			break
+			end if
+		array.push(self[head + open.len:tail])
+	end while
+
+	return array
+end function
+
+
+// Navigates to the given absolute path by using any file as starting point.
+goToFile = function (absolutePath, anyFile)
+	file = anyFile
+	while (file.path != "/")
+		file = file.parent
+	end while
+	segments = absolutePath.split("/")[1:] // Remove empty string at [0]
+	isTargetADir = absolutePath[absolutePath.len - 1] == "/"
+
+	if (isTargetADir) then segments.pop()
+	for segment in segments
+		isLastSegment = segment == segments[segments.len - 1]
+		files = file.get_folders + file.get_files
+		for f in files
+			if (f.name == segment) then file = f
+		end for
+	end for
+	if (file.path == absolutePath) then return file else return null
+end function
+
+getUser = function(anyFile)
+	root = goToFile("/", anyFile)
+		if root.has_permission("w") then return "root"
+
+	home = goToFile("/home", root)
+		for dir in home.get_folders
+				if dir.name == "guest" then continue
+		if dir.has_permission("w") then return dir.name
+		end for
+
+		return "guest"
+end function
+
+getLibPath = function (name)
+	libPath = "/lib/" + name
+	if (get_shell.host_computer.File(libPath)) then return libPath
+	libPath = current_path + "/" + name
+	if (get_shell.host_computer.File(libPath)) then return libPath
+	exit("Error: Can't find the <b>" + name + "</b> lib in the /lib path or the current folder")
+end function
+
+// Loads a lib either by reading it from the "/lib" or from the current path.
+// No need to provide the lib extension (".so").
+loadLib = function (name)
+	if (name.indexOf(".so") == null) then name = name + ".so"
+	lib = include_lib(getLibPath(name))
+	if not lib then exit("Error loading the lib "+name)
+	return lib
+end function
+
+_getLibs = function()
+	_metaxploit = null
+	// Lazy loads the `metaxploit` lib.
+	metaxploit = function()
+		if (not _metaxploit) then _metaxploit = loadLib("metaxploit")
+		return _metaxploit
+	end function
+
+	_crypto = null
+	crypto = function()
+		if (not _crypto) then _crypto = loadLib("crypto")
+		return _crypto
+	end function
+
+	versionOf = function (name)
+		if (not name.has(".so")) then name = name+".so"
+		return libs.metaxploit.load(getLibPath(name)).version
+	end function
+
+	return {
+		"metaxploit": metaxploit,
+		"crypto": crypto,
+		"versionOf": @versionOf,
+	}
+end function
+
+// Map containing various libs that are lazy loaded.
+libs = _getLibs()
+
+getRemoteLib = function (ip, port)
+	net = libs.metaxploit.net_use(ip, port)
+	if not net then exit("Error: can't connect to net session")
+	if (net.is_root_active_user) then exit("Root user is active!")
+	return net.dump_lib
+end function
+
+// Can later be improved into a whole CLI system
+getParamsOptionInt = function(option = "-x", default = 0)
+	index = params.indexOf(option)
+	if (index == null) then return default
+	return params[index + 1].to_int
+end function
+
+// test.run()

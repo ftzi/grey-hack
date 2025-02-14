@@ -1,0 +1,59 @@
+accessed = []
+built = []
+
+import_code("/root/std")
+// import_code("/root/std")
+
+compile = function(filePath, targetDir, allowImport)
+	file = get_shell.host_computer.File(filePath)
+	if (not file) then return
+
+	buildResult = get_shell.build(file.path, file.parent.path, allowImport)
+	if (buildResult) then
+		exit("<color=red>Error building the file "+file.path+": " + buildResult+"</color>")
+	end if
+end function
+
+// There shall be a "compile.txt" file with all the
+// source files paths to be compiled in order.
+// The last one must be your main file!
+compileDir = function (dirPath)
+	if (dirPath[-1] != "/") then dirPath = dirPath + "/"
+	compileFile = get_shell.host_computer.File(dirPath+"compile.txt")
+	if (not compileFile) then return
+	compileContent = compileFile.get_content
+	if (not compileContent) then return
+
+	pathsToBuildBefore = compileContent.split("\n")
+	pathToBuild = null
+	for pathToBuild in pathsToBuildBefore
+		if (pathToBuild.indexOf(".src") == null) then pathToBuild = pathToBuild + ".src"
+		compile(pathToBuild, parent_path(pathToBuild), true)
+	end for
+	compile(pathToBuild, parent_path(program_path), true)
+end function
+
+// Makes the program build itself with the latest .src to improve DX.
+// Passing -C while calling the program skips this.
+// To support the import_code of executable files, which supports nested imports,
+// this can also build all the given files before rebuilding the one that called it.
+// TODO this will recursively build all the imported files.
+selfCompile = function (dirToCompile = null)
+	if (params.indexOf("-C") != null) then return
+
+	if (dirToCompile) then
+		compileDir(dirToCompile)
+	else
+		compile(program_path+".src", parent_path(program_path), false)
+	end if
+
+	get_shell.launch(program_path, params.join(" ") + " -C") // Relaunch
+	exit()
+end function
+
+programName = program_path.split("/")[-1]
+if (programName == "compile") then
+	if params.len != 1 or params[0] == "-h" then exit("<b>Usage: "+programName+" [dirToCompile]</b>")
+	dirPath = params[0]
+	compileDir(dirPath)
+end if

@@ -1,0 +1,65 @@
+// Util script . Extension of nmap. Will be removed soon in favor of y.
+
+programName = program_path.split("/")[-1]
+if params.len != 1 or params[0] == "-h" or params[0] == "--help" then exit("<b>Usage: " + programName + " [ip_address]</b>")
+
+ip = params[0]
+if not is_valid_ip(ip) then exit("Invalid ip address")
+if not get_shell.host_computer.is_network_active then exit("No internet access.")
+
+isLanIp = is_lan_ip(ip)
+
+router = null
+if isLanIp then router = get_router else router = get_router(ip)
+if not router then exit("IP address not found")
+
+ports = null
+if isLanIp then
+   ports = router.device_ports(ip)
+else
+   ports = router.used_ports
+end if
+
+if ports == null then exit("IP address not found")
+if typeof(ports) == "string" then exit(ports)
+
+if (ports.len == 0) then exit("Scan finished. No open ports.")
+
+info = "PORT STATE SERVICE VERSION LAN"
+for port in ports
+   service_info = router.port_info(port)
+   lan_ips = port.get_lan_ip
+   port_status = "open"
+
+   if(port.is_closed and not isLanIp) then
+      port_status = "closed"
+   end if
+   info = info + "\n" + port.port_number + " " + port_status + " " + service_info + " " + lan_ips
+end for
+
+print("\n" + whois(ip)+ "\n")
+print(format_columns(info) + "\n")
+
+firewall_rules = router.firewall_rules
+if typeof(firewall_rules) == "string" then exit(firewall_rules)
+
+if firewall_rules.len == 0 then exit("No firewall rules found.")
+info = "ACTION PORT SOURCE_IP DESTINATION_IP"
+for rules in firewall_rules
+	info = info + "\n" + rules
+end for
+print(format_columns(info) + "\n")
+
+// dataOfIp = function (ip)
+//    valueOfKey = function (string)
+//       return string[(string.indexOf(": ") + 2):]
+//    end function
+
+//   lines = whois(ip).split("\n")
+//   data = {}
+//   data.domain = valueOfKey(lines[0])
+//   data.name = valueOfKey(lines[1])
+//   data.email = valueOfKey(lines[2])
+//   data.phone = valueOfKey(lines[3])
+//   return data
+// end function
