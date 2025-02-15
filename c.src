@@ -2,10 +2,13 @@
 
 Compile = {}
 Compile.accessed = []
+Compile.compiled = []
 Compile.optionToSkip = "--skipSelfCompile"
 
 // @return {string} path of the executable entry file
 Compile.compile = function (entryFilePath)
+    if (entryFilePath[0] != "/") then entryFilePath = current_path + "/" + entryFilePath
+
     valuesBetween = function (string, open, close)
         array = []
         head = 0
@@ -23,6 +26,7 @@ Compile.compile = function (entryFilePath)
     end function
 
     recursive = function(filePath)
+        print("Called recursive for " + filePath)
         if (filePath.indexOf(".src") == null) then filePath = filePath + ".src"
 
         // Skip this file if already accessed
@@ -39,20 +43,29 @@ Compile.compile = function (entryFilePath)
         imports = valuesBetween(fileContent, "import" + "_code("+char(34), char(34))
 
         for import in imports
+        print("import " + import)
+
             // We don't need to compile ".src" imports. Skip them!
             if (import.indexOf(".src") != null) then continue
             recursive(import)
         end for
 
+        print("Building" + filePath)
+
+
         allowImport = filePath != entryFilePath
         buildResult = get_shell.build(file.path, file.parent.path, allowImport)
+        Compile.compiled.push(file.path)
         if (buildResult) then
             exit("<color=red>Error building the file "+file.path+": " + buildResult+"</color>")
         end if
         return file.path.remove(".src")
     end function
 
-    return recursive(entryFilePath)
+    executablePath = recursive(entryFilePath)
+    print(Compile.accessed)
+    print(Compile.compiled)
+    return executablePath
 end function
 
 // Makes the program build itself with the latest .src, if available, to improve DX.
@@ -63,8 +76,12 @@ Compile.selfCompile = function ()
     // Skip self compile if there is no source file for the entry file.
     if (get_shell.host_computer.File(srcPath) == null) then return
 
-    // Skip if the "-C" option is passed. This is applied
-	if (params.indexOf(Compile.optionToSkip) != null) then return
+    indexOfSkip = params.indexOf(Compile.optionToSkip)
+    // Skip if the optionToSkip is passed.
+	if (indexOfSkip != null) then
+        params.remove(indexOfSkip) // So it's not present in the final program
+        return
+    end if
 
 	Compile.compile(srcPath)
 
@@ -73,16 +90,24 @@ Compile.selfCompile = function ()
 	exit() // So the rest of the original program isn't run.
 end function
 
+Compile._main = function ()
+    if params[0] == "-h" then exit("<b>Usage: c [-x] <entryFile> [programArgs]</b>")
+    executeAfter = params[0] == "-x"
+
+    executableParams = params[:]
+
+    executeAfter = params[0] == "-x"
+    if (executeAfter) then executableParams.remove(0)
+
+    entryFile = executableParams[0]
+    executableParams.remove(0)
+
+    executablePath = Compile.compile(entryFile)
+
+    if (executeAfter) then get_shell.launch(executablePath, executableParams.join(" "))
+end function
+
 if (program_path.split("/")[-1] == "c") then
-	if params[0] == "-h" then exit("<b>Usage: c [-x] <entryFile> [programArgs]</b>")
-	executeAfter = params[0] == "-x"
-
-    indexEntryFile = 0
-    if (executeAfter) then indexEntryFile = 1
-
-    entryFile = params[indexEntryFile]
-	executablePath = Compile.compile(entryFile)
-    if (executeAfter) then
-        get_shell.launch(executablePath, params[indexEntryFile + 1:].join(" ") + " " + Compile.optionToSkip)
-    end if
+    // Compile.selfCompile()
+    Compile._main()
 end if

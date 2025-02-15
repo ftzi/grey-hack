@@ -40,7 +40,7 @@ Lib.load = function (name)
 end function
 
 Lib.loadRemote = function (ip, port)
-    net = libs.metaxploit.net_use(ip, port)
+    net = Lib.metaxploit().net_use(ip, port)
     if not net then exit("Error: can't connect to net session")
     if (net.is_root_active_user) then exit("Root user is active!")
     return net.dump_lib

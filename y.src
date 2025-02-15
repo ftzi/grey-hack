@@ -4,6 +4,7 @@ Compile.selfCompile()
 
 import_code("/root/std")
 import_code("/root/obj")
+import_code("/root/lib")
 
 dbLib = {
 	"kernel_router.so": {
@@ -61,8 +62,8 @@ dbLib = {
 getAddresses = function (lib)
 	addresses = dbLib.get([Lib.lib_name, Lib.version])
 	if not addresses then
-		print("Scanning Addresses for Library <b>" + Lib.lib_name + " " + Lib.version + "</b> using Metaxploit "+libs.versionOf("metaxploit"))
-		addresses = libs.metaxploit.scan(lib)
+		print("Scanning Addresses for Library <b>" + Lib.lib_name + " " + Lib.version + "</b> using Metaxploit " + Lib.versionOf("metaxploit"))
+		addresses = Lib.metaxploit().scan(lib)
 	end if
 	print("Addresses for <b>" + Lib.lib_name + " " + Lib.version + "</b>: <b>" + addresses + "</b>\n")
 	return addresses
@@ -108,10 +109,10 @@ main = function ()
 
 	if (is_valid_ip(args.ipOrLibName)) then
 		remote = getRemote(args.ipOrLibName)
-		lib = libs.loadRemote(remote.ip, args.port)
+		lib = Lib.loadRemote(remote.ip, args.port)
 		print("IP=" + remote.ip + " Port=" + args.port)
 	else
-		lib = libs.metaxploit.load("/lib/"+args.ipOrLibName)
+		lib = Lib.metaxploit().load("/lib/"+args.ipOrLibName)
 	end if
 
 	addresses = getAddresses(lib)
