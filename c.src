@@ -1,0 +1,88 @@
+// This has no imports so if we have no executables yet, we just need to build this.
+
+Compile = {}
+Compile.accessed = []
+Compile.optionToSkip = "--skipSelfCompile"
+
+// @return {string} path of the executable entry file
+Compile.compile = function (entryFilePath)
+    valuesBetween = function (string, open, close)
+        array = []
+        head = 0
+        tail = 0
+        while true
+            head = string.indexOf(open, tail)
+            tail = string.indexOf(close, head + open.len)
+            if head == null or tail == null then
+                break
+                end if
+            array.push(string[head + open.len:tail])
+        end while
+
+        return array
+    end function
+
+    recursive = function(filePath)
+        if (filePath.indexOf(".src") == null) then filePath = filePath + ".src"
+
+        // Skip this file if already accessed
+        if (Compile.accessed.indexOf(filePath) != null) then return
+
+        Compile.accessed.push(filePath)
+
+        file = get_shell.host_computer.File(filePath)
+        if (not file) then exit("<color=red>File not found: " + file.path + "</color>")
+
+        fileContent = file.get_content()
+        if (fileContent == null) then exit("<color=red>Coulnd't read the file " + file.path + "</color>")
+
+        imports = valuesBetween(fileContent, "import" + "_code("+char(34), char(34))
+
+        for import in imports
+            // We don't need to compile ".src" imports. Skip them!
+            if (import.indexOf(".src") != null) then continue
+            recursive(import)
+        end for
+
+        allowImport = filePath != entryFilePath
+        buildResult = get_shell.build(file.path, file.parent.path, allowImport)
+        if (buildResult) then
+            exit("<color=red>Error building the file "+file.path+": " + buildResult+"</color>")
+        end if
+        return file.path.remove(".src")
+    end function
+
+    return recursive(entryFilePath)
+end function
+
+// Makes the program build itself with the latest .src, if available, to improve DX.
+// Passing --skipSelfCompile while calling the program skips this.
+Compile.selfCompile = function ()
+    srcPath = program_path+".src"
+
+    // Skip self compile if there is no source file for the entry file.
+    if (get_shell.host_computer.File(srcPath) == null) then return
+
+    // Skip if the "-C" option is passed. This is applied
+	if (params.indexOf(Compile.optionToSkip) != null) then return
+
+	Compile.compile(srcPath)
+
+    // Relaunch
+	get_shell.launch(program_path, params.join(" ") + " " + Compile.optionToSkip)
+	exit() // So the rest of the original program isn't run.
+end function
+
+if (program_path.split("/")[-1] == "c") then
+	if params[0] == "-h" then exit("<b>Usage: c [-x] <entryFile> [programArgs]</b>")
+	executeAfter = params[0] == "-x"
+
+    indexEntryFile = 0
+    if (executeAfter) then indexEntryFile = 1
+
+    entryFile = params[indexEntryFile]
+	executablePath = Compile.compile(entryFile)
+    if (executeAfter) then
+        get_shell.launch(executablePath, params[indexEntryFile + 1:].join(" ") + " " + Compile.optionToSkip)
+    end if
+end if

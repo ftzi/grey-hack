@@ -1,23 +1,36 @@
-// Add quick functions to this map and they will be executed in the end.
-// Ensures the functions are working as expected.
+// Tests are run automatically by our `c` program,
+// which compiles the programs and its dependencies automatically.
+//
+// You should have this pattern in your files:
+//
+// testPth = Test.add("Path")
+// testPth.filename = function()
+//      Test.expectToBe(Path.filename("/root/x"), "x")
+//      Test.expectToBe(Path.filename("/root/y/"), "y")
+// end function
+//
+// Instead of `testPth.filename`, you can name it as you wish.
+
 Test = {}
+Test.suites = {}
+Test.currentSuite = null
 Test.currentTest = null
 
-// Call this at the end of your file.
-Test.run = function ()
-	for kv in self
-		skip = ["__isa", "run", "currentTest", "throw"]
-		if (skip.indexOf(kv.key) != null) then continue
-		self.currentTest = kv.key
-		kv.value()
-	end for
+Test.add = function(name)
+    suite = {}
+    Test.suites[name] = suite
+    return suite
+end function
+
+Test.expectToBe = function (value, expected)
+	if (value != expected) then Test.throw("Expected "+prettyValue(expected)+" but received "+prettyValue(value)+".")
 end function
 
 Test.throw = function (message)
-	exit("<color=red>Error in test <b>"+test.currentTest+"</b>: "+message+"</color>")
+	exit("<color=red>Error in test <b>"+Test.currentSuite+"</b>"+"."+"<b>"+Test.currentTest+"</b>: "+message+"</color>")
 end function
 
-prettyValue = function (value, bold = true)
+Test.prettyValue = function (value, bold = true)
 	pretty = value
 	if (value == null) then pretty = "null"
 	if (bold) then pretty = "<b>"+pretty+"</b>"
@@ -25,6 +38,14 @@ prettyValue = function (value, bold = true)
 	return pretty
 end function
 
-Test.expectToBe = function (value, expected)
-	if (value != expected) then self.throw("Expected "+prettyValue(expected)+" but received "+prettyValue(value)+".")
+// Will run all the tests when called
+Test.run = function ()
+	for entrySuites in Test.suites
+		Test.currentSuite = entrySuites.key
+        tests = entrySuites.value
+        for entryTest in tests
+            Test.currentTest = entryTest.key
+            entryTest.value() // Run the test
+        end for
+	end for
 end function

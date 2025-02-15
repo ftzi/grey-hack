@@ -31,7 +31,7 @@ end function
 // @throw
 _Fs.ensureDir = function (dirPath)
     if (get_shell.host_computer.File(dirPath)) then return
-    res = self.shell.host_computer.create_folder(pth.parent(dirPath), pth.filename(dirPath))
+    res = self.shell.host_computer.create_folder(Path.parent(dirPath), Path.filename(dirPath))
     if (res isa string) then throw("Error ensuring the dir "+dirPath+": " + res)
 end function
 

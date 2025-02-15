@@ -1,0 +1,33 @@
+Path = {}
+
+Path.parent = function (path)
+    return parent_path(path)
+end function
+
+Path.removeStartingSlash = function (path)
+    if (path[0] == "/") then path = path[1:]
+    return path
+end function
+
+Path.removeEndingSlash = function (path)
+    if (path[-1] == "/") then path = path[:-1]
+    return path
+end function
+
+Path.removeWrappingSlases = function (path)
+    return Path.removeStartingSlash(removeEndingSlash(path))
+end function
+
+Path.filename = function (path)
+    if (path[-1] == "/") then path = path[:-1]
+    return path.split("/")[1]
+end function
+
+Path.join = function (a,b,c,d,e)
+    str = Path.removeEndingSlash(a)
+    if (b != null) then str = str + Path.removeWrappingSlases(b)
+    if (c != null) then str = str + Path.removeWrappingSlases(c)
+    if (d != null) then str = str + Path.removeWrappingSlases(d)
+    if (e != null) then str = str + Path.removeStartingSlash(e)
+    return str
+end function

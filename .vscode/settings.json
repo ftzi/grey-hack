@@ -1,3 +1,7 @@
 {
-  "editor.tabSize": 4
+  "editor.tabSize": 4,
+  "greybel.transpiler.beautify.keepParentheses": true,
+  "greybel.transpiler.buildType": "Beautify",
+  "greybel.formatter": false,
+  "greybel.createIngame.agent": "message-hook",
 }

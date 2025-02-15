@@ -1,8 +1,7 @@
 // Common functions and utils.
 
-import_code("/root/pth")
-// import_code("/root/test")
-// test = new Test
+import_code("/root/test")
+testStd = Test.add("std")
 
 // Exits and prints the message in a pretty way.
 // @param {string} message
@@ -74,10 +73,10 @@ string.valueBetween = function (open, close = null)
 	end if
 end function
 
-// test.stringValueBetween = function ()
-// 	str = "root:123"+char(10)
-// 	test.expectToBe(str.valueBetween("root:"), "123")
-// end function
+testStd.stringValueBetween = function ()
+	str = "root:123"+char(10)
+	test.expectToBe(str.valueBetween("root:"), "123")
+end function
 
 // Returns all the occurrences as a list of the substrings
 // between two other substrings
@@ -129,59 +128,6 @@ getUser = function(anyFile)
 		end for
 
 		return "guest"
-end function
-
-getLibPath = function (name)
-	libPath = "/lib/" + name
-	if (get_shell.host_computer.File(libPath)) then return libPath
-	libPath = current_path + "/" + name
-	if (get_shell.host_computer.File(libPath)) then return libPath
-	exit("Error: Can't find the <b>" + name + "</b> lib in the /lib path or the current folder")
-end function
-
-// Loads a lib either by reading it from the "/lib" or from the current path.
-// No need to provide the lib extension (".so").
-loadLib = function (name)
-	if (name.indexOf(".so") == null) then name = name + ".so"
-	lib = include_lib(getLibPath(name))
-	if not lib then exit("Error loading the lib "+name)
-	return lib
-end function
-
-_getLibs = function()
-	_metaxploit = null
-	// Lazy loads the `metaxploit` lib.
-	metaxploit = function()
-		if (not _metaxploit) then _metaxploit = loadLib("metaxploit")
-		return _metaxploit
-	end function
-
-	_crypto = null
-	crypto = function()
-		if (not _crypto) then _crypto = loadLib("crypto")
-		return _crypto
-	end function
-
-	versionOf = function (name)
-		if (not name.has(".so")) then name = name+".so"
-		return libs.metaxploit.load(getLibPath(name)).version
-	end function
-
-	return {
-		"metaxploit": metaxploit,
-		"crypto": crypto,
-		"versionOf": @versionOf,
-	}
-end function
-
-// Map containing various libs that are lazy loaded.
-libs = _getLibs()
-
-getRemoteLib = function (ip, port)
-	net = libs.metaxploit.net_use(ip, port)
-	if not net then exit("Error: can't connect to net session")
-	if (net.is_root_active_user) then exit("Root user is active!")
-	return net.dump_lib
 end function
 
 // Can later be improved into a whole CLI system

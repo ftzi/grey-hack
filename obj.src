@@ -92,7 +92,7 @@ newObjs = function (addresses, lib, extraArgs)
 			unsecValue = entry.valueBetween("<b>", "</b>")
 
 			print("Overflowing Address <b>" + address + "</b> with <b>" + unsecValue + "</b>")
-			data = lib.overflow(address, unsecValue, extraArgs)
+			data = Lib.overflow(address, unsecValue, extraArgs)
 			print("====================")
 
 			if (not ["computer", "shell", "file"].includes(typeof(data))) then continue

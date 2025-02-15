@@ -1,6 +1,6 @@
 // Main hacking tool. Eithers run remotely using an IP or locally for local exploits.
-import_code("/root/compile.src")
-selfCompile("/root")
+import_code("/root/c.src")
+Compile.selfCompile()
 
 import_code("/root/std")
 import_code("/root/obj")
@@ -59,12 +59,12 @@ dbLib = {
 }
 
 getAddresses = function (lib)
-	addresses = dbLib.get([lib.lib_name, lib.version])
+	addresses = dbLib.get([Lib.lib_name, Lib.version])
 	if not addresses then
-		print("Scanning Addresses for Library <b>" + lib.lib_name + " " + lib.version + "</b> using Metaxploit "+libs.versionOf("metaxploit"))
+		print("Scanning Addresses for Library <b>" + Lib.lib_name + " " + Lib.version + "</b> using Metaxploit "+libs.versionOf("metaxploit"))
 		addresses = libs.metaxploit.scan(lib)
 	end if
-	print("Addresses for <b>" + lib.lib_name + " " + lib.version + "</b>: <b>" + addresses + "</b>\n")
+	print("Addresses for <b>" + Lib.lib_name + " " + Lib.version + "</b>: <b>" + addresses + "</b>\n")
 	return addresses
 end function
 
@@ -108,7 +108,7 @@ main = function ()
 
 	if (is_valid_ip(args.ipOrLibName)) then
 		remote = getRemote(args.ipOrLibName)
-		lib = getRemoteLib(remote.ip, args.port)
+		lib = libs.loadRemote(remote.ip, args.port)
 		print("IP=" + remote.ip + " Port=" + args.port)
 	else
 		lib = libs.metaxploit.load("/lib/"+args.ipOrLibName)
