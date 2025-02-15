@@ -14,7 +14,7 @@ Path.removeEndingSlash = function (path)
     return path
 end function
 
-Path.removeWrappingSlases = function (path)
+Path.removeWrappingSlashes = function (path)
     return Path.removeStartingSlash(removeEndingSlash(path))
 end function
 
@@ -25,9 +25,13 @@ end function
 
 Path.join = function (a,b,c,d,e)
     str = Path.removeEndingSlash(a)
-    if (b != null) then str = str + Path.removeWrappingSlases(b)
-    if (c != null) then str = str + Path.removeWrappingSlases(c)
-    if (d != null) then str = str + Path.removeWrappingSlases(d)
-    if (e != null) then str = str + Path.removeStartingSlash(e)
+    b = Path.removeWrappingSlashes(b)
+    if (b) then str = str + "/" + b
+    c = Path.removeWrappingSlashes(b)
+    if (c) then str = str + "/" + c
+    d = Path.removeWrappingSlashes(d)
+    if (d) then str = str + "/" + d
+    e = Path.removeStartingSlash(e)
+    if (e) then str = str + "/" + e
     return str
 end function
