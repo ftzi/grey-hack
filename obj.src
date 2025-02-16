@@ -1,4 +1,5 @@
 import_code("/root/lib")
+import_code("/root/std")
 
 Obj = {}
 Obj.getFile = function (filePath)
@@ -31,11 +32,11 @@ newObj = function(data, address, unsecValue, extra)
 		obj.shell = data
 		obj.computer = obj.shell.host_computer
 		obj.anyFile = obj.computer.File("/")
-		obj.action = @actionShell
+		obj.action = @obj.actionShell
 	else if (obj.type == "computer") then
 		obj.computer = data
 		obj.anyFile = obj.computer.File("/")
-		obj.action = @actionComputer
+		obj.action = @obj.actionComputer
 	else if (obj.type == "file") then
 		obj.anyFile = data
 	end if
@@ -43,11 +44,11 @@ newObj = function(data, address, unsecValue, extra)
 end function
 
 
-actionComputer = function(obj)
+Obj.actionComputer = function()
 	while (true)
 		input = user_input("Enter the path of the file to be shown or nothing to go back:\n")
 		if (input == "") then return
-		file = obj.computer.File(input)
+		file = self.computer.File(input)
 
 		if (not file.has_permission("r")) then
 			print("You don't have the permission to read it")
@@ -61,27 +62,25 @@ actionComputer = function(obj)
 	end while
 end function
 
-actionShell = function (obj)
-	get_shell.scp(current_path + "/metaxploit.so", "/home/guest", obj.shell)
-	get_shell.scp(current_path + "/crypto.so", "/home/guest", obj.shell)
-	get_shell.scp(current_path + "/y", "/home/guest", obj.shell)
-	obj.shell.start_terminal
+Obj.actionShell = function ()
+	get_shell.scp(current_path + "/metaxploit.so", "/home/guest", self.shell)
+	get_shell.scp(current_path + "/crypto.so", "/home/guest", self.shell)
+	get_shell.scp(current_path + "/y", "/home/guest", self.shell)
+	self.shell.start_terminal
 end function
 
 Objs = {}
-Objs.list = []
-Objs.listActionable = []
-Objs.passwd = null
-
-searchPasswd = function(objs)
-	for obj in objs.list
-	content = obj.getFileContent("/etc/passwd")
-		if (content) then return content
+Objs.all = []
+Objs.withAction = []
+Objs.withShell = []
+Objs.passwd = function()
+	for obj in Objs.all
+	    content = obj.getFileContent("/etc/passwd")
+		if (content) then return content.trim()
 	end for
 end function
 
-newObjs = function (addresses, lib, extraArgs)
-	objs = new Objs
+Objs.setup = function (addresses, lib, extraArgs)
 	for address in addresses
 		scanResult = Lib.metaxploit().scan_address(lib, address)
 		scanResult = scanResult.replace("decompiling source...\nsearching unsecure values...\n", "")
@@ -94,29 +93,25 @@ newObjs = function (addresses, lib, extraArgs)
 			unsecValue = entry.valueBetween("<b>", "</b>")
 
 			print("Overflowing Address <b>" + address + "</b> with <b>" + unsecValue + "</b>")
-			data = Lib.overflow(address, unsecValue, extraArgs)
+			data = lib.overflow(address, unsecValue, extraArgs)
 			print("====================")
 
-			if (not ["computer", "shell", "file"].includes(typeof(data))) then continue
+			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
 
 			extra = (entry + "\n").valuesBetween("* ", "\n")
 			obj = newObj(data, address, unsecValue, extra)
-			objs.list.push(obj)
+			Objs.all.push(obj)
 		end for
 	end for
-
-	objs.passwd = searchPasswd(objs)
-	filter = function (obj)
-		return obj["action"] != null
-	end function
-	objs.listActionable = objs.list.filter(@filter)
-	return objs
+    print(Filters.byTruthyProp("action"))
+	Objs.withAction = Objs.all.filter(Filters.byTruthyProp("action"))
+	// Objs.withShell = Objs.all.filter(Filters.byTruthyProp("shell"))
 end function
 
 Objs.print = function ()
 	message = "Ix ADDRESS VALUE TYPE DATA"
 	i = -1
-	for obj in self.listActionable
+	for obj in Objs.withAction
 		i = i + 1
 		message = message + "\n" + i + " " + obj.address + " " + obj.unsecValue + " " + obj.type
 
@@ -130,36 +125,80 @@ Objs.print = function ()
 	end for
 
 	print(format_columns(message) + "\n")
+    if (Objs.passwd) then
+		print("Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>].")
+        i = 0
+        for line in Objs.passwd.split(char(10))
+            print ("p "+i+") "+line)
+            i = i + 1
+        end for
+        print()
+	end if
 end function
 
+Objs._connectSsh = function (remote, user, password)
+    shell = null
+    if (remote) then
+        shell = get_shell.connect_service(remote.ip, 22, user, password)
+        // TODO check if port is open instead
+        if (not shell or shell isa string) then
+            canConnectWithShell = Objs.withShell.len != 0
+            message = "Using hacked shell to login as this user."
+            if (not canConnectWithShell) then message = "There is no available shell to make the indirect login."
+            print("Couldn't connect with ssh: " + shell + message)
+            if (canConnectWithShell) then Objs.withShell[0].shell.launch("sudo", "-s " + password)
+            return
+        end if
+    else
+        shell = get_shell(user, password)
+    end if
+    if (shell isa map) then shell.start_terminal else print("Could not connect via ssh to "+user+"@"+password+". Error: "+shell)
+end function
 
-keys = {
+Objs.inputHandler = {}
+Objs.inputHandler.password = function (remote, inputParams)
+    if (not Objs.passwd) then return
+    decipherOnly = inputParams.has("-d")
+    inputParams.delete("-d")
 
-}
+    indexPasswordOption = inputParams.indexOf("-p")
+    password = null
+    if (indexPasswordOption != null) then
+        password = inputParams[indexPasswordOption + 1]
+        inputParams.remove(indexPasswordOption)
+        inputParams.remove(indexPasswordOption) // It's not +1 as we just removed it!
+    end if
+
+    indexEntry = inputParams.get(1, "0").to_int
+
+    passwds = Objs.passwd.split(char(10))
+    chosenPasswd = passwds[indexEntry]
+    user = chosenPasswd.valueBetween(null, ":")
+
+    if (not password) then
+        print("Deciphering the password of <b>"+user+"</b>...")
+        wait(0.01)
+        password = Lib.crypto().decipher(chosenPasswd.valueBetween(":"))
+        print("Password of <b>" + user + "</b> is <b>" + password + "</b>\n")
+        if (decipherOnly) then return
+    end if
+
+    Objs._connectSsh(remote, user, password)
+end function
 
 Objs.handleInput = function (remote)
 	while true
-		input = user_input("Enter the desired method:\n")
-
-		if (input == "p") then
-			if (not self.passwd) then
-				print("There is no found passwd to decipher!")
-				continue
-			end if
-
-			password = libs.crypto.decipher(self.passwd.valueBetween("root:"))
-
-			print("Password for root is <b>" + password + "</b>\n")
-
-			shell = null
-			if (remote) then
-				shell = get_shell.connect_service(remote.ip, 22, "root", password)
-			else
-				shell = get_shell("root", password)
-			end if
-			if (shell isa map) then shell.start_terminal else print("Could not connect via ssh: "+shell)
+		inputParams = user_input("Enter the desired method:\n").split(" ")
+		if (inputParams[0] == "p") then
+            Objs.inputHandler.password(remote, inputParams)
 		else
-			objs.listActionable[input.to_int].action()
+            index = inputParams[0].to_int
+            if (not Objs.withAction.hasIndex(index)) then
+                print("Invalid option.")
+                continue
+            end if
+
+			Objs.withAction[index].action()
 		end if
 		print()
 	end while

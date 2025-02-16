@@ -8,6 +8,7 @@ import_code("/root/lib")
 
 dbLib = {
 	"kernel_router.so": {
+		"1.0.7": ["0x21136096"],
 		"1.1.0": ["0x52F80728"],
 		"1.1.1": ["0x4BA8C7F7"],
 		"1.1.6": ["0x2E5976E0"],
@@ -39,12 +40,16 @@ dbLib = {
 		"1.0.5": ["0x292F648B", "0x43051C85", "0x84998BE", "0x95A4F21", "0x514F6CD2", "0x77FB8049", "0x2B8F6622"],
 		"1.1.1": ["0x292F648B", "0x380FD8D9", "0x59F29980", "0x7EDC1D0F", "0x66085944", "0x408F18B7"],
 		"1.1.5": ["0x7D764A89", "0x380FD8D9", "0x59F29980", "0x60409C2C", "0x36D92FDF"],
+        "1.3.1": ["0x4C143C7E", "0x4184B18D", "0xC20CB66", "0x43D21659"],
+        "1.3.2": ["0x4C143C7E", "0x2FFBEC9D", "0x4184B18D", "0x105BFEB0", "0x4BBEB908"],
+        "1.3.6": ["0x68096DEE", "0xB55672F", "0x4184B18D", "0x57784D2D", "0x642E9E1F"],
+        "1.3.7": ["0xD64B289", "0x16CF0AFE", "0x6C3CBF5D", "0x30FA66D9"],
 	},
 	"libsql.so": {
 		"1.0.0": ["0x19D49D84", "0x71F79E26", "0x21783512", "0x1524AFA2", "0x53BC7040", "0x2A5F0D95"],
 		"1.0.1": ["0x19D49D84", "0x71F79E26", "0x21783512", "0x621B11F1", "0x446B029"],
 		"1.0.2": ["0x19D49D84", "0x71F79E26", "0x21783512", "0x3E24079", "0xAF73C0D"],
-		"1.0.5": ["0x19D49D84", "0x71F79E26", "0x21783512"],
+		"1.0.5": ["0x19D49D84", "0x71F79E26", "0x21783512", "0x5E98A2DE", "0xDC23A4F", "0x6069572D", "0x626AA4A4"],
 	},
 	"init.so": {
 		"1.0.1": ["0x620DB87D", "0x43EDFC09", "0xA218F88", "0x5F3544B6", "0x3D58284C", "0x1D52F812"],
@@ -60,12 +65,12 @@ dbLib = {
 }
 
 getAddresses = function (lib)
-	addresses = dbLib.get([Lib.lib_name, Lib.version])
+	addresses = dbLib.get([lib.lib_name, lib.version])
 	if not addresses then
-		print("Scanning Addresses for Library <b>" + Lib.lib_name + " " + Lib.version + "</b> using Metaxploit " + Lib.versionOf("metaxploit"))
+		print("Scanning Addresses for Library <b>" + lib.lib_name + " " + lib.version + "</b> using Metaxploit " + Lib.versionOf("metaxploit"))
 		addresses = Lib.metaxploit().scan(lib)
 	end if
-	print("Addresses for <b>" + Lib.lib_name + " " + Lib.version + "</b>: <b>" + addresses + "</b>\n")
+	print("Addresses for <b>" + lib.lib_name + " " + lib.version + "</b>: <b>" + addresses + "</b>\n")
 	return addresses
 end function
 
@@ -104,6 +109,8 @@ args = {
 
 main = function ()
 	clear_screen()
+    print(program_path.split("/")[-1] + " " + params.join(" ") + "\n")
+
 	lib = null
 	remote = null
 
@@ -116,16 +123,9 @@ main = function ()
 	end if
 
 	addresses = getAddresses(lib)
-	objs = newObjs(addresses, lib, args.extraArgs)
-
-	passwd = searchPasswd(objs)
-
-	objs.print()
-	if (objs.passwd) then
-		print("Found passwd. Enter 'p' to decipher it.\n" + passwd)
-	end if
-
-	objs.handleInput(remote)
+	Objs.setup(addresses, lib, args.extraArgs)
+	Objs.print()
+	Objs.handleInput(remote)
 end function
 
 main()

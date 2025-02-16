@@ -1,3 +1,15 @@
 {
-    "name": "grey-hack"
+    "name": "grey-hack",
+    "scripts": {
+        "watch": "onchange './*.src' -- greybel build -id /root -ci -cia message-hook {{file}}",
+        "a": "greybel -h",
+        "import": ""
+    },
+    "watch": {
+        "import": "*.src"
+    },
+    "dependencies": {
+        "greybel-js": "^3.5.32",
+        "onchange": "^7.1.0"
+    }
 }

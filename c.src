@@ -63,8 +63,6 @@ Compile.compile = function (entryFilePath)
     end function
 
     executablePath = recursive(entryFilePath)
-    print(Compile.accessed)
-    print(Compile.compiled)
     return executablePath
 end function
 

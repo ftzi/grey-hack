@@ -34,7 +34,7 @@ end function
 // No need to provide the lib extension (".so").
 Lib.load = function (name)
     if (name.indexOf(".so") == null) then name = name + ".so"
-    lib = include_lib(getLibPath(name))
+    lib = include_lib(Lib.getLibPath(name))
     if not lib then exit("Error loading the lib "+name)
     return lib
 end function

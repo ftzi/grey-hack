@@ -10,7 +10,7 @@ _Fs.exists = function (path)
     file = self.computer.File(path)
     return file != null
 end function
-
+ 
 // Returns the file. Throws if the file doesn't exist.
 // @param {string} path
 // @throw
