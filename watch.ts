@@ -32,14 +32,16 @@ const uploadToGame = async (filepath: string) => {
     else console.log(`Successfully uploaded the ${dirOrFileStr} ${filepath}.`)
 }
 
-const actionQueue: Array<() => Promise<void>> = []
-let currentPromise: Promise<void> | undefined = undefined
+const uploadQueue: Array<string> = []
+let currentlyUploading: string | undefined = undefined
 
 const updateQueue = () => {
-    if (!currentPromise) {
-        currentPromise = actionQueue.shift()?.()
-        currentPromise?.then(() => {
-            currentPromise = undefined
+    if (currentlyUploading) return
+
+    currentlyUploading = uploadQueue.shift()
+    if (currentlyUploading) {
+        uploadToGame(currentlyUploading).then(() => {
+            currentlyUploading = undefined
             updateQueue()
         })
     }
@@ -47,12 +49,11 @@ const updateQueue = () => {
 
 const addUploadToQueue = (path: string) => {
     console.log(`File ${path} has been changed/added. Uploading...`)
-    actionQueue.push(async () => {
-        uploadToGame(path)
-    })
-    updateQueue()
+    if (!uploadQueue.includes(path)) {
+        uploadQueue.push(path)
+        updateQueue()
+    }
 }
-
 
 const main = async (): Promise<void> => {
     logger.setLogLevel('warn')

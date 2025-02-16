@@ -1,4 +1,4 @@
-// This has no imports so if we have no executables yet, we just need to build this.
+// This intentionally has no imports, so no file needs to be built before building this.
 
 Compile = {}
 Compile.accessed = []
@@ -83,7 +83,7 @@ Compile.selfCompile = function ()
 end function
 
 Compile._main = function ()
-    if (params.len > 0 and params[0] == "-h") then exit("<b>Usage: c [-x] [entryFile] [programArgs]</b>")
+    if (params.len > 0 and params[0] == "-h") then exit("<b>Usage: c [-x (exec)] [entryFile] [programArgs]</b>")
 
     compileAllFilesInDir = params.len == 0
     if (compileAllFilesInDir) then
@@ -107,6 +107,6 @@ Compile._main = function ()
 end function
 
 if (program_path.split("/")[-1] == "c") then
-    // Compile.selfCompile()
+    Compile.selfCompile()
     Compile._main()
 end if
