@@ -1,5 +1,5 @@
-import_code("/root/lib")
-import_code("/root/std")
+import_code("/root/utils/lib")
+import_code("/root/utils/std")
 
 Obj = {}
 Obj.getFile = function (filePath)

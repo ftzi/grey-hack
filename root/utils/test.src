@@ -10,9 +10,8 @@
 // end function
 //
 // Instead of `testPth.filename`, you can name it as you wish.
-
 Test = {}
-Test.suites = {} 
+Test.suites = {}
 Test.currentSuite = null
 Test.currentTest = null
 

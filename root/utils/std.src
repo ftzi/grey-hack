@@ -1,7 +1,11 @@
 // Common functions and utils.
 
-import_code("/root/test")
+import_code("/root/utils/test")
 testStd = Test.add("std")
+
+Consts = {}
+Consts.programName = program_path.split("/")[-1]
+
 
 // Exits and prints the message in a pretty way.
 // @param {string} message

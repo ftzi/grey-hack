@@ -1,27 +1,38 @@
 // Map containing various libs that are lazy loaded and utility functions.
+
+// @type Lib
 Lib = {}
 
+Lib._libs = {}
+
+// @return {metaxploit}
 Lib.metaxploit = function()
-    if (not Lib._libs.metaxploit) then Lib._libs.metaxploit = Lib.load("metaxploit")
-    return Lib._libs.metaxploit
-end function
+    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load("metaxploit")
+    return Lib._libs[name]
+end function 
 
+// @return {crypto}
 Lib.crypto = function()
-    if (not Lib._libs.crypto) then Lib._libs.crypto = Lib.load("crypto")
-    return Lib._libs.crypto
+    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load("crypto")
+    return Lib._libs[name]
 end function
 
-Lib._libs = {
-    "metaxploit": null,
-    "crypto": null,
-}
+// @return {aptClient}
+Lib.aptClient = function()
+    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load("aptclient")
+    return Lib._libs[name]
+end function
 
 // Returns the version of a local library
+// @param {string}
+// @return {string}
 Lib.versionOf = function (name)
     if (not name.has(".so")) then name = name+".so"
     return Lib.metaxploit().load(Lib.getLibPath(name)).version
 end function
 
+// @param {string}
+// @return {string}
 Lib.getLibPath = function (name)
     libPath = "/lib/" + name
     if (get_shell.host_computer.File(libPath)) then return libPath
@@ -39,6 +50,9 @@ Lib.load = function (name)
     return lib
 end function
 
+// @param {string} ip
+// @param {number} port
+// @return {metaLib}
 Lib.loadRemote = function (ip, port)
     net = Lib.metaxploit().net_use(ip, port)
     if not net then exit("Error: can't connect to net session")

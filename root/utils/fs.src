@@ -1,0 +1,95 @@
+import_code("/root/utils/path.src")
+import_code("/root/utils/std.src")
+import_code("/root/utils/lib.src");
+
+// @type Fs
+Fs = {}
+Fs.shell = get_shell
+// @type {computer}
+Fs.computer = get_shell.host_computer
+
+// Returns if the file or dir at the given path exists
+// @param {string} path
+// @return {boolean}
+Fs.exists = function (path)
+    file = self.computer.File(path)
+    return file != null
+end function
+
+// Returns the file. Throws if the file doesn't exist.
+// @param {string} path
+// @return {file}
+// @throw
+Fs.getFile = function (path)
+    file = self.computer.File(path)
+    if (not file) then throw("File not found at <b>"+path+"</b>.")
+    return file
+end function
+
+// Returns the root File.
+// @return {file}
+Fs.rootFile = function ()
+    return self.getFile("/")
+end function
+
+// Returns the file content. Throws if the file doesn't exist.
+// @param {string} path
+// @return {string}
+Fs.readFile = function (path)
+    return self.getFile(path).get_content()
+end function
+
+// Removes a file or directory.
+Fs.remove() = function (path)
+    if (self.exists(path)) then
+        error = self.getFile(path).delete()
+        if (error) then throw("Error removing the file " + path + ": " + error)
+    end if
+end function
+
+// @param {string} path
+// @throw
+Fs.ensureDir = function (dirPath)
+    if (get_shell.host_computer.File(dirPath)) then return
+    res = self.shell.host_computer.create_folder(Path.parent(dirPath), Path.filename(dirPath))
+    if (res isa string) then throw("Error ensuring the dir "+dirPath+": " + res)
+end function
+
+// Creates a file with the given content. Overwrites if exists.
+// Returns the created `File`.
+// @return {file}
+Fs.create = function (path, content)
+    filename = Path.filename(path)
+    self.computer.touch(Path.parent(path), filename)
+    file = self.computer.File(path)
+    file.set_content(content)
+    return file
+end function
+
+// Creates an executable at the given path with the given content.
+// @return {file} - The created executable.
+Fs.createExecutable = function (path, content, deleteSource = true)
+    filename = Path.filename(path)
+    file = self.create(path+".src", content)
+    buildResult = self.shell.build(file.path, Path.parent(path))
+    if (buildResult) then exit("Failed to build executable at "+path+": " + buildResult)
+    file.delete()
+    return self.getFile(path)
+end function
+
+// Creates an executable file with the content and run it. (TODO. should it?:) Deletes the created files.
+Fs.autorunCode = function (path, content)
+    self.create(path, content)
+    outDir = Path.parent(path)
+    self.shell.build(path, outDir)
+    self.launch(path.remove(".src"))
+end function
+
+// @param {shell}
+// @return {Fs}
+Fs.New = function (shell)
+    fs = new Fs
+    fs.shell = shell
+    fs.computer = shell.host_computer
+    return fs
+end function

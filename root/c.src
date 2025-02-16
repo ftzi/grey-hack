@@ -26,7 +26,6 @@ Compile.compile = function (entryFilePath)
     end function
 
     recursive = function(filePath)
-        print("Called recursive for " + filePath)
         if (filePath.indexOf(".src") == null) then filePath = filePath + ".src"
 
         // Skip this file if already accessed
@@ -35,23 +34,18 @@ Compile.compile = function (entryFilePath)
         Compile.accessed.push(filePath)
 
         file = get_shell.host_computer.File(filePath)
-        if (not file) then exit("<color=red>File not found: " + file.path + "</color>")
+        if (not file) then exit("<color=red>File not found: " + filePath + "</color>")
 
         fileContent = file.get_content()
         if (fileContent == null) then exit("<color=red>Coulnd't read the file " + file.path + "</color>")
 
-        imports = valuesBetween(fileContent, "import" + "_code("+char(34), char(34))
+        imports = valuesBetween(fileContent, "import" + "_code(""", """")
 
         for import in imports
-        print("import " + import)
-
             // We don't need to compile ".src" imports. Skip them!
             if (import.indexOf(".src") != null) then continue
             recursive(import)
         end for
-
-        print("Building" + filePath)
-
 
         allowImport = filePath != entryFilePath
         buildResult = get_shell.build(file.path, file.parent.path, allowImport)
@@ -89,20 +83,27 @@ Compile.selfCompile = function ()
 end function
 
 Compile._main = function ()
-    if params[0] == "-h" then exit("<b>Usage: c [-x] <entryFile> [programArgs]</b>")
+    if (params.len > 0 and params[0] == "-h") then exit("<b>Usage: c [-x] [entryFile] [programArgs]</b>")
+
+    compileAllFilesInDir = params.len == 0
+    if (compileAllFilesInDir) then
+        files = get_shell.host_computer.File(current_path).get_files
+        for file in files
+            Compile.compile(file.path)
+        end for
+        print("Successfully compiled "+files.len+" in the current directory.")
+        return
+    end if
+
     executeAfter = params[0] == "-x"
+    if (executeAfter) then params.remove(0)
 
-    executableParams = params[:]
-
-    executeAfter = params[0] == "-x"
-    if (executeAfter) then executableParams.remove(0)
-
-    entryFile = executableParams[0]
-    executableParams.remove(0)
+    entryFile = params[0]
+    params.remove(0)
 
     executablePath = Compile.compile(entryFile)
 
-    if (executeAfter) then get_shell.launch(executablePath, executableParams.join(" "))
+    if (executeAfter) then get_shell.launch(executablePath, params.join(" "))
 end function
 
 if (program_path.split("/")[-1] == "c") then

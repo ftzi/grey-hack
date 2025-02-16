@@ -1,0 +1,80 @@
+import_code("/root/utils/fs")
+import_code("/root/utils/std.src")
+
+// shell =
+// chown -R root /
+// chgrp -R root /
+// chmod -R u-rwx /
+// chmod -R g-rwx /
+// chmod -R o-rwx /
+Setup = {}
+
+Setup.exitWithUsage = function ()
+    message = "<b>Usage:\n"
+    message = message + "  " + Consts.programName + " ""home"" <password>"
+    message = message + "  " + Consts.programName + " ""server""</b>"
+    exit(message)
+end function
+
+Setup.main = function ()
+    if params[0] == "-h" then exitWithUsage()
+
+    if (active_user != "root") then exit("You must be root to run this.")
+
+    if (params[1] == "home") then
+        password = params[2]
+        print("Setting up home machine...")
+        Setup.setupHome(password)
+    else if (params[1] == "server") then
+        print("Setting up server machine...")
+    else
+        Setup.exitWithUsage()
+    end if
+
+    Fs.remove("/home/guest")
+    Setup.setupCommonPermissions()
+end function
+
+Setup.setupHome = function (password)
+    Setup.setupInitD(password)
+
+    for path in Setup.homeWhitelist
+
+    end for
+end function
+
+Setup.setupCommonPermissions = function ()
+    Fs.rootFile.set_owner("root", true)
+    Fs.rootFile.set_group("root", true)
+    Fs.rootFile.chmod("g-rwx", true)
+    Fs.rootFile.chmod("u-rwx", true)
+    Fs.rootFile.chmod("o-rwx", true)
+end function
+
+Setup.setupInitD = function (password)
+    Fs.createExecutable("/etc/init.d/start", "get_shell(""root"", "+password+").start_terminal")
+end function
+
+Setup.setupAptSources = function ()
+    content = "{\n"
+    content = content + """official_server"": true,\n"
+    content = content + """sourceList"": {\n"
+    content = content + """118.213.30.73"": 1542\n"
+    content = content + "}\n"
+    content = content + "}"
+end function
+
+Setup.homeWhitelist = [
+    "/bin/sudo",
+    "/usr/bin/Terminal.exe",
+    "/usr/bin/Mail.exe",
+    "/usr/bin/Settings.exe",
+    // "/usr/bin/AdminMonitor.exe",
+    // "/usr/bin/ConfigLan.exe",
+    // "/usr/bin/Browser.exe",
+    // "/usr/bin/Notepad.exe",
+    // "/usr/bin/Manual.exe",
+    // "/usr/bin/Chat.exe",
+]
+
+Setup.main()

@@ -1,7 +1,0 @@
-
-// shell =
-// chown -R root /
-// chgrp -R root /
-// chmod -R u-rwx /
-// chmod -R g-rwx /
-// chmod -R o-rwx /

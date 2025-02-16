@@ -2,5 +2,5 @@
     "editor.tabSize": 4,
     "greybel.formatter": false,
     "greybel.createIngame.agent": "message-hook",
-    "files.autoSave": "off",
+    "files.autoSaveDelay": 300,
 }
