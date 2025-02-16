@@ -48,7 +48,6 @@ const updateQueue = () => {
 }
 
 const addUploadToQueue = (path: string) => {
-    console.log(`File ${path} has been changed/added. Uploading...`)
     if (!uploadQueue.includes(path)) {
         uploadQueue.push(path)
         updateQueue()
@@ -56,7 +55,14 @@ const addUploadToQueue = (path: string) => {
 }
 
 const main = async (): Promise<void> => {
-    logger.setLogLevel('warn')
+    const originalConsoleLog = console.log
+    console.log = (...data) => {
+        if (typeof data[0] === 'string' && data[0].startsWith('Trying to connect to'))
+            return
+        else originalConsoleLog(...data)
+    }
+    logger.setLogLevel('warn') // Hide most of greybel's logs
+
     const pathToWatch = rootDir
 
     console.log("Uploading all the files...")
@@ -71,8 +77,14 @@ const main = async (): Promise<void> => {
 
     // Add event listeners.
     watcher
-        .on('add', path => addUploadToQueue(path))
-        .on('change', path => addUploadToQueue(path))
+        .on('add', path => {
+            console.log(`File ${path} has been added. Uploading...`)
+            addUploadToQueue(path)
+        })
+        .on('change', path => {
+            console.log(`File ${path} has been changed. Uploading...`)
+            addUploadToQueue(path);
+        })
     // .on('unlink', path => console.log(`File ${path} has been removed`));
 
     console.log(`Watching the path ${pathToWatch}.`)
