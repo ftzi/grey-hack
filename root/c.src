@@ -11,14 +11,13 @@ Compile.compile = function (entryFilePath)
 
     valuesBetween = function (string, open, close)
         array = []
-        head = 0
-        tail = 0
+        head = null
+        tail = null
         while true
             head = string.indexOf(open, tail)
+            if (head == null) then break
             tail = string.indexOf(close, head + open.len)
-            if head == null or tail == null then
-                break
-                end if
+            if (tail == null) then break
             array.push(string[head + open.len:tail])
         end while
 
@@ -39,7 +38,7 @@ Compile.compile = function (entryFilePath)
         fileContent = file.get_content()
         if (fileContent == null) then exit("<color=red>Coulnd't read the file " + file.path + "</color>")
 
-        imports = valuesBetween(fileContent, "import" + "_code(""", """")
+        imports = valuesBetween(fileContent, "import_" + "code(""", """")
 
         for import in imports
             // We don't need to compile ".src" imports. Skip them!
@@ -57,11 +56,13 @@ Compile.compile = function (entryFilePath)
     end function
 
     executablePath = recursive(entryFilePath)
+    Compile.runTests()
     return executablePath
 end function
 
 // Makes the program build itself with the latest .src, if available, to improve DX.
 // Passing --skipSelfCompile while calling the program skips this.
+// This file should be imported first and this function should be called right after it.
 Compile.selfCompile = function ()
     srcPath = program_path+".src"
 
@@ -71,7 +72,7 @@ Compile.selfCompile = function ()
     indexOfSkip = params.indexOf(Compile.optionToSkip)
     // Skip if the optionToSkip is passed.
 	if (indexOfSkip != null) then
-        params.remove(indexOfSkip) // So it's not present in the final program
+        params.remove(indexOfSkip) // So it's not present in the final program if -x.
         return
     end if
 
@@ -83,7 +84,7 @@ Compile.selfCompile = function ()
 end function
 
 Compile._main = function ()
-    if (params.len > 0 and params[0] == "-h") then exit("<b>Usage: c [-x (exec)] [entryFile] [programArgs]</b>")
+    if (params.len > 0 and params[0] == "-h") then exit("<b>Usage:c [-x] [entryFile] [programArgs]</b>\n-x executes the file after compiling. If entry file is omitted, compiles the whole cwd.")
 
     compileAllFilesInDir = params.len == 0
     if (compileAllFilesInDir) then
@@ -104,6 +105,13 @@ Compile._main = function ()
     executablePath = Compile.compile(entryFile)
 
     if (executeAfter) then get_shell.launch(executablePath, params.join(" "))
+end function
+
+// Run the tests, if any. NOTE:
+Compile.runTests = function ()
+    if (not globals.hasIndex("Test")) then return
+
+    globals.Test.run()
 end function
 
 if (program_path.split("/")[-1] == "c") then

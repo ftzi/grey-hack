@@ -1,0 +1,6 @@
+{
+    "recommendations": [
+        // We change the icons of the *.test.src files so they look different from normal *.src files.
+        "pkief.material-icon-theme"
+    ]
+}

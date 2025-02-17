@@ -3,4 +3,9 @@
     "greybel.formatter": false,
     "greybel.createIngame.agent": "message-hook",
     "files.autoSaveDelay": 200,
+
+    // Changes the icon of the test files.
+    "material-icon-theme.files.associations": {
+        "*.test.src": "Test-jsx"
+    },
 }

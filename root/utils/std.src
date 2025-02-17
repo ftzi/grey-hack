@@ -1,18 +1,7 @@
 // Common functions and utils.
 
-import_code("/root/utils/test")
-testStd = Test.add("std")
-
 Consts = {}
 Consts.programName = program_path.split("/")[-1]
-
-
-// Exits and prints the message in a pretty way.
-// @param {string} message
-// @returns never
-throw = function (message)
-    exit("<color=red>" + message + "</color>")
-end function
 
 // Safely gets the value of an object by passing the keys to access it.
 // Pass either a string or a list of keys to deeply access it.
@@ -23,7 +12,6 @@ map.get = function (keys)
 	for key in keys
 		if (data.hasIndex(key)) then data = data[key] else return null
 	end for
-    print(typeof(data))
 	return data
 end function
 
@@ -69,6 +57,24 @@ list.map = function (fn)
 		newList.push(fn(item))
 	end for
 	return newList
+end function
+
+// Line Feed. Adds the newline char to the end of the string.
+string.LF = function ()
+    return self+"\n"
+end function
+
+string.bold = function ()
+    return "<b>"+self+"</b>"
+end function
+
+string.color = function (color)
+    return "<color="+color+">"+self+"</color=>"
+end function
+
+// Colors the string with the error color.
+string.error = function ()
+    return self.color("red")
 end function
 
 // Returns true if the string has the given substring.
@@ -120,29 +126,37 @@ string.valueBetween = function (open, close = null)
     if (tail != null) then return self[head + open.len:tail]
 end function
 
-testStd.stringValueBetween = function ()
-	str = "root:123"+char(10)
-	test.expectToBe(str.valueBetween("root:"), "123")
-end function
-
 // Returns all the occurrences as a list of the substrings
 // between two other substrings
 string.valuesBetween = function (open, close)
 	array = []
-	head = 0
-	tail = 0
+	head = null
+	tail = null
 	while true
 		head = self.indexOf(open, tail)
+        if (head == null) then break
 		tail = self.indexOf(close, head + open.len)
-		if head == null or tail == null then
-			break
-			end if
+        if (tail == null) then break
 		array.push(self[head + open.len:tail])
 	end while
 
 	return array
 end function
 
+toString = function (value)
+    if (value == null) then return "null"
+    if (value isa string) then return value
+    if (value isa number) then return ""+value
+    if (value isa list) then return "["+value.join(",")+"]"
+    if (value isa map) then return "Object"
+end function
+
+// Exits and prints the message in a pretty way.
+// @param {string} message
+// @returns never
+throw = function (message)
+    exit(toString(message).error)
+end function
 
 // Navigates to the given absolute path by using any file as starting point.
 goToFile = function (absolutePath, anyFile)
@@ -183,5 +197,3 @@ getParamsOptionInt = function(option = "-x", default = 0)
 	if (index == null) then return default
 	return params[index + 1].to_int
 end function
-
-// test.run()

@@ -1,32 +1,15 @@
 // Tests are run automatically by our `c` program,
 // which compiles the programs and its dependencies automatically.
-//
-// You should have this pattern in your files:
-//
-// testPth = Test.add("Path")
-// testPth.filename = function()
-//      Test.expectToBe(Path.filename("/root/x"), "x")
-//      Test.expectToBe(Path.filename("/root/y/"), "y")
-// end function
-//
-// Instead of `testPth.filename`, you can name it as you wish.
 Test = {}
-Test.suites = {}
-Test.currentSuite = null
 Test.currentTest = null
-
-Test.add = function(name)
-    suite = {}
-    Test.suites[name] = suite
-    return suite
-end function
-
-Test.expectToBe = function (value, expected)
-	if (value != expected) then Test.throw("Expected "+prettyValue(expected)+" but received "+prettyValue(value)+".")
-end function
 
 Test.throw = function (message)
 	exit("<color=red>Error in test <b>"+Test.currentSuite+"</b>"+"."+"<b>"+Test.currentTest+"</b>: "+message+"</color>")
+end function
+
+test = function (name, fn)
+    Test.currentTest = name
+    fn()
 end function
 
 Test.prettyValue = function (value, bold = true)
@@ -37,14 +20,16 @@ Test.prettyValue = function (value, bold = true)
 	return pretty
 end function
 
-// Will run all the tests when called
-Test.run = function ()
-	for entrySuites in Test.suites
-		Test.currentSuite = entrySuites.key
-        tests = entrySuites.value
-        for entryTest in tests
-            Test.currentTest = entryTest.key
-            entryTest.value() // Run the test
-        end for
-	end for
+Expect = {}
+Expect.value = null
+Expect.toBe = function (expected)
+    if (self.value != expected) then
+        Test.throw("Expected "+Test.prettyValue(expected)+" but received "+Test.prettyValue(value)+".")
+    end if
+end function
+
+expect = function (value)
+    exp = new Expect
+    exp.value = value
+    return exp
 end function

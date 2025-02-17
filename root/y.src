@@ -124,7 +124,6 @@ main = function ()
 
 	addresses = getAddresses(lib)
 	Objs.setup(addresses, lib, args.extraArgs)
-	Objs.print()
 	Objs.handleInput(remote)
 end function
 

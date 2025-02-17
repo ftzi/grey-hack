@@ -15,12 +15,11 @@ Path.removeEndingSlash = function (path)
 end function
 
 Path.removeWrappingSlashes = function (path)
-    return Path.removeStartingSlash(removeEndingSlash(path))
+    return Path.removeStartingSlash(Path.removeEndingSlash(path))
 end function
 
 Path.filename = function (path)
-    if (path[-1] == "/") then path = path[:-1]
-    return path.split("/")[1]
+    return Path.removeEndingSlash(path).split("/")[-1]
 end function
 
 Path.join = function (a,b,c,d,e)

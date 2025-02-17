@@ -1,7 +1,7 @@
 import chokidar from 'chokidar';
 import path from 'path'
 import upload from 'greybel-js/out/upload.js'
-import { logger } from 'greybel-js/out/helper/logger.js'
+import { logger as greybelLogger } from 'greybel-js/out/helper/logger.js'
 import fs from 'fs'
 
 const __dirname = import.meta.dirname
@@ -61,7 +61,7 @@ const main = async (): Promise<void> => {
             return
         else originalConsoleLog(...data)
     }
-    logger.setLogLevel('warn') // Hide most of greybel's logs
+    greybelLogger.setLogLevel('warn') // Hide most of greybel's logs
 
     const pathToWatch = rootDir
 

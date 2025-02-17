@@ -1,58 +1,65 @@
-import_code("/root/utils/fs")
-import_code("/root/utils/std.src")
+import_code("/root/c.src")
+Compile.selfCompile()
 
-// shell =
-// chown -R root /
-// chgrp -R root /
-// chmod -R u-rwx /
-// chmod -R g-rwx /
-// chmod -R o-rwx /
+import_code("/root/utils/fs")
+import_code("/root/utils/std")
+
 Setup = {}
 
-Setup.exitWithUsage = function ()
-    message = "<b>Usage:\n"
-    message = message + "  " + Consts.programName + " ""home"" <password>"
-    message = message + "  " + Consts.programName + " ""server""</b>"
+// TODO program lib
+Setup.exitWithUsage = function (message = "")
+    if (message) then message = message.error.bold.LF
+    message = "Usage:".bold.LF
+    message = message + "  " + Consts.programName + " home".LF
+    message = message + "  " + Consts.programName + " server"
     exit(message)
 end function
 
 Setup.main = function ()
-    if params[0] == "-h" then exitWithUsage()
+    if not params.len or params[0] == "-h" then Setup.exitWithUsage()
 
     if (active_user != "root") then exit("You must be root to run this.")
 
-    if (params[1] == "home") then
-        password = params[2]
+    if (params[0] == "home") then
+        password = user_input("Enter your root password to setup the Terminal with root on init:".LF, true)
         print("Setting up home machine...")
         Setup.setupHome(password)
-    else if (params[1] == "server") then
+    else if (params[0] == "server") then
         print("Setting up server machine...")
+        Setup.setupServer()
     else
-        Setup.exitWithUsage()
+        Setup.exitWithUsage("Invalid parameter.")
     end if
+end function
 
-    Fs.remove("/home/guest")
-    Setup.setupCommonPermissions()
+Setup.setupCommon = function ()
+    Fs.root.set_owner("root", true)
+    Fs.root.set_group("root", true)
+    Fs.root.chmod("g-rwx", true)
+    Fs.root.chmod("u-rwx", true)
+    Fs.root.chmod("o-rwx", true)
 end function
 
 Setup.setupHome = function (password)
-    Setup.setupInitD(password)
-
-    for path in Setup.homeWhitelist
-
+    Setup.setupCommon()
+    Fs.getFile("/bin/sudo").chmod("g+x", true)
+    Fs.getFile("/usr/bin/Terminal.exe").chmod("g+x", true)
+    Fs.remove("/etc/passwd")
+    Fs.remove("/home/guest")
+    for dir in Fs.home.get_folders
+        Fs.remove(Path.join(dir.path, "Config/Mail.txt"))
+        Fs.remove(Path.join(dir.path, "Config/Bank.txt"))
     end for
+    Setup.setupInitD(password)
 end function
 
-Setup.setupCommonPermissions = function ()
-    Fs.rootFile.set_owner("root", true)
-    Fs.rootFile.set_group("root", true)
-    Fs.rootFile.chmod("g-rwx", true)
-    Fs.rootFile.chmod("u-rwx", true)
-    Fs.rootFile.chmod("o-rwx", true)
+Setup.setupServer = function ()
+    Setup.setupCommon()
+    Fs.remove("/home")
 end function
 
 Setup.setupInitD = function (password)
-    Fs.createExecutable("/etc/init.d/start", "get_shell(""root"", "+password+").start_terminal")
+    Fs.createExecutable("/etc/init.d/start", "get_shell(""root"", """+password+""").start_terminal")
 end function
 
 Setup.setupAptSources = function ()
@@ -63,18 +70,5 @@ Setup.setupAptSources = function ()
     content = content + "}\n"
     content = content + "}"
 end function
-
-Setup.homeWhitelist = [
-    "/bin/sudo",
-    "/usr/bin/Terminal.exe",
-    "/usr/bin/Mail.exe",
-    "/usr/bin/Settings.exe",
-    // "/usr/bin/AdminMonitor.exe",
-    // "/usr/bin/ConfigLan.exe",
-    // "/usr/bin/Browser.exe",
-    // "/usr/bin/Notepad.exe",
-    // "/usr/bin/Manual.exe",
-    // "/usr/bin/Chat.exe",
-]
 
 Setup.main()

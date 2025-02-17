@@ -1,0 +1,13 @@
+test "string.valueBetween", function ()
+    Test.expectToBe(("root:123").valueBetween("root:"), "123")
+    Test.expectToBe(("root:123\n").valueBetween("root:"), "123")
+	Test.expectToBe(("root:123"+char(10)).valueBetween("root:"), "123")
+end function
+
+test "string.valuesBetween", function ()
+    str = "import_"+"code(""/root/utils/lib"")""\nimport_"+"code(""/root/utils/std"")""\n"
+    valuesBetween = str.valuesBetween("import" + "_code(""", """")
+	Test.expectToBe(valuesBetween.len, 2)
+	Test.expectToBe(valuesBetween[0], "/root/utils/lib")
+	Test.expectToBe(valuesBetween[1], "/root/utils/std")
+end function
