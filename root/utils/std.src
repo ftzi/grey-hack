@@ -1,7 +1,17 @@
 // Common functions and utils.
+import_code("/root/utils/Std/path")
+import_code("/root/utils/Std/string")
+import_code("/root/utils/Std/list")
 
 Consts = {}
 Consts.programName = program_path.split("/")[-1]
+
+// Exits and prints the message in a pretty way.
+// @param {string} message
+// @returns never
+throw = function (message)
+    exit(toString(message).error)
+end function
 
 // Safely gets the value of an object by passing the keys to access it.
 // Pass either a string or a list of keys to deeply access it.
@@ -15,169 +25,32 @@ map.get = function (keys)
 	return data
 end function
 
-// Safely accesses a list item by the index.
-// Returns null if the index is invalid.
-list.get = function (index, default = null)
-	if (self.hasIndex(index)) then return self[index] else return default
-end function
+// Navigates to the given path by using the file as starting point.
+// The path can start with `/` to be absolute or without to be relative.
+// @param {string}
+// @param {file}
+goToFile = function (path, file)
+    isPathAbsolute = path[0] == "/"
+    absolutePath = path
+    if (not isPathAbsolute) then absolutePath = file.path.join(path)
 
-// Returns true if the list includes the given item.
-list.has = function (item)
-	return self.indexOf(item) != null
-end function
-
-// Deletes the first occurrence of an item in the list. Mutates that list.
-list.delete = function (item)
-    index = self.indexOf(item)
-    if (index != null) then self.remove(index)
-end function
-
-Filters = {}
-Filters.byTruthyProp = function (key)
-    fn = function (item)
-        return item.get(key) != null
-    end function
-
-    return @fn
-end function
-
-// Removes the items of a list when the given function returns not-true for each item.
-list.filter = function (fn)
-	newList = []
-	for item in self
-		if (fn(item)) then newList.push(item)
-	end for
-	return newList
-end function
-
-// Transforms each item of a list by using the given function.
-list.map = function (fn)
-	newList = []
-	for item in self
-		newList.push(fn(item))
-	end for
-	return newList
-end function
-
-// Line Feed. Adds the newline char to the end of the string.
-string.LF = function ()
-    return self+"\n"
-end function
-
-string.bold = function ()
-    return "<b>"+self+"</b>"
-end function
-
-string.color = function (color)
-    return "<color="+color+">"+self+"</color=>"
-end function
-
-// Colors the string with the error color.
-string.error = function ()
-    return self.color("red")
-end function
-
-// Returns true if the string has the given substring.
-string.has = function (item)
-	return self.indexOf(item) != null
-end function
-
-// Removes whitespaces from both ends of the string.
-string.trim = function ()
-    str = self
-    removables = [" ", char(10), "\n"]
-    xHead = true
-    xTail = true
-
-    while (xHead or xTail)
-        // TODO handle invalid indexes if length becomes 0
-        if (removables.has(str[0])) then
-            str = str[1:]
-        else
-            xHead = false
-        end if
-
-        if (removables.has(str[-1])) then
-            str = str[:-1]
-        else
-            xTail = false
-        end if
+    while (file.path != "/")
+        file = file.parent
     end while
-
-	return str
-end function
-
-// Returns the substring between two other substrings.
-// If "" or null is given to open, it will consider the beginning of the string; index 0.
-// If null is given to close, it will consider either a NewLine or the end of the string.
-string.valueBetween = function (open, close = null)
-    if (open == null) then open = ""
-    self = self.replace(char(10), "\n") // Files such as passwd uses char(10) instead "\n"
-
-    if (close == null) then
-		self = self + "\n"
-		close = "\n"
-	end if
-
-	head = self.indexOf(open)
-	if (head == null) then return
-
-    tail = self.indexOf(close, head + open.len)
-    if (tail != null) then return self[head + open.len:tail]
-end function
-
-// Returns all the occurrences as a list of the substrings
-// between two other substrings
-string.valuesBetween = function (open, close)
-	array = []
-	head = null
-	tail = null
-	while true
-		head = self.indexOf(open, tail)
-        if (head == null) then break
-		tail = self.indexOf(close, head + open.len)
-        if (tail == null) then break
-		array.push(self[head + open.len:tail])
-	end while
-
-	return array
-end function
-
-toString = function (value)
-    if (value == null) then return "null"
-    if (value isa string) then return value
-    if (value isa number) then return ""+value
-    if (value isa list) then return "["+value.join(",")+"]"
-    if (value isa map) then return "Object"
-end function
-
-// Exits and prints the message in a pretty way.
-// @param {string} message
-// @returns never
-throw = function (message)
-    exit(toString(message).error)
-end function
-
-// Navigates to the given absolute path by using any file as starting point.
-goToFile = function (absolutePath, anyFile)
-	file = anyFile
-	while (file.path != "/")
-		file = file.parent
-	end while
-	segments = absolutePath.split("/")[1:] // Remove empty string at [0]
-	isTargetADir = absolutePath[absolutePath.len - 1] == "/"
-
-	if (isTargetADir) then segments.pop()
-	for segment in segments
-		isLastSegment = segment == segments[segments.len - 1]
+	segmentsToNavigate = Path.removeWrappingSlashes(path).split("/")
+	for segment in segmentsToNavigate
 		files = file.get_folders + file.get_files
 		for f in files
-			if (f.name == segment) then file = f
+			if (f.name == segment) then
+                file = f
+                break
+            end if
 		end for
 	end for
 	if (file.path == absolutePath) then return file else return null
 end function
 
+// @return {string} The current user for the given file's context.
 getUser = function(anyFile)
 	root = goToFile("/", anyFile)
 		if root.has_permission("w") then return "root"

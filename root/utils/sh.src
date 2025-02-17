@@ -1,6 +1,7 @@
 // Improved shell.
 
-import_code("fs")
+import_code("/root/utils/fs")
+import_code("/root/utils/std")
 
 Sh = {}
 Sh.shell = null
@@ -16,7 +17,7 @@ Sh.init = function (shell)
 end function
 
 Sh.startTerminalAs = function (user, password)
-    self.fs.autorunCode(Path.join("/home", user, "loginAs"), "get_shell("""+user+""","""+rootPassword+""").start_terminal")
+    self.fs.autorunCode("/home".join(user, "loginAs"), "get_shell("""+user+""","""+rootPassword+""").start_terminal")
 end function
 
 

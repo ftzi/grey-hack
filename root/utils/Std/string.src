@@ -1,0 +1,101 @@
+
+// Line Feed. Adds the newline char to the end of the string.
+string.LF = function ()
+    return self+"\n"
+end function
+
+string.bold = function ()
+    return "<b>"+self+"</b>"
+end function
+
+string.color = function (color)
+    return "<color="+color+">"+self+"</color=>"
+end function
+
+// Colors the string with the error color.
+string.error = function ()
+    return self.color("red")
+end function
+
+string.underline = function ()
+    return "<u>"+self+"</u>"
+end function
+
+string.center=function()
+    return "<align=center>"+self+"</align>"
+end function
+
+// Returns true if the string has the given substring.
+// @return {number}
+string.has = function (item)
+	return self.indexOf(item) != null
+end function
+
+// Removes whitespaces from both ends of the string.
+string.trim = function ()
+    str = self
+    removables = [" ", char(10), "\n"]
+    xHead = true
+    xTail = true
+
+    while (xHead or xTail)
+        // TODO handle invalid indexes if length becomes 0
+        if (removables.has(str[0])) then
+            str = str[1:]
+        else
+            xHead = false
+        end if
+
+        if (removables.has(str[-1])) then
+            str = str[:-1]
+        else
+            xTail = false
+        end if
+    end while
+
+	return str
+end function
+
+// Returns the substring between two other substrings.
+// If "" or null is given to open, it will consider the beginning of the string; index 0.
+// If null is given to close, it will consider either a NewLine or the end of the string.
+string.valueBetween = function (open, close = null)
+    if (open == null) then open = ""
+    self = self.replace(char(10), "\n") // Files such as passwd uses char(10) instead "\n"
+
+    if (close == null) then
+		self = self + "\n"
+		close = "\n"
+	end if
+
+	head = self.indexOf(open)
+	if (head == null) then return
+
+    tail = self.indexOf(close, head + open.len)
+    if (tail != null) then return self[head + open.len:tail]
+end function
+
+// Returns all the occurrences as a list of the substrings
+// between two other substrings
+string.valuesBetween = function (open, close)
+	array = []
+	head = null
+	tail = null
+	while true
+		head = self.indexOf(open, tail)
+        if (head == null) then break
+		tail = self.indexOf(close, head + open.len)
+        if (tail == null) then break
+		array.push(self[head + open.len:tail])
+	end while
+
+	return array
+end function
+
+toString = function (value)
+    if (value == null) then return "null"
+    if (value isa string) then return value
+    if (value isa number) then return ""+value
+    if (value isa list) then return "["+value.join(",")+"]"
+    if (value isa map) then return "Object"
+end function

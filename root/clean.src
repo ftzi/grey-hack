@@ -1,0 +1,24 @@
+// Removes all .src and executable files in /root.
+import_code("/root/c")
+Compile.selfCompile()
+
+import_code("/root/utils/std")
+import_code("/root/utils/fs")
+
+alsoRemove = ["/root/utils"]
+
+Clean = {}
+Clean.main = function ()
+    if (params.len > 0 and params[0] == "-h") then exit("<b>Usage: clean. Removes all the .src and executables files in /root and also "+alsoRemove.join(", ")+".")
+    input = user_input("This will remove all the .src and executable files in /root and also the following: "+alsoRemove.join(", ")+". Proceed? (y/n)".LF)
+    if (input != "y") then return
+    for file in Fs.rootHome.get_files
+        if (file.name.has(".src") or (file.is_binary and not file.name.has("."))) then file.delete()
+    end for
+    for path in alsoRemove
+        Fs.remove(path)
+    end for
+    print("Cleaning complete. You can run ""npm start"" again in your real terminal to upload the source files again, and then in the game ""build c.src /root"" and then ""c"" to build them.")
+end function
+
+Clean.main()

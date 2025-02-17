@@ -55,6 +55,7 @@ const addUploadToQueue = (path: string) => {
 }
 
 const main = async (): Promise<void> => {
+    console.clear()
     const originalConsoleLog = console.log
     console.log = (...data) => {
         if (typeof data[0] === 'string' && data[0].startsWith('Trying to connect to'))

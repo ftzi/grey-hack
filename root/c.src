@@ -1,10 +1,12 @@
 // This intentionally has no imports, so no file needs to be built before building this.
 
 Compile = {}
+// Files which were accessed.
 Compile.accessed = []
-Compile.compiled = []
+Compile.srcToTryToTest = []
 Compile.optionToSkip = "--skipSelfCompile"
 
+// @param {string}
 // @return {string} path of the executable entry file
 Compile.compile = function (entryFilePath)
     if (entryFilePath[0] != "/") then entryFilePath = current_path + "/" + entryFilePath
@@ -24,6 +26,11 @@ Compile.compile = function (entryFilePath)
         return array
     end function
 
+    // Only adds if the list doesn't have this item yet.
+    addUnique = function (list, item)
+        if (list.indexOf(item) == null) then list.push(item)
+    end function
+
     recursive = function(filePath)
         if (filePath.indexOf(".src") == null) then filePath = filePath + ".src"
 
@@ -31,6 +38,7 @@ Compile.compile = function (entryFilePath)
         if (Compile.accessed.indexOf(filePath) != null) then return
 
         Compile.accessed.push(filePath)
+        addUnique(Compile.srcToTryToTest, filePath)
 
         file = get_shell.host_computer.File(filePath)
         if (not file) then exit("<color=red>File not found: " + filePath + "</color>")
@@ -42,13 +50,15 @@ Compile.compile = function (entryFilePath)
 
         for import in imports
             // We don't need to compile ".src" imports. Skip them!
-            if (import.indexOf(".src") != null) then continue
+            if (import.indexOf(".src") != null) then
+                addUnique(Compile.srcToTryToTest, filePath)
+                continue
+            end if
             recursive(import)
         end for
 
         allowImport = filePath != entryFilePath
         buildResult = get_shell.build(file.path, file.parent.path, allowImport)
-        Compile.compiled.push(file.path)
         if (buildResult) then
             exit("<color=red>Error building the file "+file.path+": " + buildResult+"</color>")
         end if
@@ -56,7 +66,6 @@ Compile.compile = function (entryFilePath)
     end function
 
     executablePath = recursive(entryFilePath)
-    Compile.runTests()
     return executablePath
 end function
 
@@ -79,39 +88,50 @@ Compile.selfCompile = function ()
 	Compile.compile(srcPath)
 
     // Relaunch
-	get_shell.launch(program_path, params.join(" ") + " " + Compile.optionToSkip)
+	get_shell.launch(program_path, (params + [Compile.optionToSkip]).join(" "))
 	exit() // So the rest of the original program isn't run.
 end function
 
 Compile._main = function ()
     if (params.len > 0 and params[0] == "-h") then exit("<b>Usage:c [-x] [entryFile] [programArgs]</b>\n-x executes the file after compiling. If entry file is omitted, compiles the whole cwd.")
 
+    executeAfter = false
+
     compileAllFilesInDir = params.len == 0
     if (compileAllFilesInDir) then
-        files = get_shell.host_computer.File(current_path).get_files
-        for file in files
+        print("Compiling all the source files in the current directory "+current_path+"...")
+        count = 0
+        for file in get_shell.host_computer.File(current_path).get_files
+            if (file.name.indexOf(".src") == null) then continue
             Compile.compile(file.path)
+            count = count + 1
         end for
-        print("Successfully compiled "+files.len+" in the current directory.")
-        return
+        print("Successfully compiled "+count+" files.")
+    else
+        executeAfter = params[0] == "-x"
+        if (executeAfter) then params.remove(0)
+
+        entryFile = params[0]
+        params.remove(0)
+
+        executablePath = Compile.compile(entryFile)
     end if
 
-    executeAfter = params[0] == "-x"
-    if (executeAfter) then params.remove(0)
-
-    entryFile = params[0]
-    params.remove(0)
-
-    executablePath = Compile.compile(entryFile)
-
+    Compile.runTests()
     if (executeAfter) then get_shell.launch(executablePath, params.join(" "))
 end function
 
 // Run the tests, if any. NOTE:
 Compile.runTests = function ()
-    if (not globals.hasIndex("Test")) then return
+    print("Now running tests.")
+    for src in Compile.srcToTryToTest
+        src = src.remove(".src") + ".test.src"
 
-    globals.Test.run()
+        file = get_shell.host_computer.File(src)
+        if (not file) then continue
+        print("Running test " + file.path)
+        executableTest = Compile.compile(file.path)
+    end for
 end function
 
 if (program_path.split("/")[-1] == "c") then

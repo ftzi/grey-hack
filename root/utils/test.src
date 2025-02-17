@@ -1,10 +1,12 @@
+// This intentionally has no imports.
+
 // Tests are run automatically by our `c` program,
 // which compiles the programs and its dependencies automatically.
 Test = {}
 Test.currentTest = null
 
 Test.throw = function (message)
-	exit("<color=red>Error in test <b>"+Test.currentSuite+"</b>"+"."+"<b>"+Test.currentTest+"</b>: "+message+"</color>")
+	exit("<color=red>Error in test <b>"+Test.currentTest+"</b>: "+message+"</color>")
 end function
 
 test = function (name, fn)

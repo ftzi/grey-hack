@@ -1,3 +1,5 @@
+import_code("/root/utils/test.src")
+
 test "string.valueBetween", function ()
     Test.expectToBe(("root:123").valueBetween("root:"), "123")
     Test.expectToBe(("root:123\n").valueBetween("root:"), "123")
