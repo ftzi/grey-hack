@@ -62,10 +62,10 @@ end function
 // As everything now requires root, we can't execute or open files on the Desktop with the cursor.
 // This removes them to remove the temptation.
 Setup.cleanDesktop = function ()
-    for userDir in Fs.home.get_folders
-        for file in userDir.get_files()
-            if (file.is_symlink) then file.remove()
-        end for
+    userDir = Fs.home.get_folders[0]
+    desktop = Fs.getFile(userDir.path.join("Desktop"))
+    for file in desktop.get_files
+        if (file.is_symlink) then file.delete()
     end for
 end function
 

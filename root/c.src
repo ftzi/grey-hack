@@ -1,4 +1,7 @@
+// Compiler program. Compile not only the entry file but also the sources of the executables imported as well.
+//
 // This intentionally has no imports, so no file needs to be built before building this.
+// Simply run `build c.src /root` to build this and then `c` to build everything in `/root`.
 
 Compile = {}
 // Files which were accessed.

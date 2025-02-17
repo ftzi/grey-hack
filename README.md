@@ -20,7 +20,10 @@ If so, you can clone this and remove all the contents in the `root` directory an
 1) Run `sudo -s` and enter your password.
 1) Run `build c.src /root` to build the compilation tool.
 1) Run `c` to build all the source files in the current directory (`/root`) and their required libraries.
-1) Run `setup home <password>` to secure your home computer and setup the auto-root Terminal on startup.
+1) Run `setup home` to secure your home computer and setup the auto-root Terminal on startup.
+
+## Info
+- You can run the program `clean` to remove all the source files and executables in `/root` and related subdirectories. Then you can run `npm start` in your real terminal to upload them again.
 
 # Tips
 - The VS Code extension https://github.com/ayecue/greybel-vs is recommended for syntax highlight.
