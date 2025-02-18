@@ -46,7 +46,7 @@ end function
 
 Obj.actionComputer = function()
 	while (true)
-		input = user_input("Enter the path of the file to be shown or nothing to go back:\n")
+		input = user_input("Enter the path of the file to be shown or nothing to go back:".LF)
 		if (input == "") then return
 		file = self.computer.File(input)
 
@@ -98,12 +98,11 @@ Objs.setup = function (addresses, lib, extraArgs)
 
 			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
 
-			extra = (entry + "\n").valuesBetween("* ", "\n")
+			extra = (entry.LF).valuesBetween("* ", LF)
 			obj = newObj(data, address, unsecValue, extra)
 			Objs.all.push(obj)
 		end for
 	end for
-    print(Filters.byTruthyProp("action"))
 	Objs.withAction = Objs.all.filter(Filters.byTruthyProp("action"))
 	// Objs.withShell = Objs.all.filter(Filters.byTruthyProp("shell"))
 end function
@@ -113,7 +112,7 @@ Objs.print = function ()
 	i = -1
 	for obj in Objs.withAction
 		i = i + 1
-		message = message + "\n" + i + " " + obj.address + " " + obj.unsecValue + " " + obj.type
+		message = message.LF + i + " " + obj.address + " " + obj.unsecValue + " " + obj.type
 
 		if (obj.type == "computer") then message = message + " " + obj.getUser()
 		if (obj.type == "shell") then message = message + " " + obj.getUser()
@@ -124,11 +123,12 @@ Objs.print = function ()
 		end if
 	end for
 
-	print(format_columns(message) + "\n")
+	print(format_columns(message).LF)
+
     if (Objs.passwd) then
 		print("Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>].")
         i = 0
-        for line in Objs.passwd.split(char(10))
+        for line in Objs.passwd.split(LF)
             print ("p "+i+") "+line)
             i = i + 1
         end for
@@ -171,7 +171,7 @@ Objs.inputHandler.password = function (remote, inputParams)
 
     indexEntry = inputParams.get(1, "0").to_int
 
-    passwds = Objs.passwd.split(char(10))
+    passwds = Objs.passwd.split(LF)
     chosenPasswd = passwds[indexEntry]
     user = chosenPasswd.valueBetween(null, ":")
 
@@ -179,7 +179,7 @@ Objs.inputHandler.password = function (remote, inputParams)
         print("Deciphering the password of <b>"+user+"</b>...")
         wait(0.01)
         password = Lib.crypto().decipher(chosenPasswd.valueBetween(":"))
-        print("Password of <b>" + user + "</b> is <b>" + password + "</b>\n")
+        print("Password of <b>" + user + "</b> is <b>" + password + "</b>".LF)
         if (decipherOnly) then return
     end if
 
@@ -188,7 +188,7 @@ end function
 
 Objs.handleInput = function (remote)
 	while true
-		inputParams = user_input("Enter the desired method:\n").split(" ")
+		inputParams = user_input("Enter the desired method:".LF).split(" ")
 		if (inputParams[0] == "p") then
             Objs.inputHandler.password(remote, inputParams)
 		else

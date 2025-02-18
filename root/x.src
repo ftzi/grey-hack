@@ -1,4 +1,5 @@
 // Util script . Extension of nmap. Will be removed soon in favor of y.
+import_code("/root/utils/std")
 
 programName = program_path.split("/")[-1]
 if params.len != 1 or params[0] == "-h" or params[0] == "--help" then exit("<b>Usage: " + programName + " [ip_address]</b>")
@@ -34,11 +35,12 @@ for port in ports
    if(port.is_closed and not isLanIp) then
       port_status = "closed"
    end if
-   info = info + "\n" + port.port_number + " " + port_status + " " + service_info + " " + lan_ips
+   info = info.LF + port.port_number + " " + port_status + " " + service_info + " " + lan_ips
 end for
 
-print("\n" + whois(ip)+ "\n")
-print(format_columns(info) + "\n")
+print()
+print(whois(ip).LF)
+print(format_columns(info).LF)
 
 firewall_rules = router.firewall_rules
 if typeof(firewall_rules) == "string" then exit(firewall_rules)
@@ -46,20 +48,6 @@ if typeof(firewall_rules) == "string" then exit(firewall_rules)
 if firewall_rules.len == 0 then exit("No firewall rules found.")
 info = "ACTION PORT SOURCE_IP DESTINATION_IP"
 for rules in firewall_rules
-	info = info + "\n" + rules
+	info = info.LF + rules
 end for
-print(format_columns(info) + "\n")
-
-// dataOfIp = function (ip)
-//    valueOfKey = function (string)
-//       return string[(string.indexOf(": ") + 2):]
-//    end function
-
-//   lines = whois(ip).split("\n")
-//   data = {}
-//   data.domain = valueOfKey(lines[0])
-//   data.name = valueOfKey(lines[1])
-//   data.email = valueOfKey(lines[2])
-//   data.phone = valueOfKey(lines[3])
-//   return data
-// end function
+print(format_columns(info).LF)

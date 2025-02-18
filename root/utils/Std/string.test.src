@@ -1,15 +1,82 @@
 import_code("/root/utils/test.src")
+import_code("/root/utils/Std/string.src")
 
 test "string.valueBetween", function ()
-    Test.expectToBe(("root:123").valueBetween("root:"), "123")
-    Test.expectToBe(("root:123\n").valueBetween("root:"), "123")
-	Test.expectToBe(("root:123"+char(10)).valueBetween("root:"), "123")
+    expect("root:123".valueBetween("root:")).toBe("123")
+    expect("root:123\n".valueBetween("root:")).toBe("123")
+	expect("root:123".LF.valueBetween("root:")).toBe("123")
 end function
 
 test "string.valuesBetween", function ()
     str = "import_"+"code(""/root/utils/lib"")""\nimport_"+"code(""/root/utils/std"")""\n"
     valuesBetween = str.valuesBetween("import" + "_code(""", """")
-	Test.expectToBe(valuesBetween.len, 2)
-	Test.expectToBe(valuesBetween[0], "/root/utils/lib")
-	Test.expectToBe(valuesBetween[1], "/root/utils/std")
+	expect(valuesBetween.len).toBe(2)
+	expect(valuesBetween[0]).toBe("/root/utils/lib")
+	expect(valuesBetween[1]).toBe("/root/utils/std")
 end function
+
+test "string.f", function ()
+    expect("Hi, $!".f("John")).toBe("Hi, John!")
+    expect("$ $ $".f("Hi", 5, null)).toBe("Hi 5 null")
+end function
+
+test "string.ensureSuffix", function ()
+    expect("file".ensureSuffix(".src")).toBe("file.src")
+    expect("file.src".ensureSuffix(".src")).toBe("file.src")
+    expect("test".ensureSuffix("test")).toBe("test")
+end function
+
+test "string.ensurePrefix", function ()
+    expect("file".ensurePrefix("/")).toBe("/file")
+    expect("/file".ensurePrefix("/")).toBe("/file")
+    expect("test".ensurePrefix("test")).toBe("test")
+end function
+
+test "string.removeSuffix", function ()
+    expect("file.src".removeSuffix(".src")).toBe("file")
+    expect("file".removeSuffix(".src")).toBe("file")
+    expect("test".removeSuffix("test")).toBe("")
+end function
+
+test "string.removePrefix", function ()
+    expect("/file".removePrefix("/")).toBe("file")
+    expect("file".removePrefix("/")).toBe("file")
+    expect("test".removePrefix("test")).toBe("")
+end function
+
+test "string.trim", function ()
+    expect("  Hi  ".trim()).toBe("Hi")
+    expect("  Hi  \n ".LF.trim()).toBe("Hi")
+end function
+
+test "string.join", function ()
+    expect("/root".join("utils", "lib", "file.txt")).toBe("/root/utils/lib/file.txt")
+end function
+
+test "string.parent", function ()
+    expect("/root/utils".parent()).toBe("/root")
+    expect("/root".parent()).toBe("/")
+    expect("/".parent()).toBe("/")
+end function
+
+test "string.filename", function ()
+    expect("/root/utils".filename()).toBe("utils")
+    expect("/root".filename()).toBe("root")
+    expect("/".filename()).toBe("")
+end function
+
+test "string.has", function ()
+    expect("root".has("root")).toBe(true)
+    expect("root".has("roo")).toBe(true)
+    expect("root".has("r")).toBe(true)
+    expect("root".has("")).toBe(true)
+end function
+
+test "toString", function ()
+    expect(toString(null)).toBe("null")
+    expect(toString("test")).toBe("test")
+    expect(toString(5)).toBe("5")
+    expect(toString([1,2,3])).toBe("[1, 2, 3]")
+end function
+
+runTests

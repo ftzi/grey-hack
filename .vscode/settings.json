@@ -2,7 +2,10 @@
     "editor.tabSize": 4,
     "greybel.formatter": false,
     "greybel.createIngame.agent": "message-hook",
+    
+    "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 200,
+    "files.autoSaveWhenNoErrors": true,
 
     // Changes the icon of the test files.
     "material-icon-theme.files.associations": {

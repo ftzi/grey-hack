@@ -1,37 +1,87 @@
-// This intentionally has no imports.
-
+// Program responsible for running test files.
 // Tests are run automatically by our `c` program,
-// which compiles the programs and its dependencies automatically.
-Test = {}
-Test.currentTest = null
+// which compiles the programs and its dependencies automatically and then run the tests.
+// This intentionally has no imports so no imports can cause internal errors.
 
-Test.throw = function (message)
-	exit("<color=red>Error in test <b>"+Test.currentTest+"</b>: "+message+"</color>")
+// TODO change so by importing this file, the test file will self-call with a try/catch (sure?)
+
+Test = {}
+Test.tests = []
+Test.debugMode = false
+
+Test.currentTest = null
+Test.testFnRun = 0
+Test.expectIndex = 0
+
+Test.main = function ()
+    get_custom_object.tests = {
+        "finishedSetup": false,
+        "totalTests": 0,
+        "successfulTests": 0,
+        "successfulExpects": 0,
+        "success": false,
+    }
+    debugModeIndex = params.indexOf("-d")
+    if (debugModeIndex != null) then
+        params.remove(debugModeIndex)
+        Test.debugMode = true
+    end if
 end function
 
+Test.main()
+
 test = function (name, fn)
-    Test.currentTest = name
-    fn()
+    Test.tests.push({"name": name, "fn": @fn})
+end function
+
+// Call this in the end of your test file so the compiler can know when all tests passed.
+runTests = function ()
+    get_custom_object.tests.finishedSetup = true
+    get_custom_object.tests.totalTests = Test.tests.len
+    for test in Test.tests
+        Test.expectIndex = 0
+        Test.currentTest = test.name
+        if (Test.debugMode) then print("Running test """+test.name+""" ("+program_path+")")
+        test.fn()
+        get_custom_object.tests.successfulTests = get_custom_object.tests.successfulTests + 1
+    end for
+    get_custom_object.tests.success = true
 end function
 
 Test.prettyValue = function (value, bold = true)
 	pretty = value
 	if (value == null) then pretty = "null"
 	if (bold) then pretty = "<b>"+pretty+"</b>"
-	if (value isa string) then pretty = char(34)+pretty+char(34) // quotes
+	if (value isa string) then pretty = """"+pretty+""""
 	return pretty
 end function
 
 Expect = {}
 Expect.value = null
+
+Test.throw = function (message)
+    text = "<color=red>Error in test ""<b>"+Test.currentTest+"</b>"" ("+program_path+", expect #"+Test.expectIndex+"):\n</color>"
+    text = text + "<color=red>"+message+"</color>"
+    exit(text)
+end function
+
 Expect.toBe = function (expected)
     if (self.value != expected) then
-        Test.throw("Expected "+Test.prettyValue(expected)+" but received "+Test.prettyValue(value)+".")
+        Test.throw("Expected "+Test.prettyValue(expected)+" but received "+Test.prettyValue(self.value)+".")
     end if
+    get_custom_object.tests.successfulExpects = get_custom_object.tests.successfulExpects + 1
+end function
+
+Expect.toHave = function (expected)
+    if (self.value.indexOf(expected) == null) then
+        Test.throw("Expected "+Test.prettyValue(self.value)+" to have "+Test.prettyValue(expected)+" but it doesn't.")
+    end if
+    get_custom_object.tests.successfulExpects = get_custom_object.tests.successfulExpects + 1
 end function
 
 expect = function (value)
     exp = new Expect
     exp.value = value
+    Test.expectIndex = Test.expectIndex + 1
     return exp
 end function

@@ -5,70 +5,80 @@
 
 Compile = {}
 // Files which were accessed.
-Compile.accessed = []
-Compile.srcToTryToTest = []
+Compile.debugMode = false
+// Source files which are going to be / were built, so we don't build them again.
+Compile.buildList = []
+// All the relevant files and their contents.
+Compile.allSourcesAndContents = {}
 Compile.optionToSkip = "--skipSelfCompile"
+Compile.filesContent = {}
+Compile.watchIntervalSeconds = 2.5
 
+Compile._valuesBetween = function (string, open, close)
+    array = []
+    head = null
+    tail = null
+    while true
+        head = string.indexOf(open, tail)
+        if (head == null) then break
+        tail = string.indexOf(close, head + open.len)
+        if (tail == null) then break
+        array.push(string[head + open.len:tail])
+    end while
+    return array
+end function
+
+Compile.getImportsOfFile = function (filePath)
+    if (filePath.indexOf(".src") == null) then filePath = filePath + ".src"
+
+    file = get_shell.host_computer.File(filePath)
+    if (not file) then exit("<color=red>File not found: " + filePath + "</color>")
+
+    fileContent = file.get_content()
+    if (fileContent == null) then exit("<color=red>Coulnd't read the file " + file.path + "</color>")
+
+    return Compile._valuesBetween(fileContent, "import_" + "code(""", """")
+end function
+
+// TODO build should be executed with launch so it doesn't crash the program while on watch mode.
 // @param {string}
 // @return {string} path of the executable entry file
 Compile.compile = function (entryFilePath)
     if (entryFilePath[0] != "/") then entryFilePath = current_path + "/" + entryFilePath
 
-    valuesBetween = function (string, open, close)
-        array = []
-        head = null
-        tail = null
-        while true
-            head = string.indexOf(open, tail)
-            if (head == null) then break
-            tail = string.indexOf(close, head + open.len)
-            if (tail == null) then break
-            array.push(string[head + open.len:tail])
-        end while
+    entryFile = get_shell.host_computer.File(entryFilePath)
+    if (not entryFile) then exit("<color=red>Entry file not found: " + entryFilePath + "</color>")
 
-        return array
-    end function
+    // @return {string} path of the built executable file
+    recursive = function(filePath, isEntryFile = false)
+        // We don't need to compile ".src" imports.
+        isSrcImport = filePath.indexOf(".src") != null
 
-    // Only adds if the list doesn't have this item yet.
-    addUnique = function (list, item)
-        if (list.indexOf(item) == null) then list.push(item)
-    end function
+        srcPath = filePath
+        if (not isSrcImport) then srcPath = srcPath + ".src"
 
-    recursive = function(filePath)
-        if (filePath.indexOf(".src") == null) then filePath = filePath + ".src"
+        file = get_shell.host_computer.File(srcPath)
+        if (not Compile.allSourcesAndContents.hasIndex(srcPath)) then
+            Compile.allSourcesAndContents[srcPath] = file.get_content()
+        end if
 
-        // Skip this file if already accessed
-        if (Compile.accessed.indexOf(filePath) != null) then return
+        inBuildList = Compile.buildList.indexOf(srcPath) != null
+        shouldSkip = (inBuildList or (isSrcImport and not isEntryFile))
+        if (shouldSkip) then return
 
-        Compile.accessed.push(filePath)
-        addUnique(Compile.srcToTryToTest, filePath)
+        Compile.buildList.push(filePath)
 
-        file = get_shell.host_computer.File(filePath)
-        if (not file) then exit("<color=red>File not found: " + filePath + "</color>")
-
-        fileContent = file.get_content()
-        if (fileContent == null) then exit("<color=red>Coulnd't read the file " + file.path + "</color>")
-
-        imports = valuesBetween(fileContent, "import_" + "code(""", """")
-
-        for import in imports
-            // We don't need to compile ".src" imports. Skip them!
-            if (import.indexOf(".src") != null) then
-                addUnique(Compile.srcToTryToTest, filePath)
-                continue
-            end if
+        for import in Compile.getImportsOfFile(filePath)
             recursive(import)
         end for
 
-        allowImport = filePath != entryFilePath
-        buildResult = get_shell.build(file.path, file.parent.path, allowImport)
-        if (buildResult) then
-            exit("<color=red>Error building the file "+file.path+": " + buildResult+"</color>")
-        end if
+        allowImport = not isEntryFile
+        error = get_shell.build(file.path, file.parent.path, allowImport)
+        if (error) then exit("<color=red>Error building the file "+file.path+": " + error+"</color>")
         return file.path.remove(".src")
     end function
 
-    executablePath = recursive(entryFilePath)
+    executablePath = recursive(entryFilePath, true)
     return executablePath
 end function
 
@@ -95,46 +105,120 @@ Compile.selfCompile = function ()
 	exit() // So the rest of the original program isn't run.
 end function
 
+Compile._exitWithUsage = function ()
+    message = ""
+    message = message + "<b>Compilation program for the language.</b>\n"
+    message = message + "<b>Usage</b>\n"
+    message = message + "  c    [options] <entryFile> -> Compiles a program and its imports\n"
+    message = message + "  c    -> Compiles the whole current directory and their imports\n\n"
+    message = message + "<b>Options</b>\n"
+    message = message + " -d    Debug Mode\n"
+    message = message + " -x    Execute after compiling\n"
+    message = message + " -w    Watch mode. Great for TDD and/or to be used with -x\n"
+    message = message + " -h    Show help\n"
+    exit(message)
+end function
+
+Compile._compileAll = function ()
+    print("Compiling all the source files in the current directory "+current_path+"...")
+    count = 0
+    for file in get_shell.host_computer.File(current_path).get_files
+        if (file.name.indexOf(".src") == null) then continue
+        Compile.compile(file.path)
+        count = count + 1
+    end for
+    print("Successfully compiled "+count+" files.")
+    Compile.runTests()
+end function
+
 Compile._main = function ()
-    if (params.len > 0 and params[0] == "-h") then exit("<b>Usage:c [-x] [entryFile] [programArgs]</b>\n-x executes the file after compiling. If entry file is omitted, compiles the whole cwd.")
+    if (params.len > 0 and params[0] == "-h") then Compile._exitWithUsage()
 
-    executeAfter = false
-
-    compileAllFilesInDir = params.len == 0
-    if (compileAllFilesInDir) then
-        print("Compiling all the source files in the current directory "+current_path+"...")
-        count = 0
-        for file in get_shell.host_computer.File(current_path).get_files
-            if (file.name.indexOf(".src") == null) then continue
-            Compile.compile(file.path)
-            count = count + 1
-        end for
-        print("Successfully compiled "+count+" files.")
-    else
-        executeAfter = params[0] == "-x"
-        if (executeAfter) then params.remove(0)
-
-        entryFile = params[0]
-        params.remove(0)
-
-        executablePath = Compile.compile(entryFile)
+    debugModeIndex = params.indexOf("-d")
+    if (debugModeIndex != null) then
+        params.remove(debugModeIndex)
+        Compile.debugMode = true
     end if
 
-    Compile.runTests()
-    if (executeAfter) then get_shell.launch(executablePath, params.join(" "))
+    executeAfter = false
+    executeAfterIndex = params.indexOf("-x")
+    if (executeAfterIndex != null) then
+        params.remove(executeAfterIndex)
+        executeAfter = true
+    end if
+
+    watchMode = false
+    watchModeIndex = params.indexOf("-w")
+    if (watchModeIndex != null) then
+        params.remove(watchModeIndex)
+        watchMode = true
+    end if
+
+    compileAllFilesInDir = params.len == 0
+    if (compileAllFilesInDir) then return Compile._compileAll()
+
+    entryFile = params[0]
+    params.remove(0)
+
+    while true
+        executablePath = Compile.compile(entryFile)
+        testsSuccess = Compile.runTests()
+        if (testsSuccess) then
+            if (executeAfter) then get_shell.launch(executablePath, params.join(" "))
+        end if
+        if (not watchMode) then break
+        print("Watching for changes in the files...")
+        while true
+            wait(Compile.watchIntervalSeconds)
+            if (Compile.hasChangesInFiles()) then break
+        end while
+        print("Changes detected. Recompiling...")
+        Compile.buildList = []
+        Compile.allSourcesAndContents = {}
+        Compile.filesContent = {}
+    end while
 end function
+
+Compile.hasChangesInFiles = function ()
+    for kv in Compile.allSourcesAndContents
+        content = get_shell.host_computer.File(kv.key).get_content()
+        if (content != kv.value) then return true
+    end for
+    return false
+end function
+
+Compile.testsData = {}
+Compile.testsData.successfulTests = 0
 
 // Run the tests, if any. NOTE:
 Compile.runTests = function ()
-    print("Now running tests.")
-    for src in Compile.srcToTryToTest
-        src = src.remove(".src") + ".test.src"
+    srcPaths = Compile.allSourcesAndContents.indexes
+    if (Compile.debugMode) then print("Looking for tests for the following sources: [" + srcPaths.join(", ")+"]")
+    
+    params = ""
+    if (Compile.debugMode) then params = "-d"
 
-        file = get_shell.host_computer.File(src)
+    for srcPath in srcPaths
+        testFilePath = srcPath.remove(".src") + ".test.src"
+
+        file = get_shell.host_computer.File(testFilePath)
         if (not file) then continue
-        print("Running test " + file.path)
         executableTest = Compile.compile(file.path)
+
+        launchRes = get_shell.launch(executableTest, params)
+        if (launchRes == 0 or (launchRes isa string)) then exit("Failed to execute the test "+executableTest+" : " + launchRes)
+
+        if (not get_custom_object.hasIndex("tests")) then
+            print("Failed to setup the test file "+testFilePath)
+            return false
+        end if
+
+        Compile.testsData.successfulTests = Compile.testsData.successfulTests + get_custom_object.tests.successfulTests
+
+        if (not get_custom_object.tests.success) then return false
+
     end for
+    if (Compile.debugMode) then print("Successfully ran <color=green>"+Compile.testsData.successfulTests+"</color> test functions and <color=green>"+get_custom_object.tests.successfulExpects+"</color> expects.")
 end function
 
 if (program_path.split("/")[-1] == "c") then

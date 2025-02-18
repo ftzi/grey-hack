@@ -3,6 +3,7 @@ Compile.selfCompile()
 
 import_code("/root/utils/fs")
 import_code("/root/utils/std")
+import_code("/root/utils/lib")
 
 Setup = {}
 
@@ -32,7 +33,26 @@ Setup.main = function ()
     end if
 end function
 
-Setup.setupCommon = function ()
+Setup.setupHome = function (password)
+    setupInitD = function (password)
+        program = "print(""Welcome back! 0x31F01"")".LF // Random code that might help to know if the file was compromised or not. Can be later improved.
+        program = program + "get_shell(""root"", """+password+""").start_terminal"
+        Fs.createExecutable("/etc/init.d/start", program)
+    end function
+
+    Setup.setupHomeFilesAndPermissions()
+    // Setup.setupAptSources()
+    setupInitD(password)
+end function
+
+Setup.setupServer = function ()
+    Setup.setupRootPermissions()
+    // Setup.setupAptSources()
+    Fs.remove("/home")
+    Fs.remove("/bin/sudo")
+end function
+
+Setup.setupRootPermissions = function ()
     Fs.absoluteRoot.set_owner("root", true)
     Fs.absoluteRoot.set_group("root", true)
     Fs.absoluteRoot.chmod("g-rwx", true)
@@ -40,10 +60,32 @@ Setup.setupCommon = function ()
     Fs.absoluteRoot.chmod("o-rwx", true)
 end function
 
-Setup.setupHome = function (password)
-    Setup.setupCommon()
+// Setup.setupAptSources = function ()
+//     content = "{".LF
+//     content = content + """official_server"": true,".LF
+//     content = content + """sourceList"": {".LF
+//     content = content + """118.213.30.73"": 1542".LF
+//     content = content + "}".LF
+//     content = content + "}"
+//     error = Lib.aptClient.update()
+//     if (error) then throw("Error in apt-get update: " + error)
+// end function
+
+Setup.setupHomeFilesAndPermissions = function ()
+    // As everything now requires root, we can't execute or open files on the Desktop with the cursor.
+    // This removes them to remove the temptation.
+    cleanDesktop = function ()
+        userDir = Fs.home.get_folders[0]
+        desktop = Fs.getFile(userDir.path.join("Desktop"))
+        for file in desktop.get_files
+            if (file.is_symlink) then file.delete()
+        end for
+    end function
+
+    Setup.setupRootPermissions()
     Fs.getFile("/bin/sudo").chmod("g+x", true)
     Fs.getFile("/usr/bin/Terminal.exe").chmod("g+x", true)
+
     Fs.remove("/etc/passwd")
     Fs.remove("/home/guest")
 
@@ -55,36 +97,7 @@ Setup.setupHome = function (password)
         Fs.remove(dir.path.join("Config/Bank.txt"))
     end for
 
-    Setup.setupInitD(password)
-    Setup.cleanDesktop()
-end function
-
-// As everything now requires root, we can't execute or open files on the Desktop with the cursor.
-// This removes them to remove the temptation.
-Setup.cleanDesktop = function ()
-    userDir = Fs.home.get_folders[0]
-    desktop = Fs.getFile(userDir.path.join("Desktop"))
-    for file in desktop.get_files
-        if (file.is_symlink) then file.delete()
-    end for
-end function
-
-Setup.setupServer = function ()
-    Setup.setupCommon()
-    Fs.remove("/home")
-end function
-
-Setup.setupInitD = function (password)
-    Fs.createExecutable("/etc/init.d/start", "get_shell(""root"", """+password+""").start_terminal")
-end function
-
-Setup.setupAptSources = function ()
-    content = "{\n"
-    content = content + """official_server"": true,\n"
-    content = content + """sourceList"": {\n"
-    content = content + """118.213.30.73"": 1542\n"
-    content = content + "}\n"
-    content = content + "}"
+    cleanDesktop()
 end function
 
 Setup.main()

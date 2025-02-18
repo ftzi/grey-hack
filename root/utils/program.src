@@ -1,0 +1,135 @@
+// Based on https://www.npmjs.com/package/commander
+
+// This intentionally has no imports.
+
+Program = {}
+
+Program.New = function (description = "")
+    program = new Program
+    program.description = description
+    program.args = {}
+    program.opts = {}
+    program._params = []
+    program._args = []
+    program._opts = []
+    return program
+end function
+
+// Allows mocking the exit function for testing.
+Program._quit = @exit
+
+Program.getUsage = function ()
+    programName = program_path.split("/")[-1]
+
+    usage = ""
+
+    usage = usage + "<b>Usage:</b> "+programName+" [options]\n\n"
+
+    if (self.description) then usage = usage + "<b>"+self.description+"</b>\n\n"
+
+    // for arg in Program._args
+    //     usage = usage + " $".f(arg)
+    // end for
+    // usage = usage + "\n"
+
+    usage = usage + "<b>Options</b>\n"
+    for opt in self._opts
+        usage = usage + " " + opt.name
+        if (opt.valueName) then usage = usage + " "+opt.valueName
+        usage = usage + "    " + opt.description+"\n"
+    end for
+
+    return usage
+end function
+
+Program.exitWithUsage = function ()
+    self._quit(self.getUsage)
+end function
+
+Program.throwWithUsage = function (errorMessage)
+    self._quit("<color=red>"+errorMessage+"\n\n"+self.getUsage()+"</color>")
+end function
+
+Program.argument = function (name, description)
+    // fn = function ()
+    //     value = self._params.pull()
+    // end function
+    // self._args.push(name)
+    // if (params.indexOf(name) == null) then self.throwWithUsage("Missing required argument: " + name)
+end function
+
+Program._removeDashes = function (option)
+    if (option.indexOf("--") == 0) then return option[2:]
+    if (option.indexOf("-") == 0) then return option[1:]
+    self._quit("Found no dashes for the option "+option)
+end function
+
+// self.throwWithUsage("The option "+opt.name+" does not exist.")
+Program._parseOptions = function ()
+    for opt in self._opts
+        nameNoDash = self._removeDashes(opt.name)
+        self.opts[nameNoDash] = null
+
+        indexOf = self._params.indexOf(opt.name)
+        if (indexOf == null) then continue
+
+        self._params.remove(indexOf)
+
+        value = null
+        if (opt.type == "boolean") then
+            value = true
+        else
+            if (not self._params.hasIndex(indexOf)) then self.throwWithUsage("Option "+opt.name+" requires a value.")
+            value = self._params[indexOf] // Same index as the one before got removed
+            self._params.remove(indexOf)
+            if (opt.type == "number") then
+                value = value.to_int
+                if (value isa string) then self.throwWithUsage("Option "+opt.name+" requires a valid number.")
+            end if
+        end if
+
+        self.opts[nameNoDash] = value
+    end for
+end function
+
+Program.option = function (name, description, type = null)
+    allowedTypes = ["string", "number"]
+    invalid = function ()
+        self._quit("Invalid option name "+name+". Must be in the format ""-x"" or ""-x <value>"".")
+    end function
+
+    if (name.len < 2 or name[0] != "-") then invalid()
+
+    splittedName = name.split(" ")
+
+    name = splittedName[0]
+    valueName = null
+
+    if (splittedName.len == 1) then
+        if (type != null) then self._quit("Option "+name+" does not accept a type.")
+        type = "boolean"
+    else if (splittedName.len == 2) then
+        if (type == null) then type = "string"
+        if (allowedTypes.indexOf(type) == null) then
+            self._quit("Invalid option type "+type+" for "+name+". Must be one of the following: ["+Program.allowedTypes.join(", ")+"]")
+        end if
+        valueName = splittedName[1]
+        if (valueName.len < 3 or valueName[0] != "<" or valueName[-1] != ">") then invalid()
+    else
+        invalid()
+    end if
+
+    self._opts.push({"name": name, "valueName": valueName, "description": description, "type": type})
+end function
+
+// You can pass the params to parse, or it will use the global `params`. Useful for testing.
+Program.parse = function (_params = null)
+    if (not _params) then _params = params[:] // Can't _params = params in this function args
+
+    self._params = _params
+    self.option("-h", "Prints the usage.")
+
+    self._parseOptions()
+
+    if (self.opts.h) then self.exitWithUsage
+end function

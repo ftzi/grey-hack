@@ -1,0 +1,51 @@
+import_code("/root/c.src")
+Compile.selfCompile()
+
+import_code("/root/utils/std")
+
+Debug = {}
+Debug.currentLineCount = 0
+Debug.currentFile = ""
+
+// @param {string}
+// @return {number}
+Debug.linesOfFile = function (filePath)
+    file = Fs.readFile(filePath)
+    lines = content.split(LF)
+    return lines.len
+end function
+
+// @param {string}
+// @return {string} path of the executable entry file
+Debug.findLine = function (entryFilePath, targetLine)
+    if (entryFilePath[0] != "/") then entryFilePath = current_path + "/" + entryFilePath
+
+    recursive = function(filePath)
+        Compile.getImportsOfFile(filePath)
+
+        for import in imports
+            recursive(import)
+        end for
+
+        Debug.currentLineCount = Debug.currentLineCount + Debug.linesOfFile(filePath)
+    end function
+
+    recursive(entryFilePath)
+
+    print("Lines $".f(Debug.currentLineCount))
+
+    if (Debug.currentLineCount < targetLine) then
+        throw("Target line is greater than the total line count of the file and its imports ($).".f(Debug.currentLineCount))
+    end if
+end function
+
+Debug.main = function ()
+    program = Program.New
+    // program.argument("srcFile")
+    // program.argumentNumber("targetLine", "The line number to find the corresponding source file which raised the runtime error.")
+    program.parse()
+
+    Compile.findLine(program.args.srcFile, program.args.targetLine)
+end function
+
+Debug.main()

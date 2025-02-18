@@ -68,9 +68,9 @@ getAddresses = function (lib)
 	addresses = dbLib.get([lib.lib_name, lib.version])
 	if not addresses then
 		print("Scanning Addresses for Library <b>" + lib.lib_name + " " + lib.version + "</b> using Metaxploit " + Lib.versionOf("metaxploit"))
-		addresses = Lib.metaxploit().scan(lib)
+		addresses = Lib.metaxploit.scan(lib)
 	end if
-	print("Addresses for <b>" + lib.lib_name + " " + lib.version + "</b>: <b>" + addresses + "</b>\n")
+	print("Addresses for <b>" + lib.lib_name + " " + lib.version + "</b>: <b>" + addresses + "</b>".LF)
 	return addresses
 end function
 
@@ -109,7 +109,7 @@ args = {
 
 main = function ()
 	clear_screen()
-    print(program_path.split("/")[-1] + " " + params.join(" ") + "\n")
+    print(program_path.split("/")[-1] + " " + params.join(" ").LF)
 
 	lib = null
 	remote = null
@@ -119,7 +119,7 @@ main = function ()
 		lib = Lib.loadRemote(remote.ip, args.port)
 		print("IP=" + remote.ip + " Port=" + args.port)
 	else
-		lib = Lib.metaxploit().load("/lib/"+args.ipOrLibName)
+		lib = Lib.metaxploit.load("/lib/"+args.ipOrLibName)
 	end if
 
 	addresses = getAddresses(lib)
