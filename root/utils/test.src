@@ -72,6 +72,7 @@ Expect.toBe = function (expected)
 end function
 
 Expect.toHave = function (expected)
+    if (self.value isa number) then Test.throw("Can't use toHave() with a number. Expect is "+Test.prettyValue(self.value)+".")
     if (self.value.indexOf(expected) == null) then
         Test.throw("Expected "+Test.prettyValue(self.value)+" to have "+Test.prettyValue(expected)+" but it doesn't.")
     end if

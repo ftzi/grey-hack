@@ -7,18 +7,12 @@ end if
 // Returns an object with `.error` and `.data` properties.
 // `.error` is true if an error happened, string if `exit()` was called, and false if the function executed successfully.
 // `.data` is the return of the function if it executed successfully.
-try = function (fn, argsList = [])
+try = function (fn, silentExit = true)
     tryObj = {}
     tryObj.error = true
     tryObj.data = null
-    fn2 = function ()
-        if (argsList.len == 0) then return fn()
-        if (argsList.len == 1) then return fn(argsList[0])
-        if (argsList.len == 2) then return fn(argsList[0], argsList[1])
-        if (argsList.len == 3) then return fn(argsList[0], argsList[1], argsList[2])
-        if (argsList.len == 4) then return fn(argsList[0], argsList[1], argsList[2], argsList[3])
-    end function
-    tryObj._fn = @fn2
+    tryObj._silentExit = silentExit
+    tryObj._fn = @fn
     get_custom_object.try.objs.push(tryObj)
 
     successLaunching = get_shell.launch("/root/try")
@@ -48,6 +42,7 @@ if (program_path.split("/")[-1] == "try") then
         else if (message isa map) then
             tryObj.error = "Object"
         end if
+        if (tryObj._silentExit) then message = ""
         originalExit(message)
     end function
 

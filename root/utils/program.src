@@ -123,7 +123,6 @@ end function
 // You can pass the params to parse, or it will use the global `params`. Useful for testing.
 Program.parse = function (_params = null)
     if (not _params) then _params = params[:] // Can't _params = params in this function args
-
     self._params = _params
     self.option("-h", "Prints the usage.")
 

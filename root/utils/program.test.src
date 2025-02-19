@@ -9,9 +9,12 @@ test "program with only help", function ()
     expect(program.opts.h).toBe(null)
 
     program = Program.New
-    result = try(program.parse(["-h"]))
+    fn = function ()
+        program.parse(["-h"])
+    end function
+    result = try(@fn)
+    expect(result.error).toHave("Usage")
     expect(program.opts.h).toBe(true)
-    expect(fnObj.lastCalledWith[0]).toHave("Usage")
 end function
 
 test "program with boolean option", function ()
@@ -36,12 +39,13 @@ test "program with string options", function ()
     program.parse(["-i", "127.0.0.1"])
     expect(program.opts.i).toBe("127.0.0.1")
 
-    // program = Program.New
-    // fnObj = Test.fnObj
-    // program._quit = @fnObj.fn
-    // program.option("-i <ip>", "The IP to use")
-    // program.parse(["-i"])
-    // expect(fnObj.lastCalledWith[0]).toHave("Usage")
+    program = Program.New
+    fn = function ()
+        program.parse(["-i"])
+    end function
+    program.option("-i <ip>", "The IP to use")
+    result = try(@fn)
+    expect(result.error).toHave("Usage")
 end function
 
 test "program with number options", function ()
