@@ -4,7 +4,7 @@ Personal scripts for the **[Grey Hack](https://store.steampowered.com/app/605230
 
 ## **You might be particularly interested in:**
 - **The `try` function**: https://github.com/ftzi/grey-hack/blob/main/root/try.src
-- **The [compiler](https://github.com/ftzi/grey-hack/blob/main/root/c.src)**. It compiles your entry file and its imported files automatically. Supports watch mode, execute after build, [automated tests](https://github.com/ftzi/grey-hack/blob/main/root/utils/test.src) and a function to make your programs self-compile with the latest source when executed.
+- **The [compiler](https://github.com/ftzi/grey-hack/blob/main/root/c.src)**. It compiles your entry file and its imported files automatically. Supports watch mode, execute after build, [automated tests](https://github.com/ftzi/grey-hack/blob/main/root/utils/test.src), and an importable function to make your programs self-compile with the latest source when executed.
 - **Automatic upload of the changed source files to the game while you use your favorite IDE. See [`package.json`](https://github.com/ftzi/grey-hack/blob/main/package.json) and [`watch.ts`](https://github.com/ftzi/grey-hack/blob/main/watch.ts)**. Note that by choice, I don't use Greybel's build system, only its raw upload.
 
 # Setup
