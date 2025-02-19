@@ -3,8 +3,8 @@
 Personal scripts for the **[Grey Hack](https://store.steampowered.com/app/605230/Grey_Hack/)** game. Still on early stage.
 
 ## **You might be particularly interested in:**
-- The `try` function: https://github.com/ftzi/grey-hack/blob/main/root/try.src
-- Automatic upload of the changed source files to the game. See `package.json` and `watch.ts`. Note that by choice, I don't use Greybel's build system, only its raw upload.
+- **The `try` function**: https://github.com/ftzi/grey-hack/blob/main/root/try.src
+- **Automatic upload of the changed source files to the game. See [`package.json`](https://github.com/ftzi/grey-hack/blob/main/package.json) and [`watch.ts`](https://github.com/ftzi/grey-hack/blob/main/watch.ts)**. Note that by choice, I don't use Greybel's build system, only its raw upload.
 
 # Setup
 1) Install BepInEx 5.x.x: https://github.com/ayecue/greybel-vs#message-hook
