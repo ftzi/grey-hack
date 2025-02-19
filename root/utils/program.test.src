@@ -1,10 +1,6 @@
 import_code("/root/utils/test")
 import_code("/root/utils/program")
-
-context = { "data": "" }
-mockedQuit = function (message)
-    context.data = message // Just data = message wouldn't work.
-end function
+import_code("/root/try")
 
 test "program with only help", function ()
     program = Program.New
@@ -13,15 +9,9 @@ test "program with only help", function ()
     expect(program.opts.h).toBe(null)
 
     program = Program.New
-    program._quit = @mockedQuit
-    program.parse(["-h"])
-    expect(context.data).toHave("Usage")
+    result = try(program.parse(["-h"]))
     expect(program.opts.h).toBe(true)
-
-    // program = Program.New
-    // program._quit = @mockedQuit
-    // program.parse(["-z"])
-    // expect(context.data).toHave("does not exist")
+    expect(fnObj.lastCalledWith[0]).toHave("Usage")
 end function
 
 test "program with boolean option", function ()
@@ -42,9 +32,16 @@ end function
 
 test "program with string options", function ()
     program = Program.New
-    program.option("-i <ip>", "The ip use")
+    program.option("-i <ip>", "The IP to use")
     program.parse(["-i", "127.0.0.1"])
     expect(program.opts.i).toBe("127.0.0.1")
+
+    // program = Program.New
+    // fnObj = Test.fnObj
+    // program._quit = @fnObj.fn
+    // program.option("-i <ip>", "The IP to use")
+    // program.parse(["-i"])
+    // expect(fnObj.lastCalledWith[0]).toHave("Usage")
 end function
 
 test "program with number options", function ()
@@ -54,24 +51,4 @@ test "program with number options", function ()
     expect(program.opts.p).toBe(8080)
 end function
 
-runTests
-
-// test "program just options", function ()
-//     program = new Program
-//     program.argument("srcFile")
-//     program.argumentNumber("targetLine", "The line number to find the corresponding source file which raised the runtime error.")
-//     program.parse()
-
-//     assert_equal(program.args.srcFile, "srcFile")
-//     assert_equal(program.args.targetLine, "targetLine")
-// end function
-
-// test "program just options", function ()
-//     program = new Program
-//     program.argument("srcFile")
-//     program.argumentNumber("targetLine", "The line number to find the corresponding source file which raised the runtime error.")
-//     program.parse()
-
-//     assert_equal(program.args.srcFile, "srcFile")
-//     assert_equal(program.args.targetLine, "targetLine")
-// end function
+Test.runTests()

@@ -1,0 +1,56 @@
+if (not get_custom_object.hasIndex("try")) then
+    get_custom_object.try = {}
+    get_custom_object.try.objs = []
+end if
+
+// Catches errors run during the call of the given function without breaking your program.
+// Returns an object with `.error` and `.data` properties.
+// `.error` is true if an error happened, string if `exit()` was called, and false if the function executed successfully.
+// `.data` is the return of the function if it executed successfully.
+try = function (fn, argsList = [])
+    tryObj = {}
+    tryObj.error = true
+    tryObj.data = null
+    fn2 = function ()
+        if (argsList.len == 0) then return fn()
+        if (argsList.len == 1) then return fn(argsList[0])
+        if (argsList.len == 2) then return fn(argsList[0], argsList[1])
+        if (argsList.len == 3) then return fn(argsList[0], argsList[1], argsList[2])
+        if (argsList.len == 4) then return fn(argsList[0], argsList[1], argsList[2], argsList[3])
+    end function
+    tryObj._fn = @fn2
+    get_custom_object.try.objs.push(tryObj)
+
+    successLaunching = get_shell.launch("/root/try")
+    if (not successLaunching) then exit("Failed to launch the ""try"" program: "+successLaunching)
+
+    tryObj.remove("_fn")
+    return tryObj
+end function
+
+// Executed by the launched program.
+if (program_path.split("/")[-1] == "try") then
+    tryObj = get_custom_object.try.objs.pop()
+    if (not tryObj) then exit("No ""try"" object found in the ""get_custom_object"".")
+
+    originalExit = @exit
+    globals.exit = function (message)
+        if (message == "") then
+            tryObj.error = "No message"
+        else if (message isa string) then
+            tryObj.error = message
+        else if (message == null) then
+            tryObj.error = "null"
+        else if (message isa number) then
+            tryObj.error = ""+message
+        else if (message isa list) then
+            tryObj.error = "["+message.join(", ")+"]"
+        else if (message isa map) then
+            tryObj.error = "Object"
+        end if
+        originalExit(message)
+    end function
+
+    tryObj.data = tryObj._fn()
+    tryObj.error = false
+end if

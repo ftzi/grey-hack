@@ -10,7 +10,6 @@ Test.tests = []
 Test.debugMode = false
 
 Test.currentTest = null
-Test.testFnRun = 0
 Test.expectIndex = 0
 
 Test.main = function ()
@@ -35,7 +34,7 @@ test = function (name, fn)
 end function
 
 // Call this in the end of your test file so the compiler can know when all tests passed.
-runTests = function ()
+Test.runTests = function ()
     get_custom_object.tests.finishedSetup = true
     get_custom_object.tests.totalTests = Test.tests.len
     for test in Test.tests
@@ -84,4 +83,18 @@ expect = function (value)
     exp.value = value
     Test.expectIndex = Test.expectIndex + 1
     return exp
+end function
+
+// Returns an object containing a mocked function.
+Test.fnObj = function ()
+    fnObj = {
+        "timesCalled": 0,
+        "lastCalledWith": [null, null, null, null, null],
+    }
+    fn = function (a,b,c,d,e)
+        fnObj.timesCalled = fnObj.timesCalled + 1
+        fnObj.lastCalledWith = [a,b,c,d,e]
+    end function
+    fnObj.fn = @fn
+    return fnObj
 end function

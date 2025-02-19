@@ -15,9 +15,6 @@ Program.New = function (description = "")
     return program
 end function
 
-// Allows mocking the exit function for testing.
-Program._quit = @exit
-
 Program.getUsage = function ()
     programName = program_path.split("/")[-1]
 
@@ -43,11 +40,11 @@ Program.getUsage = function ()
 end function
 
 Program.exitWithUsage = function ()
-    self._quit(self.getUsage)
+    exit(self.getUsage)
 end function
 
 Program.throwWithUsage = function (errorMessage)
-    self._quit("<color=red>"+errorMessage+"\n\n"+self.getUsage()+"</color>")
+    exit("<color=red>"+errorMessage+"\n\n"+self.getUsage()+"</color>")
 end function
 
 Program.argument = function (name, description)
@@ -61,7 +58,7 @@ end function
 Program._removeDashes = function (option)
     if (option.indexOf("--") == 0) then return option[2:]
     if (option.indexOf("-") == 0) then return option[1:]
-    self._quit("Found no dashes for the option "+option)
+    exit("Found no dashes for the option "+option)
 end function
 
 // self.throwWithUsage("The option "+opt.name+" does not exist.")
@@ -79,6 +76,7 @@ Program._parseOptions = function ()
         if (opt.type == "boolean") then
             value = true
         else
+            print(self._params)
             if (not self._params.hasIndex(indexOf)) then self.throwWithUsage("Option "+opt.name+" requires a value.")
             value = self._params[indexOf] // Same index as the one before got removed
             self._params.remove(indexOf)
@@ -95,7 +93,7 @@ end function
 Program.option = function (name, description, type = null)
     allowedTypes = ["string", "number"]
     invalid = function ()
-        self._quit("Invalid option name "+name+". Must be in the format ""-x"" or ""-x <value>"".")
+        exit("Invalid option name "+name+". Must be in the format ""-x"" or ""-x <value>"".")
     end function
 
     if (name.len < 2 or name[0] != "-") then invalid()
@@ -106,12 +104,12 @@ Program.option = function (name, description, type = null)
     valueName = null
 
     if (splittedName.len == 1) then
-        if (type != null) then self._quit("Option "+name+" does not accept a type.")
+        if (type != null) then exit("Option "+name+" does not accept a type.")
         type = "boolean"
     else if (splittedName.len == 2) then
         if (type == null) then type = "string"
         if (allowedTypes.indexOf(type) == null) then
-            self._quit("Invalid option type "+type+" for "+name+". Must be one of the following: ["+Program.allowedTypes.join(", ")+"]")
+            exit("Invalid option type "+type+" for "+name+". Must be one of the following: ["+Program.allowedTypes.join(", ")+"]")
         end if
         valueName = splittedName[1]
         if (valueName.len < 3 or valueName[0] != "<" or valueName[-1] != ">") then invalid()

@@ -45,6 +45,7 @@ end function
 // @return {string} path of the executable entry file
 Compile.compile = function (entryFilePath)
     if (entryFilePath[0] != "/") then entryFilePath = current_path + "/" + entryFilePath
+    if (entryFilePath.indexOf(".src") == null) then entryFilePath = entryFilePath + ".src"
 
     entryFile = get_shell.host_computer.File(entryFilePath)
     if (not entryFile) then exit("<color=red>Entry file not found: " + entryFilePath + "</color>")
@@ -72,7 +73,7 @@ Compile.compile = function (entryFilePath)
             recursive(import)
         end for
 
-        allowImport = not isEntryFile
+        allowImport = true // not isEntryFile // Test files would fail by importing it.
         error = get_shell.build(file.path, file.parent.path, allowImport)
         if (error) then exit("<color=red>Error building the file "+file.path+": " + error+"</color>")
         return file.path.remove(".src")
@@ -188,13 +189,14 @@ Compile.hasChangesInFiles = function ()
 end function
 
 Compile.testsData = {}
-Compile.testsData.successfulTests = 0
 
-// Run the tests, if any. NOTE:
+// Run the tests, if any.
+// @return {boolean} true if all tests passed/none found, false otherwise
 Compile.runTests = function ()
+    Compile.testsData.successfulTests = 0
     srcPaths = Compile.allSourcesAndContents.indexes
     if (Compile.debugMode) then print("Looking for tests for the following sources: [" + srcPaths.join(", ")+"]")
-    
+
     params = ""
     if (Compile.debugMode) then params = "-d"
 
@@ -218,7 +220,14 @@ Compile.runTests = function ()
         if (not get_custom_object.tests.success) then return false
 
     end for
-    if (Compile.debugMode) then print("Successfully ran <color=green>"+Compile.testsData.successfulTests+"</color> test functions and <color=green>"+get_custom_object.tests.successfulExpects+"</color> expects.")
+    if (Compile.debugMode) then
+        if (Compile.testsData.successfulTests) then
+            print("Successfully ran <color=green>"+Compile.testsData.successfulTests+"</color> test functions and <color=green>"+get_custom_object.tests.successfulExpects+"</color> expects.")
+        else
+            print("No tests found.")
+        end if
+    end if
+    return true
 end function
 
 if (program_path.split("/")[-1] == "c") then
