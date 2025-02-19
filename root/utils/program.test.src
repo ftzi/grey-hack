@@ -40,10 +40,10 @@ test "program with string options", function ()
     expect(program.opts.i).toBe("127.0.0.1")
 
     program = Program.New
+    program.option("-i <ip>", "The IP to use")
     fn = function ()
         program.parse(["-i"])
     end function
-    program.option("-i <ip>", "The IP to use")
     result = try(@fn)
     expect(result.error).toHave("Usage")
 end function

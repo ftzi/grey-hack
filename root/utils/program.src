@@ -76,7 +76,6 @@ Program._parseOptions = function ()
         if (opt.type == "boolean") then
             value = true
         else
-            print(self._params)
             if (not self._params.hasIndex(indexOf)) then self.throwWithUsage("Option "+opt.name+" requires a value.")
             value = self._params[indexOf] // Same index as the one before got removed
             self._params.remove(indexOf)

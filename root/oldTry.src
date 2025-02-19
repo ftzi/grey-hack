@@ -64,8 +64,6 @@ if (program_path.split("/")[-1] == "try") then
         originalExit(message)
     end function
 
-    print("HII")
-
     tryObj.data = tryObj._fn()
     tryObj.error = false
 end if
