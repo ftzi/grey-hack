@@ -65,6 +65,19 @@ test "string.filename", function ()
     expect("/".filename()).toBe("")
 end function
 
+test "string.absolutePath", function ()
+    expect("/root/utils".absolutePath()).toBe("/root/utils")
+    expect("/root".absolutePath()).toBe("/root")
+    expect("/".absolutePath()).toBe("/")
+
+    bkp_current_path = @current_path
+    globals.current_path = function ()
+        return "/root"
+    end function
+    expect("utils".absolutePath()).toBe("/root/utils")
+    globals.current_path = @bkp_current_path
+end function
+
 test "string.has", function ()
     expect("root".has("root")).toBe(true)
     expect("root".has("roo")).toBe(true)
@@ -78,5 +91,7 @@ test "toString", function ()
     expect(toString(5)).toBe("5")
     expect(toString([1,2,3])).toBe("[1, 2, 3]")
 end function
+
+
 
 Test.runTests()

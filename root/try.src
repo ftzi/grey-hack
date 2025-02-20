@@ -1,3 +1,9 @@
+// // This import is only required because when we run the try executable,
+// // it can't know about the methods like `string.foo` etc. This is required in my setup, where
+// // all my primitive methods are in this `std` import and are used in most files.
+// // You don't need this import if you don't have such methods, or you can simply adapt to yours.
+// import_code("/root/utils/std")
+
 if (not get_custom_object.hasIndex("try")) then
     get_custom_object.try = {}
     get_custom_object.try.objs = []
@@ -13,11 +19,18 @@ try = function (fn, silentExit = true)
     tryObj.data = null
     tryObj._silentExit = silentExit
     tryObj._fn = @fn
+    tryObj._globals = globals
+    tryObj._primitives = {
+        "string": string,
+        "number": number,
+        "list": list,
+        "map": map,
+    }
     get_custom_object.try.objs.push(tryObj)
 
     successLaunching = get_shell.launch("/root/try")
     if (not successLaunching) then exit("Failed to launch the ""try"" program: "+successLaunching)
-
+    if (tryObj.error == true) then print("<color=red><i>(The above Runtime error happened while trying to execute a <b>try</b>!)</i></color>")
     return {
         "error": tryObj.error,
         "data": tryObj.data,
@@ -28,8 +41,32 @@ end function
 if (program_path.split("/")[-1] == "try") then
     tryObj = get_custom_object.try.objs.pop()
     if (not tryObj) then exit("No ""try"" object found in the ""get_custom_object"".")
-
     originalExit = @exit
+
+    originalGlobals = {}
+    for kv in globals
+        originalGlobals[kv.key] = @kv.value
+    end for
+    for kv in tryObj._globals
+        globals[kv.key] = @kv.value
+    end for
+    for kv in originalGlobals
+        globals[kv.key] = @kv.value
+    end for
+
+    for kv in tryObj._primitives.string
+        string[kv.key] = @kv.value
+    end for
+    for kv in tryObj._primitives.number
+        number[kv.key] = @kv.value
+    end for
+    for kv in tryObj._primitives.list
+        list[kv.key] = @kv.value
+    end for
+    for kv in tryObj._primitives.map
+        map[kv.key] = @kv.value
+    end for
+
     globals.exit = function (message)
         if (message == "") then
             tryObj.error = "No message"
@@ -45,7 +82,6 @@ if (program_path.split("/")[-1] == "try") then
             tryObj.error = "Object"
         end if
         if (tryObj._silentExit) then message = ""
-        print("changed exit called")
         originalExit(message)
     end function
 

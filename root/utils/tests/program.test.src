@@ -2,10 +2,18 @@ import_code("/root/utils/test")
 import_code("/root/utils/program")
 import_code("/root/try")
 
+// apply = function (fn, args = [])
+
+// end function
+
 test "program with only help", function ()
     program = Program.New
-    program.parse()
-    expect(program._opts.len).toBe(1)
+    fn = function ()
+        program.parse()
+    end function
+    result = try(@fn)
+    expect(result.error).toBe(false)
+    expect(program._options.len).toBe(1)
     expect(program.opts.h).toBe(null)
 
     program = Program.New
@@ -21,14 +29,14 @@ test "program with boolean option", function ()
     program = Program.New
     program.option("-d", "Debug mode")
     program.parse()
-    expect(program._opts.len).toBe(2)
+    expect(program._options.len).toBe(2)
     expect(program.opts.h).toBe(null)
     expect(program.opts.d).toBe(null)
 
     program = Program.New
     program.option("-d", "Debug mode")
     program.parse(["-d"])
-    expect(program._opts.len).toBe(2)
+    expect(program._options.len).toBe(2)
     expect(program.opts.h).toBe(null)
     expect(program.opts.d).toBe(true)
 end function

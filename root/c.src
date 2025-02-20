@@ -204,6 +204,12 @@ Compile.runTests = function ()
         testFilePath = srcPath.remove(".src") + ".test.src"
 
         file = get_shell.host_computer.File(testFilePath)
+        if (not file) then
+            segments = testFilePath.split("/")
+            segments2 = segments[:-1] + ["tests"] + [segments[-1]]
+            testFilePath = segments2.join("/")
+            file = get_shell.host_computer.File(testFilePath)
+        end if
         if (not file) then continue
         executableTest = Compile.compile(file.path)
 

@@ -5,29 +5,33 @@ import_code("/root/utils/std")
 
 Debug = {}
 Debug.currentLineCount = 0
-Debug.currentFile = ""
 
-// @param {string}
-// @return {number}
-Debug.linesOfFile = function (filePath)
-    file = Fs.read(filePath)
-    lines = content.split(LF)
-    return lines.len
-end function
-
-// @param {string}
-// @return {string} path of the executable entry file
-Debug.findLine = function (entryFilePath, targetLine)
-    if (entryFilePath[0] != "/") then entryFilePath = current_path + "/" + entryFilePath
+// @param {string} entryFilePath
+// @param {number} targetLineNumber
+// @return {FindLine|null}
+Debug.findLine = function (entryFilePath, targetLineNumber)
+    entryFilePath = entryFilePath.absolutePath()
 
     recursive = function(filePath)
-        Compile.getImportsOfFile(filePath)
-
-        for import in imports
-            recursive(import)
+        fileContent = Fs.read(filePath)
+        currentLineCount = 0
+        for line in fileContent.split(LF)
+            Debug.currentLineCount = Debug.currentLineCount + 1
+            currentLineCount = currentLineCount + 1
+            if (Debug.currentLineCount == targetLineNumber) then
+                print("File: $".f(filePath))
+                print("Line: $".f(line))
+                return {
+                    "file": filePath,
+                    "line": 0
+                    }
+                end if
         end for
+        // Compile.getImportsOfFile(filePath)
 
-        Debug.currentLineCount = Debug.currentLineCount + Debug.linesOfFile(filePath)
+        // for import in imports
+        //     recursive(import)
+        // end for
     end function
 
     recursive(entryFilePath)
@@ -45,7 +49,7 @@ Debug.main = function ()
     // program.argumentNumber("targetLine", "The line number to find the corresponding source file which raised the runtime error.")
     program.parse()
 
-    Compile.findLine(program.args.srcFile, program.args.targetLine)
+    Debug.findLine(program.args.srcFile, program.args.targetLine)
 end function
 
 Debug.main()

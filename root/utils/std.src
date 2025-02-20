@@ -1,6 +1,7 @@
 // Common functions and utils.
 import_code("/root/utils/Std/string")
 import_code("/root/utils/Std/list")
+import_code("/root/utils/Std/map")
 
 Consts = {}
 Consts.programName = program_path.split("/")[-1]
@@ -9,19 +10,7 @@ Consts.programName = program_path.split("/")[-1]
 // @param {string} message
 // @returns never
 throw = function (message)
-    exit(toString(message).error)
-end function
-
-// Safely gets the value of an object by passing the keys to access it.
-// Pass either a string or a list of keys to deeply access it.
-// Returns null if the final property is not found.
-map.get = function (keys)
-	if not (keys isa list) then keys = [keys]
-	data = self
-	for key in keys
-		if (data.hasIndex(key)) then data = data[key] else return null
-	end for
-	return data
+    exit(toString(message))
 end function
 
 // Navigates to the given path by using the file as starting point.

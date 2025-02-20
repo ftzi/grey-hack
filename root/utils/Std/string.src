@@ -165,3 +165,9 @@ end function
 string.filename = function ()
     return self.removeSuffix("/").split("/")[-1]
 end function
+
+// If the string is not an absolute path, it will add the current path to it.
+string.absolutePath = function ()
+    if (self[0] != "/") then return current_path + "/" + self
+    return self
+end function

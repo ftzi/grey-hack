@@ -1,0 +1,11 @@
+// Safely gets the value of an object by passing the keys to access it.
+// Pass either a string or a list of keys to deeply access it.
+// Returns null if the final property is not found.
+map.get = function (keys)
+	if not (keys isa list) then keys = [keys]
+	data = self
+	for key in keys
+		if (data.hasIndex(key)) then data = data[key] else return null
+	end for
+	return data
+end function

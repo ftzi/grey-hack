@@ -1,6 +1,6 @@
 // Based on https://www.npmjs.com/package/commander
 
-// This intentionally has no imports.
+import_code("/root/utils/std")
 
 Program = {}
 
@@ -10,30 +10,26 @@ Program.New = function (description = "")
     program.args = {}
     program.opts = {}
     program._params = []
-    program._args = []
-    program._opts = []
+    program._arguments = []
+    program._options = []
     return program
 end function
 
 Program.getUsage = function ()
-    programName = program_path.split("/")[-1]
-
     usage = ""
+    usage = usage + "<b>Usage:</b> "+Consts.programName+" [options]\n\n"
+    if (self.description) then usage = usage + self.description.bold.LF.LF
 
-    usage = usage + "<b>Usage:</b> "+programName+" [options]\n\n"
-
-    if (self.description) then usage = usage + "<b>"+self.description+"</b>\n\n"
-
-    // for arg in Program._args
-    //     usage = usage + " $".f(arg)
+    // for argument in Program._arguments
+    //     usage = usage + " $".f(argument)
     // end for
     // usage = usage + "\n"
 
-    usage = usage + "<b>Options</b>\n"
-    for opt in self._opts
-        usage = usage + " " + opt.name
-        if (opt.valueName) then usage = usage + " "+opt.valueName
-        usage = usage + "    " + opt.description+"\n"
+    usage = usage + "Options".bold.LF
+    for option in self._options
+        usage = usage + " " + option.name
+        if (option.valueName) then usage = usage + " "+option.valueName
+        usage = usage + "    " + option.description+"\n"
     end for
 
     return usage
@@ -47,14 +43,6 @@ Program.throwWithUsage = function (errorMessage)
     exit("<color=red>"+errorMessage+"\n\n"+self.getUsage()+"</color>")
 end function
 
-Program.argument = function (name, description)
-    // fn = function ()
-    //     value = self._params.pull()
-    // end function
-    // self._args.push(name)
-    // if (params.indexOf(name) == null) then self.throwWithUsage("Missing required argument: " + name)
-end function
-
 Program._removeDashes = function (option)
     if (option.indexOf("--") == 0) then return option[2:]
     if (option.indexOf("-") == 0) then return option[1:]
@@ -63,7 +51,7 @@ end function
 
 // self.throwWithUsage("The option "+opt.name+" does not exist.")
 Program._parseOptions = function ()
-    for opt in self._opts
+    for opt in self._options
         nameNoDash = self._removeDashes(opt.name)
         self.opts[nameNoDash] = null
 
@@ -87,6 +75,20 @@ Program._parseOptions = function ()
 
         self.opts[nameNoDash] = value
     end for
+end function
+
+Program.argument = function (name, description, type = null)
+    allowedTypes = ["string", "number"]
+    if (type == null) then type = "string"
+    if (allowedTypes.indexOf(type) == null) then
+        exit("Invalid argument type "+type+". Must be one of the following: ["+Program.allowedTypes.join(", ")+"]")
+    end if
+    // fn = function ()
+    //     value = self._params.pull()
+    // end function
+    // self._arguments.push(name)
+    // if (params.indexOf(name) == null) then self.throwWithUsage("Missing required argument: " + name)
+    self._arguments.push({"name": name, "description": description, "type": type})
 end function
 
 Program.option = function (name, description, type = null)
@@ -116,7 +118,7 @@ Program.option = function (name, description, type = null)
         invalid()
     end if
 
-    self._opts.push({"name": name, "valueName": valueName, "description": description, "type": type})
+    self._options.push({"name": name, "valueName": valueName, "description": description, "type": type})
 end function
 
 // You can pass the params to parse, or it will use the global `params`. Useful for testing.
