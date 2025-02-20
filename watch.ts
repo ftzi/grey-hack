@@ -25,7 +25,6 @@ const uploadToGame = async (filepath: string) => {
 
     const success = await upload(filepath, {
         ingameDirectory: getTargetDir(filepath),
-        createIngameAgentType: 'message-hook',
     });
     const dirOrFileStr = isUploadingDir ? "dir" : "file"
     if (!success) console.error(`Failed to upload the ${dirOrFileStr} ${filepath}.`)

@@ -18,8 +18,10 @@ try = function (fn, silentExit = true)
     successLaunching = get_shell.launch("/root/try")
     if (not successLaunching) then exit("Failed to launch the ""try"" program: "+successLaunching)
 
-    tryObj.remove("_fn")
-    return tryObj
+    return {
+        "error": tryObj.error,
+        "data": tryObj.data,
+    }
 end function
 
 // Executed by the launched program.
@@ -43,6 +45,7 @@ if (program_path.split("/")[-1] == "try") then
             tryObj.error = "Object"
         end if
         if (tryObj._silentExit) then message = ""
+        print("changed exit called")
         originalExit(message)
     end function
 

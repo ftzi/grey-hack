@@ -1,5 +1,4 @@
 import_code("/root/utils/std")
-import_code("/root/utils/lib")
 
 // @type Fs
 Fs = {}
@@ -46,9 +45,10 @@ end function
 // Returns the file content. Throws if the file doesn't exist.
 // @param {string} path
 // @return {string}
-Fs.readFile = function (path)
+Fs.read = function (path)
     content = self.getFile(path).get_content
     if (content == null) then throw("Error reading the file $ content".f(path.bold))
+    return content
 end function
 
 // Removes a file or directory.

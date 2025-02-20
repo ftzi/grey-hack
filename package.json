@@ -7,6 +7,6 @@
     },
     "dependencies": {
         "chokidar": "4.0.3",
-        "greybel-js": "3.5.33"
+        "greybel-js": "3.5.34"
     }
 }

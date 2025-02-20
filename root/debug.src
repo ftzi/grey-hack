@@ -10,7 +10,7 @@ Debug.currentFile = ""
 // @param {string}
 // @return {number}
 Debug.linesOfFile = function (filePath)
-    file = Fs.readFile(filePath)
+    file = Fs.read(filePath)
     lines = content.split(LF)
     return lines.len
 end function
