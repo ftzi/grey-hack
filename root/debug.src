@@ -13,10 +13,10 @@ Debug.Result = {
 }
 // @param {string} entryFilePath
 // @param {number} targetLineNumber
-// @return {FindLine|null}
+// @return {Debug.Result}
 Debug.findLine = function (entryFilePath, targetLineNumber)
     entryFilePath = entryFilePath.ensureSuffix(".src").absolutePath()
-    if (targetLineNumber < 1) then throw("The target line number must be greater than 0.")
+    if (targetLineNumber < 1) then throw("The target line must be greater than 0.")
 
     state = {}
     state.totalLineCount = 0
