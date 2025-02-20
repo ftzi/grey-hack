@@ -1,9 +1,3 @@
-// // This import is only required because when we run the try executable,
-// // it can't know about the methods like `string.foo` etc. This is required in my setup, where
-// // all my primitive methods are in this `std` import and are used in most files.
-// // You don't need this import if you don't have such methods, or you can simply adapt to yours.
-// import_code("/root/utils/std")
-
 if (not get_custom_object.hasIndex("try")) then
     get_custom_object.try = {}
     get_custom_object.try.objs = []
