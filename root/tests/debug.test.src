@@ -1,0 +1,32 @@
+import_code("/root/debug")
+import_code("/root/utils/test")
+
+test "debug works for nested files", function ()
+    result = Debug.findLine("/root/tests/debug1.src", 3)
+    expect(result.lineContent).toBe("import_cod"+"e(""/root/tests/debug0"")")
+    expect(result.filePath).toBe("/root/tests/debug1.src")
+    expect(result.line).toBe(3)
+
+    result = Debug.findLine("/root/tests/debug1.src", 18)
+    expect(result.lineContent).toBe("    array = []")
+    expect(result.filePath).toBe("/root/tests/debug0.src")
+    expect(result.line).toBe(15)
+
+    result = Debug.findLine("/root/tests/debug1.src", 58)
+    expect(result.lineContent).toBe("Lib.crypto = function()")
+    expect(result.filePath).toBe("/root/tests/debug2.src")
+    expect(result.line).toBe(15)
+
+    result = Debug.findLine("/root/tests/debug1.src", 103)
+    expect(result.lineContent).toBe("list.has = function (item)")
+    expect(result.filePath).toBe("/root/tests/debug1.src")
+    expect(result.line).toBe(23)
+
+    result = Debug.findLine("/root/tests/debug1.src", 120)
+
+    expect(result.lineContent).toBe(null)
+    expect(result.error).toHave("117")
+    expect(result.error).toHave("120")
+end function
+
+Test.runTests()

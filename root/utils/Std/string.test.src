@@ -8,8 +8,8 @@ test "string.valueBetween", function ()
 end function
 
 test "string.valuesBetween", function ()
-    str = "import_"+"code(""/root/utils/lib"")""\nimport_"+"code(""/root/utils/std"")""\n"
-    valuesBetween = str.valuesBetween("import" + "_code(""", """")
+    str = "import_cod"+"e(""/root/utils/lib"")""\nimport_"+"code(""/root/utils/std"")""\n"
+    valuesBetween = str.valuesBetween("import_cod"+"e(""", """")
 	expect(valuesBetween.len).toBe(2)
 	expect(valuesBetween[0]).toBe("/root/utils/lib")
 	expect(valuesBetween[1]).toBe("/root/utils/std")

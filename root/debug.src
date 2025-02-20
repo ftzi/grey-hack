@@ -1,55 +1,70 @@
 import_code("/root/c.src")
 Compile.selfCompile()
 
-import_code("/root/utils/std")
+import_code("/root/utils/program")
+import_code("/root/utils/fs")
 
 Debug = {}
-Debug.currentLineCount = 0
-
+Debug.Result = {
+    "file": null,
+    "line": null,
+    "lineContent": null,
+    "error": null,
+}
 // @param {string} entryFilePath
 // @param {number} targetLineNumber
 // @return {FindLine|null}
 Debug.findLine = function (entryFilePath, targetLineNumber)
-    entryFilePath = entryFilePath.absolutePath()
+    entryFilePath = entryFilePath.ensureSuffix(".src").absolutePath()
+    if (targetLineNumber < 1) then throw("The target line number must be greater than 0.")
+
+    state = {}
+    state.totalLineCount = 0
 
     recursive = function(filePath)
         fileContent = Fs.read(filePath)
-        currentLineCount = 0
+        currentFileLineCount = 0
         for line in fileContent.split(LF)
-            Debug.currentLineCount = Debug.currentLineCount + 1
-            currentLineCount = currentLineCount + 1
-            if (Debug.currentLineCount == targetLineNumber) then
-                print("File: $".f(filePath))
-                print("Line: $".f(line))
-                return {
-                    "file": filePath,
-                    "line": 0
-                    }
-                end if
-        end for
-        // Compile.getImportsOfFile(filePath)
+            state.totalLineCount = state.totalLineCount + 1
+            currentFileLineCount = currentFileLineCount + 1
 
-        // for import in imports
-        //     recursive(import)
-        // end for
+            if (state.totalLineCount == targetLineNumber) then
+                result = new Debug.Result
+                result.filePath = filePath
+                result.line = currentFileLineCount
+                result.lineContent = line
+                return result
+            end if
+
+            importPath = line.valueBetween("import_cod"+"e(""", """")
+            if not importPath then continue
+            result = recursive(importPath.ensureSuffix(".src"))
+            if (result) then
+                return result
+            end if
+        end for
     end function
 
-    recursive(entryFilePath)
+    result = recursive(entryFilePath)
 
-    print("Lines $".f(Debug.currentLineCount))
-
-    if (Debug.currentLineCount < targetLine) then
-        throw("Target line is greater than the total line count of the file and its imports ($).".f(Debug.currentLineCount))
-    end if
+    if (result) then return result
+    result = new Debug.Result
+    result.error = "Target line $ is greater than the total line count ($).".f(targetLineNumber, state.totalLineCount)
+    return result
 end function
 
 Debug.main = function ()
     program = Program.New
-    // program.argument("srcFile")
-    // program.argumentNumber("targetLine", "The line number to find the corresponding source file which raised the runtime error.")
+    program.argument("srcFile")
+    program.argument("targetLine", "The line number to find the corresponding source file which raised the runtime error.").number
     program.parse()
 
-    Debug.findLine(program.args.srcFile, program.args.targetLine)
+    result = Debug.findLine(program.args.srcFile, program.args.targetLine)
+    if (result.error) then
+        throw(result.error)
+    end if
+    print("Found the line $ at $@$ with the content:".f(program.args.targetLine.bold, result.filePath.bold, result.line.bold).color("green"))
+    print(""""+result.lineContent.trim.italic.bold+"""")
 end function
 
-Debug.main()
+if (Consts.programName == "debug") then Debug.main()

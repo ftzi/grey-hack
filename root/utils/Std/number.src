@@ -1,0 +1,7 @@
+number.to_str = function (number)
+    return ""+number
+end function
+
+number.bold = function (number)
+    return "<b>"+self+"</b>"
+end function

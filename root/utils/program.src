@@ -49,27 +49,42 @@ Program._removeDashes = function (option)
     exit("Found no dashes for the option "+option)
 end function
 
+Program._parseArguments = function ()
+    for argument in self._arguments
+        value = self._params.pull()
+
+        if (value == null) then self.throwWithUsage("Argument "+argument.name+" is required.")
+
+        if (argument.type == "number") then
+            value = value.to_int
+            if (value isa string) then self.throwWithUsage("Argument "+argument.name+" requires a valid number.")
+        end if
+
+        self.args[argument.name] = value
+    end for
+end function
+
 // self.throwWithUsage("The option "+opt.name+" does not exist.")
 Program._parseOptions = function ()
-    for opt in self._options
-        nameNoDash = self._removeDashes(opt.name)
+    for option in self._options
+        nameNoDash = self._removeDashes(option.name)
         self.opts[nameNoDash] = null
 
-        indexOf = self._params.indexOf(opt.name)
+        indexOf = self._params.indexOf(option.name)
         if (indexOf == null) then continue
 
         self._params.remove(indexOf)
 
         value = null
-        if (opt.type == "boolean") then
+        if (option.type == "boolean") then
             value = true
         else
-            if (not self._params.hasIndex(indexOf)) then self.throwWithUsage("Option "+opt.name+" requires a value.")
+            if (not self._params.hasIndex(indexOf)) then self.throwWithUsage("Option "+option.name+" requires a value.")
             value = self._params[indexOf] // Same index as the one before got removed
             self._params.remove(indexOf)
-            if (opt.type == "number") then
+            if (option.type == "number") then
                 value = value.to_int
-                if (value isa string) then self.throwWithUsage("Option "+opt.name+" requires a valid number.")
+                if (value isa string) then self.throwWithUsage("Option "+option.name+" requires a valid number.")
             end if
         end if
 
@@ -83,16 +98,20 @@ Program.argument = function (name, description, type = null)
     if (allowedTypes.indexOf(type) == null) then
         exit("Invalid argument type "+type+". Must be one of the following: ["+Program.allowedTypes.join(", ")+"]")
     end if
-    // fn = function ()
-    //     value = self._params.pull()
-    // end function
-    // self._arguments.push(name)
-    // if (params.indexOf(name) == null) then self.throwWithUsage("Missing required argument: " + name)
-    self._arguments.push({"name": name, "description": description, "type": type})
+
+    obj = {"name": name, "description": description, "type": type}
+    self._arguments.push(obj)
+
+    argument = {}
+    argument.number = function ()
+        obj.type = "number"
+        return argument
+    end function
+
+    return argument
 end function
 
-Program.option = function (name, description, type = null)
-    allowedTypes = ["string", "number"]
+Program.option = function (name, description)
     invalid = function ()
         exit("Invalid option name "+name+". Must be in the format ""-x"" or ""-x <value>"".")
     end function
@@ -100,25 +119,32 @@ Program.option = function (name, description, type = null)
     if (name.len < 2 or name[0] != "-") then invalid()
 
     splittedName = name.split(" ")
+    if (splittedName.len > 2) then invalid()
 
     name = splittedName[0]
     valueName = null
+    type = null
 
     if (splittedName.len == 1) then
-        if (type != null) then exit("Option "+name+" does not accept a type.")
         type = "boolean"
     else if (splittedName.len == 2) then
-        if (type == null) then type = "string"
-        if (allowedTypes.indexOf(type) == null) then
-            exit("Invalid option type "+type+" for "+name+". Must be one of the following: ["+Program.allowedTypes.join(", ")+"]")
-        end if
+        type = "string"
         valueName = splittedName[1]
         if (valueName.len < 3 or valueName[0] != "<" or valueName[-1] != ">") then invalid()
     else
         invalid()
     end if
 
-    self._options.push({"name": name, "valueName": valueName, "description": description, "type": type})
+    obj = {"name": name, "valueName": valueName, "description": description, "type": type}
+    self._options.push(obj)
+
+    option = {}
+    option.number = function ()
+        obj.type = "number"
+        return option
+    end function
+
+    return option
 end function
 
 // You can pass the params to parse, or it will use the global `params`. Useful for testing.
@@ -128,6 +154,7 @@ Program.parse = function (_params = null)
     self.option("-h", "Prints the usage.")
 
     self._parseOptions()
+    self._parseArguments()
 
     if (self.opts.h) then self.exitWithUsage
 end function

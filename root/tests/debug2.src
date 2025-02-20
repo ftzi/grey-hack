@@ -1,0 +1,40 @@
+// This is just a dummy test file for the `debug` program.
+
+// @type Lib
+Lib = {}
+
+Lib._libs = {}
+
+// @return {metaxploit}
+Lib.metaxploit = function()
+    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load("metaxploit")
+    return Lib._libs[name]
+end function
+
+// @return {crypto}
+Lib.crypto = function()
+    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load("crypto")
+    return Lib._libs[name]
+end function
+
+// @return {aptClient}
+Lib.aptClient = function()
+    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load("aptclient")
+    return Lib._libs[name]
+end function
+
+// @param {string}
+// @return {string}
+Lib.getLibPath = function (name, installIfMissing)
+    libPath = "/lib/" + name
+    if (get_shell.host_computer.File(libPath)) then return libPath
+    localLibPath = current_path + "/" + name
+    if (get_shell.host_computer.File(localLibPath)) then return localLibPath
+    if (not installIfMissing) then
+        throw("Can't find the <b>" + name + "</b> lib in the /lib path or the current folder.")
+    end if
+
+    error = Lib.aptClient.install(name)
+    if (error) then throw ("Error installing the missing library "+name+": "+error)
+    return libPath
+end function

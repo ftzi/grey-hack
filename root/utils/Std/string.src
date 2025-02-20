@@ -25,6 +25,10 @@ string.bold = function ()
     return "<b>"+self+"</b>"
 end function
 
+string.italic = function ()
+    return "<i>"+self+"</i>"
+end function
+
 string.color = function (color)
     return "<color="+color+">"+self+"</color=>"
 end function

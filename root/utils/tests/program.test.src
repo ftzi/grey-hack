@@ -58,9 +58,38 @@ end function
 
 test "program with number options", function ()
     program = Program.New
-    program.option("-p <port>", "The port to use", "number")
+    program.option("-p <port>", "The port to use").number
     program.parse(["-p", "8080"])
     expect(program.opts.p).toBe(8080)
+end function
+
+test "program with arguments", function ()
+    program = Program.New
+    program.argument("path", "The path to use")
+    program.parse(["/home"])
+    expect(program.args.path).toBe("/home")
+
+    program = Program.New
+    program.argument("port", "The port to use").number
+    program.parse(["1234"])
+    expect(program.args.port).toBe(1234)
+end function
+
+test "program with all", function ()
+    program = Program.New
+    program.option("-d", "Debug mode")
+    program.option("-x", "Mystery mode")
+    program.option("-i <ip>", "The IP to use")
+    program.argument("path", "The path to use")
+    program.argument("port", "The port to use").number
+
+    program.parse(["-x", "-i", "127.0.0.1", "/home", "8080"])
+    
+    expect(program.opts.d).toBe(null)
+    expect(program.opts.x).toBe(true)
+    expect(program.opts.i).toBe("127.0.0.1")
+    expect(program.args.path).toBe("/home")
+    expect(program.args.port).toBe(8080)
 end function
 
 Test.runTests()

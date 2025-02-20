@@ -1,0 +1,36 @@
+// This is just a dummy test file for the `debug` program.
+
+import_code("/root/tests/debug0")
+import_code("/root/tests/debug2")
+
+Filters = {}
+Filters.byTruthyProp = function (key)
+    fn = function (item)
+        return item.get(key) != null
+    end function
+
+    return @fn
+end function
+
+// Safely accesses a list item by the index.
+// Returns null if the index is invalid.
+list.get = function (index, default = null)
+	if (self.hasIndex(index)) then return self[index] else return default
+end function
+
+// Returns true if the list includes the given item.
+// @return {number}
+list.has = function (item)
+	return self.indexOf(item) != null
+end function
+
+// Only adds if the list doesn't have this item yet.
+list.addUnique = function (item)
+    if (not self.has(item)) then self.push(item)
+end function
+
+// Deletes the first occurrence of an item in the list. Mutates that list.
+list.delete = function (item)
+    index = self.indexOf(item)
+    if (index != null) then self.remove(index)
+end function

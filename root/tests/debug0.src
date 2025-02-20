@@ -1,0 +1,38 @@
+// This is just a dummy test file for the `debug` program.
+
+Compile = {}
+// Files which were accessed.
+Compile.debugMode = false
+// Source files which are going to be / were built, so we don't build them again.
+Compile.buildList = []
+// All the relevant files and their contents.
+Compile.allSourcesAndContents = {}
+Compile.optionToSkip = "--skipSelfCompile"
+Compile.filesContent = {}
+Compile.watchIntervalSeconds = 2.5
+
+Compile._valuesBetween = function (string, open, close)
+    array = []
+    head = null
+    tail = null
+    while true
+        head = string.indexOf(open, tail)
+        if (head == null) then break
+        tail = string.indexOf(close, head + open.len)
+        if (tail == null) then break
+        array.push(string[head + open.len:tail])
+    end while
+    return array
+end function
+
+Compile.getImportsOfFile = function (filePath)
+    if (filePath.indexOf(".src") == null) then filePath = filePath + ".src"
+
+    file = get_shell.host_computer.File(filePath)
+    if (not file) then exit("<color=red>File not found: " + filePath + "</color>")
+
+    fileContent = file.get_content()
+    if (fileContent == null) then exit("<color=red>Coulnd't read the file " + file.path + "</color>")
+
+    return Compile._valuesBetween(fileContent, "import_cod" + "e(""", """")
+end function
