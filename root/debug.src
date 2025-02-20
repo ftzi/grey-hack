@@ -55,7 +55,7 @@ end function
 
 Debug.main = function ()
     program = Program.New
-    program.argument("srcFile")
+    program.argument("srcFile", "The main program")
     program.argument("targetLine", "The line number to find the corresponding source file which raised the runtime error.").number
     program.parse()
 

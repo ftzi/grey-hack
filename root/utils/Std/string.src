@@ -69,6 +69,14 @@ string.removeSuffix = function (suffix)
     return self
 end function
 
+string.padLeft = function (length, char = " ")
+    return (char * (length - self.len)) + self
+end function
+
+string.padRight = function (length, char = " ")
+    return self + (char * (length - self.len))
+end function
+
 toString = function (value)
     if (value == null) then return "null"
     if (value isa string) then return value

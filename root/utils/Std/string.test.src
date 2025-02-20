@@ -44,6 +44,16 @@ test "string.removePrefix", function ()
     expect("test".removePrefix("test")).toBe("")
 end function
 
+test "string.padLeft", function ()
+    expect("5".padLeft(3, "0")).toBe("005")
+    expect("5".padLeft(3)).toBe("  5")
+end function
+
+test "string.padRight", function ()
+    expect("5".padRight(3, "0")).toBe("500")
+    expect("5".padRight(3)).toBe("5  ")
+end function
+
 test "string.trim", function ()
     expect("  Hi  ".trim()).toBe("Hi")
     expect("  Hi  \n ".LF.trim()).toBe("Hi")

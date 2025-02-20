@@ -17,20 +17,40 @@ end function
 
 Program.getUsage = function ()
     usage = ""
-    usage = usage + "<b>Usage:</b> "+Consts.programName+" [options]\n\n"
+    usage = usage + "<b>Usage:</b> "+Consts.programName
+    if (self._options.len > 0) then usage = usage + " [options]"
+    for argument in self._arguments
+        if (argument.isRequired) then
+            usage = "$ <$>".f(usage, argument.name)
+        else
+            usage = "$ [$]".f(usage, argument.name)
+        end if
+    end for
+    usage = usage.LF.LF
     if (self.description) then usage = usage + self.description.bold.LF.LF
 
-    // for argument in Program._arguments
-    //     usage = usage + " $".f(argument)
-    // end for
-    // usage = usage + "\n"
-
-    usage = usage + "Options".bold.LF
-    for option in self._options
-        usage = usage + " " + option.name
-        if (option.valueName) then usage = usage + " "+option.valueName
-        usage = usage + "    " + option.description+"\n"
+    maxLeftColumnLen = 0
+    for argument in self._arguments
+        if (argument.name.len > maxLeftColumnLen) then maxLeftColumnLen = argument.name.len
     end for
+    for option in self._options
+        if (option.fullname.len > maxLeftColumnLen) then maxLeftColumnLen = option.fullname.len
+    end for
+
+    if (self._arguments.len > 0) then
+        usage = usage + "Arguments".bold.LF
+        for argument in self._arguments
+            usage = "$ $  $".f(usage, argument.name.padRight(maxLeftColumnLen), argument.description).LF
+        end for
+        usage = usage.LF
+    end if
+
+    if (self._options.len > 0) then
+        usage = usage + "Options".bold.LF
+        for option in self._options
+            usage = "$ $  $".f(usage, option.fullname.padRight(maxLeftColumnLen), option.description).LF
+        end for
+    end if
 
     return usage
 end function
@@ -40,7 +60,7 @@ Program.exitWithUsage = function ()
 end function
 
 Program.throwWithUsage = function (errorMessage)
-    exit("<color=red>"+errorMessage+"\n\n"+self.getUsage()+"</color>")
+    exit(LF+errorMessage.error.LF.LF+self.getUsage)
 end function
 
 Program._removeDashes = function (option)
@@ -92,14 +112,9 @@ Program._parseOptions = function ()
     end for
 end function
 
-Program.argument = function (name, description, type = null)
-    allowedTypes = ["string", "number"]
-    if (type == null) then type = "string"
-    if (allowedTypes.indexOf(type) == null) then
-        exit("Invalid argument type "+type+". Must be one of the following: ["+Program.allowedTypes.join(", ")+"]")
-    end if
-
-    obj = {"name": name, "description": description, "type": type}
+Program.argument = function (name, description = "")
+    if (description) then description = description.ensureSuffix(".")
+    obj = {"name": name, "description": description, "type": "string", "isRequired": true}
     self._arguments.push(obj)
 
     argument = {}
@@ -111,7 +126,8 @@ Program.argument = function (name, description, type = null)
     return argument
 end function
 
-Program.option = function (name, description)
+Program.option = function (name, description = "")
+    if (description) then description = description.ensureSuffix(".")
     invalid = function ()
         exit("Invalid option name "+name+". Must be in the format ""-x"" or ""-x <value>"".")
     end function
@@ -121,21 +137,18 @@ Program.option = function (name, description)
     splittedName = name.split(" ")
     if (splittedName.len > 2) then invalid()
 
+    fullname = name
     name = splittedName[0]
     valueName = null
-    type = null
+    type = "boolean"
 
-    if (splittedName.len == 1) then
-        type = "boolean"
-    else if (splittedName.len == 2) then
+    if (splittedName.len == 2) then
         type = "string"
         valueName = splittedName[1]
         if (valueName.len < 3 or valueName[0] != "<" or valueName[-1] != ">") then invalid()
-    else
-        invalid()
     end if
 
-    obj = {"name": name, "valueName": valueName, "description": description, "type": type}
+    obj = {"name": name, "valueName": valueName, "fullname": fullname, "description": description, "type": type}
     self._options.push(obj)
 
     option = {}
