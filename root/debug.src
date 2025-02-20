@@ -21,25 +21,29 @@ Debug.findLine = function (entryFilePath, targetLineNumber)
     state = {}
     state.totalLineCount = 0
 
+    // NOTE: lines with import_co... are removed by GreyHack.
     recursive = function(filePath)
         fileContent = Fs.read(filePath)
+        importsInFile = 0
         currentFileLineCount = 0
         for line in fileContent.split(LF)
+            importPath = line.valueBetween("import_cod"+"e(""", """")
+            if importPath then
+                importsInFile = importsInFile + 1
+                result = recursive(importPath.ensureSuffix(".src"))
+                if (result) then return result
+                continue
+            end if
+
             state.totalLineCount = state.totalLineCount + 1
             currentFileLineCount = currentFileLineCount + 1
+            // print("$) $".f(state.totalLineCount, line))
 
             if (state.totalLineCount == targetLineNumber) then
                 result = new Debug.Result
                 result.filePath = filePath
-                result.line = currentFileLineCount
+                result.line = currentFileLineCount + importsInFile
                 result.lineContent = line
-                return result
-            end if
-
-            importPath = line.valueBetween("import_cod"+"e(""", """")
-            if not importPath then continue
-            result = recursive(importPath.ensureSuffix(".src"))
-            if (result) then
                 return result
             end if
         end for
@@ -49,7 +53,7 @@ Debug.findLine = function (entryFilePath, targetLineNumber)
 
     if (result) then return result
     result = new Debug.Result
-    result.error = "Target line $ is greater than the total line count ($).".f(targetLineNumber, state.totalLineCount)
+    result.error = "Target line $ is greater than the total line count ($).".f(targetLineNumber.bold, state.totalLineCount.bold)
     return result
 end function
 

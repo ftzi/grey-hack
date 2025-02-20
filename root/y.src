@@ -2,9 +2,7 @@
 import_code("/root/c.src")
 Compile.selfCompile()
 
-import_code("/root/utils/std")
 import_code("/root/utils/obj")
-import_code("/root/utils/lib")
 
 dbLib = {
 	"kernel_router.so": {
