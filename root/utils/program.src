@@ -20,10 +20,10 @@ Program.getUsage = function ()
     usage = usage + "<b>Usage:</b> "+Consts.programName
     if (self._options.len > 0) then usage = usage + " [options]"
     for argument in self._arguments
-        if (argument.isRequired) then
-            usage = "$ <$>".f(usage, argument.name)
-        else
+        if (argument.optional) then
             usage = "$ [$]".f(usage, argument.name)
+        else
+            usage = "$ <$>".f(usage, argument.name)
         end if
     end for
     usage = usage.LF.LF
@@ -70,14 +70,20 @@ Program._removeDashes = function (option)
 end function
 
 Program._parseArguments = function ()
+    hadOptional = false
     for argument in self._arguments
         value = self._params.pull()
+        if (argument.optional) then
+            hadOptional = true
+            if (value == null) then value = argument.default
+        else
+            if (value == null) then self.throwWithUsage("Argument $ is required.".f(argument.name))
+            if (hadOptional) then self.throwWithUsage("Optional arguments must be at the end.")
+        end if
 
-        if (value == null) then self.throwWithUsage("Argument "+argument.name+" is required.")
-
-        if (argument.type == "number") then
+        if (argument.type == "number" and value isa string) then
             value = value.to_int
-            if (value isa string) then self.throwWithUsage("Argument "+argument.name+" requires a valid number.")
+            if (value isa string) then self.throwWithUsage("Argument $ requires a valid number.".f(argument.name))
         end if
 
         self.args[argument.name] = value
@@ -88,14 +94,15 @@ end function
 Program._parseOptions = function ()
     for option in self._options
         nameNoDash = self._removeDashes(option.name)
-        self.opts[nameNoDash] = null
+        self.opts[nameNoDash] = option.default
 
         indexOf = self._params.indexOf(option.name)
         if (indexOf == null) then continue
 
         self._params.remove(indexOf)
 
-        value = null
+        value = option.default
+
         if (option.type == "boolean") then
             value = true
         else
@@ -114,12 +121,23 @@ end function
 
 Program.argument = function (name, description = "")
     if (description) then description = description.ensureSuffix(".")
-    obj = {"name": name, "description": description, "type": "string", "isRequired": true}
+
+    obj = {"name": name, "description": description, "type": "string", "optional": false, "default": null}
     self._arguments.push(obj)
 
     argument = {}
     argument.number = function ()
         obj.type = "number"
+        return argument
+    end function
+    argument.optional = function ()
+        obj.optional = true
+        return argument
+    end function
+    argument.default = function (value)
+        if (obj.type == "number" and not value isa number) then throw(".default must be a number.")
+        if (obj.type == "string" and not value isa string) then throw(".default must be a string.")
+        obj.default = value
         return argument
     end function
 
@@ -148,7 +166,14 @@ Program.option = function (name, description = "")
         if (valueName.len < 3 or valueName[0] != "<" or valueName[-1] != ">") then invalid()
     end if
 
-    obj = {"name": name, "valueName": valueName, "fullname": fullname, "description": description, "type": type}
+    obj = {
+        "name": name,
+        "valueName": valueName,
+        "fullname": fullname,
+        "description": description,
+        "type": type,
+        "default": null,
+    }
     self._options.push(obj)
 
     option = {}
@@ -156,7 +181,13 @@ Program.option = function (name, description = "")
         obj.type = "number"
         return option
     end function
-
+    option.default = function (value)
+        if (obj.type == "boolean") then throw("Can't set a default value for a boolean option.")
+        if (obj.type == "number" and not value isa number) then throw(".default must be a number.")
+        if (obj.type == "string" and not value isa string) then throw(".default must be a string.")
+        obj.default = value
+        return option
+    end function
     return option
 end function
 

@@ -25,7 +25,7 @@ end function
 
 // @param {string}
 // @return {string}
-Lib.getLibPath = function (name, installIfMissing)
+Lib.libPath = function (name, installIfMissing)
     libPath = "/lib/" + name
     if (get_shell.host_computer.File(libPath)) then return libPath
     localLibPath = current_path + "/" + name

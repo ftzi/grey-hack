@@ -1,19 +1,9 @@
 import_code("/root/utils/lib")
 import_code("/root/utils/std")
+import_code("/root/utils/xfile")
 
 Obj = {}
-Obj.getFile = function (filePath)
-	if (self.anyFile) then return goToFile(filePath, self.anyFile)
-end function
-Obj.getFileContent = function (filePath)
-	file = self.getFile(filePath)
-	if (file) then return file.get_content
-end function
-Obj.getUser = function ()
-	return getUser(self.anyFile)
-end function
-
-newObj = function(data, address, unsecValue, extra)
+Obj.New = function(data, address, unsecValue, extra)
 	obj = new Obj
 	obj.type = typeof(data)
 	obj.address = address
@@ -25,20 +15,20 @@ newObj = function(data, address, unsecValue, extra)
 	// A computer object this Object might point to.
 	obj.computer = null
 	// Any file, used to reach other files and informations.
-	obj.anyFile = null
+	obj.xfile = null
 	obj.action = null
 
 	if (obj.type == "shell") then
 		obj.shell = data
 		obj.computer = obj.shell.host_computer
-		obj.anyFile = obj.computer.File("/")
+		obj.xfile = XFile.New(obj.computer.File("/"))
 		obj.action = @obj.actionShell
 	else if (obj.type == "computer") then
 		obj.computer = data
-		obj.anyFile = obj.computer.File("/")
+		obj.xfile = XFile.New(obj.computer.File("/"))
 		obj.action = @obj.actionComputer
 	else if (obj.type == "file") then
-		obj.anyFile = data
+		obj.xfile = XFile.New(data)
 	end if
 	return obj
 end function
@@ -63,9 +53,9 @@ Obj.actionComputer = function()
 end function
 
 Obj.actionShell = function ()
-	get_shell.scp(current_path + "/metaxploit.so", "/home/guest", self.shell)
-	get_shell.scp(current_path + "/crypto.so", "/home/guest", self.shell)
-	get_shell.scp(current_path + "/y", "/home/guest", self.shell)
+	get_shell.scp(Lib.libPath("metaxploit.so"), "/home/guest", self.shell)
+	get_shell.scp(Lib.libPath("crypto.so"), "/home/guest", self.shell)
+	get_shell.scp(program_path, "/home/guest", self.shell)
 	self.shell.start_terminal
 end function
 
@@ -73,10 +63,10 @@ Objs = {}
 Objs.all = []
 Objs.withAction = []
 Objs.withShell = []
+Objs.withXFile = []
 Objs.passwd = function()
-	for obj in Objs.all
-	    content = obj.getFileContent("/etc/passwd")
-		if (content) then return content.trim()
+	for obj in Objs.withXFile
+	    return obj.xfile.contentAt("/etc/passwd")
 	end for
 end function
 
@@ -99,12 +89,13 @@ Objs.setup = function (addresses, lib, extraArgs)
 			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
 
 			extra = (entry.LF).valuesBetween("* ", LF)
-			obj = newObj(data, address, unsecValue, extra)
+			obj = Obj.New(data, address, unsecValue, extra)
 			Objs.all.push(obj)
 		end for
 	end for
 	Objs.withAction = Objs.all.filter(Filters.byTruthyProp("action"))
-	// Objs.withShell = Objs.all.filter(Filters.byTruthyProp("shell"))
+	Objs.withShell = Objs.all.filter(Filters.byTruthyProp("shell"))
+	Objs.withXFile = Objs.all.filter(Filters.byTruthyProp("xfile"))
 end function
 
 Objs.print = function ()
@@ -113,26 +104,25 @@ Objs.print = function ()
 	for obj in Objs.withAction
 		i = i + 1
 		message = message.LF + i + " " + obj.address + " " + obj.unsecValue + " " + obj.type
-
-		if (obj.type == "computer") then message = message + " " + obj.getUser()
-		if (obj.type == "shell") then message = message + " " + obj.getUser()
+		if (obj.type == "computer") then message = message + " "+ obj.xfile.user
+		if (obj.type == "shell") then message = message + " "+ obj.xfile.user
 		if (obj.type == "file") then
 			message = message + " " + file.path
 			if (file.is_folder) then message = message + "/"
-			message = message + " " + file.permissions + " " + obj.getUser()
+			message = message + " " + file.permissions + " " + obj.xfile.user
 		end if
 	end for
 
 	print(format_columns(message).LF)
 
     if (Objs.passwd) then
-		print("Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>].")
+        message = "Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>]."
         i = 0
         for line in Objs.passwd.split(LF)
-            print ("p "+i+") "+line)
+            message = "$p $) $".f(message, i, line)
             i = i + 1
         end for
-        print()
+        print(message.LF)
 	end if
 end function
 

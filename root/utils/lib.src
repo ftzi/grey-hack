@@ -25,7 +25,7 @@ end function
 
 // @param {string}
 // @return {string}
-Lib.getLibPath = function (name, installIfMissing)
+Lib.libPath = function (name, installIfMissing)
     libPath = "/lib/" + name
     if (get_shell.host_computer.File(libPath)) then return libPath
     localLibPath = current_path + "/" + name
@@ -44,14 +44,14 @@ end function
 // @return {string}
 Lib.versionOf = function (name)
     if (name.indexOf(".so") == null) then name = name + ".so"
-    return Lib.metaxploit.load(Lib.getLibPath(name, false)).version
+    return Lib.metaxploit.load(Lib.libPath(name, false)).version
 end function
 
 // Loads a lib either by reading it from the "/lib" or from the current path.
 // No need to provide the lib extension (".so").
 Lib.load = function (name)
     if (name.indexOf(".so") == null) then name = name + ".so"
-    lib = include_lib(Lib.getLibPath(name, true))
+    lib = include_lib(Lib.libPath(name, true))
     if not lib then exit("Error loading the lib "+name)
     return lib
 end function

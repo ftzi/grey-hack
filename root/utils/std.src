@@ -1,8 +1,7 @@
 // Common functions and utils.
 import_code("/root/utils/Std/string")
 import_code("/root/utils/Std/number")
-import_code("/root/utils/Std/list")
-import_code("/root/utils/Std/map")
+import_code("/root/utils/Std/collections")
 
 Consts = {}
 Consts.programName = program_path.split("/")[-1]
@@ -12,50 +11,4 @@ Consts.programName = program_path.split("/")[-1]
 // @returns never
 throw = function (message)
     exit(toString(message).error)
-end function
-
-// Navigates to the given path by using the file as starting point.
-// The path can start with `/` to be absolute or without to be relative.
-// @param {string}
-// @param {file}
-goToFile = function (path, file)
-    isPathAbsolute = path[0] == "/"
-    absolutePath = path
-    if (not isPathAbsolute) then absolutePath = file.path.join(path)
-
-    while (file.path != "/")
-        file = file.parent
-    end while
-	segmentsToNavigate = path.replace("/", " ").trim().split(" ")
-	for segment in segmentsToNavigate
-		files = file.get_folders + file.get_files
-		for f in files
-			if (f.name == segment) then
-                file = f
-                break
-            end if
-		end for
-	end for
-	if (file.path == absolutePath) then return file else return null
-end function
-
-// @return {string} The current user for the given file's context.
-getUser = function(anyFile)
-	root = goToFile("/", anyFile)
-		if root.has_permission("w") then return "root"
-
-	home = goToFile("/home", root)
-		for dir in home.get_folders
-				if dir.name == "guest" then continue
-		if dir.has_permission("w") then return dir.name
-		end for
-
-		return "guest"
-end function
-
-// Can later be improved into a whole CLI system
-getParamsOptionInt = function(option = "-x", default = 0)
-	index = params.indexOf(option)
-	if (index == null) then return default
-	return params[index + 1].to_int
 end function

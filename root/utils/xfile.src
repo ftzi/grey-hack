@@ -1,8 +1,74 @@
-// // XFile = {}
-// // XFile.New = function (file)
-// //     for kv in file.
+import_code("/root/utils/Std/collections")
 
-// newXFile = function (file)
+XFile = {}
+XFile._file = null
+XFile.New = function (file)
+    xfile = new XFile
+    xfile._file = file
+    return xfile
+end function
 
-//     file.
-// end function
+XFile.path = function()
+    return self._file.path
+end function
+
+XFile.get_content = function()
+    return self._file.get_content
+end function
+
+XFile.has_permission = function(permission)
+    return self._file.has_permission(permission)
+end function
+
+XFile.name = function()
+    return self._file.name
+end function
+
+XFile.get_folders = function()
+    return self._file.get_folders.map(@XFile.New)
+end function
+
+// Navigates to the given path by using the file as starting point.
+// The path can start with `/` to be absolute or without to be relative.
+// @param {string}
+// @param {XFile|null}
+XFile.getAt = function (path)
+    file = self._file
+    isPathAbsolute = path[0] == "/"
+    absolutePath = path
+    if (not isPathAbsolute) then absolutePath = file.path.join(path)
+    while (file.path != "/")
+        file = file.parent
+    end while
+
+	segmentsToNavigate = path.replace("/", " ").trim().split(" ")
+	for segment in segmentsToNavigate
+		files = file.get_folders + file.get_files
+		for f in files
+			if (f.name == segment) then
+                file = f
+                break
+            end if
+		end for
+	end for
+	if (file.path == absolutePath) then return XFile.New(file) else return null
+end function
+
+XFile.contentAt = function (path)
+    xfile = self.getAt(path)
+    if (xfile) then return xfile.get_content
+end function
+
+// @return {string} The current user for the given file's context.
+XFile.user = function()
+    root = self.getAt("/")
+    if root.has_permission("w") then return "root"
+
+	home = self.getAt("/home")
+    for dir in home.get_folders
+        if dir.name == "guest" then continue
+        if dir.has_permission("w") then return dir.name
+    end for
+
+    return "guest"
+end function

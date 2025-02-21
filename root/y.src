@@ -3,6 +3,7 @@ import_code("/root/c.src")
 Compile.selfCompile()
 
 import_code("/root/utils/obj")
+import_code("/root/utils/program")
 
 dbLib = {
 	"kernel_router.so": {
@@ -99,30 +100,33 @@ getRemote = function (ip)
 	return remote
 end function
 
-args = {
-	"ipOrLibName": params.get(0),
-	"extraArgs": params.get(1, ""),
-	"port": getParamsOptionInt("-p", 0),
-}
+Y = {}
+Y.main = function ()
+    program = Program.New("Hacks stuff!")
+    program.option("-p <port>", "Port to attempt to hack").number.default(0)
+    program.argument("ipOrLibName", "IP address or library name")
+    program.argument("extraArgs", "Extra arguments to pass to the library").optional.default("")
+    program.parse()
 
-main = function ()
 	clear_screen()
-    print(program_path.split("/")[-1] + " " + params.join(" ").LF)
-
+    print(Consts.programName + " " + params.join(" ").LF)
+    port = program.opts.p
+    print(program.args)
 	lib = null
 	remote = null
 
-	if (is_valid_ip(args.ipOrLibName)) then
-		remote = getRemote(args.ipOrLibName)
-		lib = Lib.loadRemote(remote.ip, args.port)
-		print("IP=" + remote.ip + " Port=" + args.port)
+	if (is_valid_ip(program.args.ipOrLibName)) then
+		remote = getRemote(program.args.ipOrLibName)
+		lib = Lib.loadRemote(remote.ip, port)
+		print("IP=" + remote.ip + " Port=" + port)
 	else
-		lib = Lib.metaxploit.load("/lib/"+args.ipOrLibName)
+		lib = Lib.metaxploit.load("/lib/"+program.args.ipOrLibName)
 	end if
 
 	addresses = getAddresses(lib)
-	Objs.setup(addresses, lib, args.extraArgs)
+	Objs.setup(addresses, lib, program.args.extraArgs)
+    Objs.print()
 	Objs.handleInput(remote)
 end function
 
-main()
+Y.main()

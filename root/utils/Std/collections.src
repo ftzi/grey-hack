@@ -1,16 +1,37 @@
+// Safely gets the value of an object by passing the keys to access it.
+// Pass either a string or a list of keys to deeply access it.
+// Returns null if the final property is not found.
+map.get = function (keys)
+	if not (keys isa list) then keys = [keys]
+	data = self
+	for key in keys
+		if (data.hasIndex(key)) then data = @data[key] else return null
+	end for
+	return @data
+end function
+
 Filters = {}
 Filters.byTruthyProp = function (key)
     fn = function (item)
-        return item.get(key) != null
+        return (item.get(key)) != null
     end function
 
     return @fn
 end function
 
+// Removes the items of a list when the given function returns not-true for each item.
+list.filter = function (fn)
+	newList = []
+	for item in self
+		if (fn(item)) then newList.push(item)
+	end for
+	return newList
+end function
+
 // Safely accesses a list item by the index.
 // Returns null if the index is invalid.
 list.get = function (index, default = null)
-	if (self.hasIndex(index)) then return self[index] else return default
+	if (self.hasIndex(index)) then return @self[index] else return default
 end function
 
 // Returns true if the list includes the given item.
@@ -28,15 +49,6 @@ end function
 list.delete = function (item)
     index = self.indexOf(item)
     if (index != null) then self.remove(index)
-end function
-
-// Removes the items of a list when the given function returns not-true for each item.
-list.filter = function (fn)
-	newList = []
-	for item in self
-		if (fn(item)) then newList.push(item)
-	end for
-	return newList
 end function
 
 // Transforms each item of a list by using the given function.
