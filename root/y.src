@@ -4,6 +4,7 @@ Compile.selfCompile()
 
 import_code("/root/utils/obj")
 import_code("/root/utils/program")
+import_code("/root/utils/remote")
 
 dbLib = {
 	"kernel_router.so": {
@@ -25,6 +26,7 @@ dbLib = {
 		"1.7.8": ["0x42ECAE9C"],
 		"1.7.9": ["0x42ECAE9C"],
 		"1.8.4": ["0x6C262E54", "0x6B77D50A"],
+        "2.2.0": ["0x65B9E0E5"],
 	},
 	"libssh.so": {
 		"1.0.3": ["0x41D54B6F", "0x150DD09D", "0x311F7AF2", "0x61DF7223"],
@@ -33,6 +35,7 @@ dbLib = {
 	"libftp.so": {
 		"1.0.0": ["0x2FDE73E", "0x6E7502EF", "0x4FF2BF81", "0x6580FEDA", "0xD3C3164"],
 		"1.0.2": ["0x2FDE73E", "0x25F98742", "0x4A93D6AA"],
+		"1.0.3": ["0x2FDE73E", "0x7DA3E659", "0x120736F2", "0x1BE9AD25", "0x2B8D80F1"],
 	},
 	"libhttp.so": {
 		"1.0.2": ["0x3EA33B42", "0x43051C85", "0x84998BE", "0x34F2F64B", "0x2934F618"],
@@ -73,32 +76,7 @@ getAddresses = function (lib)
 	return addresses
 end function
 
-getRemote = function (ip)
-	if (not is_valid_ip(ip)) then exit("Invalid ip: " + ip)
-	if (not get_shell.ping(ip)) then exit("IP address not found")
 
-	remote = {
-		"ip": ip,
-		"isLanIp": is_lan_ip(ip),
-		"router": null,
-		"ports": null,
-	}
-
-	if remote.isLanIp then
-		remote.router = get_router
-	else
-		remote.router = get_router(ip)
-	end if
-
-	if remote.isLanIp then
-		remote.ports = remote.router.device_ports(ip)
-	else
-		remote.ports = remote.router.used_ports
-	end if
-	if typeof(remote.ports) == "string" then exit(remote.ports)
-
-	return remote
-end function
 
 Y = {}
 Y.main = function ()
@@ -116,7 +94,7 @@ Y.main = function ()
 	remote = null
 
 	if (is_valid_ip(program.args.ipOrLibName)) then
-		remote = getRemote(program.args.ipOrLibName)
+		remote = Remote.New(program.args.ipOrLibName)
 		lib = Lib.loadRemote(remote.ip, port)
 		print("IP=" + remote.ip + " Port=" + port)
 	else

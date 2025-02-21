@@ -5,22 +5,22 @@ Lib = {}
 
 Lib._libs = {}
 
+Lib._getLib = function (name)
+    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load(name)
+    return Lib._libs[name]
+end function
+
 // @return {metaxploit}
 Lib.metaxploit = function()
-    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load("metaxploit")
-    return Lib._libs[name]
+    return Lib._getLib("metaxploit")
 end function
-
 // @return {crypto}
 Lib.crypto = function()
-    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load("crypto")
-    return Lib._libs[name]
+    return Lib._getLib("crypto")
 end function
-
 // @return {aptClient}
 Lib.aptClient = function()
-    if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load("aptclient")
-    return Lib._libs[name]
+    return Lib._getLib("aptclient")
 end function
 
 // @param {string}

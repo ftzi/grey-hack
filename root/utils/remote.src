@@ -1,0 +1,28 @@
+Remote = {}
+
+Remote.New = function (ip)
+	if (not is_valid_ip(ip)) then exit("Invalid ip: " + ip)
+	if (not get_shell.ping(ip)) then exit("IP address not found")
+
+	remote = {
+		"ip": ip,
+		"isLanIp": is_lan_ip(ip),
+		"router": null,
+		"ports": null,
+	}
+
+	if remote.isLanIp then
+		remote.router = get_router
+	else
+		remote.router = get_router(ip)
+	end if
+
+	if remote.isLanIp then
+		remote.ports = remote.router.device_ports(ip)
+	else
+		remote.ports = remote.router.used_ports
+	end if
+	if typeof(remote.ports) == "string" then exit(remote.ports)
+
+	return remote
+end function

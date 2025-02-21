@@ -7,7 +7,6 @@ import_code("/root/utils/lib")
 
 Setup = {}
 
-// TODO program lib
 Setup.exitWithUsage = function (message = "")
     if (message) then message = message.error.bold.LF
     message = "Usage:".bold.LF
@@ -85,6 +84,7 @@ Setup.setupHomeFilesAndPermissions = function ()
     Setup.setupRootPermissions()
     Fs.getFile("/bin/sudo").chmod("g+x", true)
     Fs.getFile("/usr/bin/Terminal.exe").chmod("g+x", true)
+    Fs.getFile("/usr/bin/Mail.exe").chmod("g+x", true)
 
     Fs.remove("/etc/passwd")
     Fs.remove("/home/guest")

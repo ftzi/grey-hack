@@ -116,13 +116,13 @@ Objs.print = function ()
 	print(format_columns(message).LF)
 
     if (Objs.passwd) then
-        message = "Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>]."
+        message = "Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>].".LF
         i = 0
-        for line in Objs.passwd.split(LF)
-            message = "$p $) $".f(message, i, line)
+        for line in Objs.passwd.trim.split(LF)
+            message = "$p $) $".f(message, i, line).LF
             i = i + 1
         end for
-        print(message.LF)
+        print(message)
 	end if
 end function
 
@@ -168,7 +168,7 @@ Objs.inputHandler.password = function (remote, inputParams)
     if (not password) then
         print("Deciphering the password of <b>"+user+"</b>...")
         wait(0.01)
-        password = Lib.crypto().decipher(chosenPasswd.valueBetween(":"))
+        password = Lib.crypto.decipher(chosenPasswd.valueBetween(":"))
         print("Password of <b>" + user + "</b> is <b>" + password + "</b>".LF)
         if (decipherOnly) then return
     end if
