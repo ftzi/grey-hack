@@ -2,7 +2,9 @@ import_code("/root/utils/Std/utils")
 import_code("/root/utils/lib")
 import_code("/root/utils/addresses")
 
+// @type Who
 Who = {}
+// @return {Who}
 Who.New = function (ip)
     who = new Who
     whoisOutput = whois(ip)
@@ -16,12 +18,24 @@ Who.New = function (ip)
     return who
 end function
 
+// @return {null}
 Who.print = function ()
     print("IP: $ Domain: $".f(self.ip.bold, self.domain.bold))
     print("Admin: $ Email: $".f(self.admin.name.bold, self.admin.email.bold).LF)
 end function
 
+// @type XLib
+// @property {Remote} remote
+// @property {Lib} lib
+// @property {string} service
+// @property {number} portNumber
+// @property {string} lanIp
+// @property {number} canUse
+// @property {number} hasAddresses
+// @property {string} name
+// @property {string} version
 XLib = {}
+// @return {XLib}
 XLib.New = function (remote, port = null)
     xlib = new XLib
     xlib.remote = remote
@@ -44,8 +58,17 @@ XLib.New = function (remote, port = null)
 end function
 
 // Remote is not a good name. How should it be called? XRouter?
+// @type Remote
+// @property {string} ip
+// @property {bool} isLanIp
+// @property {Router} router
+// @property {Who} who
+// @property {list<port>} ports
+// @property {list<XLib>} xlibs
+// @property {XLib} lib
 Remote = {}
 
+// @return {number}
 Remote._sortXlibs = function (a, b)
     if (a.lanIp < b.lanIp) then return -1
     if (a.lanIp == b.lanIp) then
@@ -55,6 +78,7 @@ Remote._sortXlibs = function (a, b)
     return 1
 end function
 
+// @return {Remote}
 Remote.New = function (ip)
 	if (not is_valid_ip(ip)) then throw("Invalid ip: " + ip)
 	if (not get_shell.ping(ip)) then throw("IP address not found")
@@ -91,6 +115,7 @@ Remote._getPorts = function (remote)
     return ports
 end function
 
+// @return {null}
 Remote.printFirewallRules = function ()
     firewall_rules = self.router.firewall_rules
     if (firewall_rules isa string) then throw(firewall_rules)
@@ -106,6 +131,7 @@ Remote.printFirewallRules = function ()
     end if
 end function
 
+// @return {null}
 Remote.print = function ()
     self.who.print()
 

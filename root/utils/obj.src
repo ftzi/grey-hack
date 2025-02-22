@@ -3,8 +3,10 @@ import_code("/root/utils/std")
 import_code("/root/utils/xfile")
 import_code("/root/utils/addresses")
 
+// @type Obj
 Obj = {}
-Obj.New = function(data, address, unsecValue, extra)
+// @return {Obj}
+Obj.New = function(data, address, unsecValue, extra, lanIp = null)
 	obj = new Obj
 	obj.type = typeof(data)
 	obj.address = address
@@ -18,6 +20,7 @@ Obj.New = function(data, address, unsecValue, extra)
 	// Any file, used to reach other files and informations.
 	obj.xfile = null
 	obj.action = null
+    obj.lanIp = lanIp
 
 	if (obj.type == "shell") then
 		obj.shell = data
@@ -34,7 +37,7 @@ Obj.New = function(data, address, unsecValue, extra)
 	return obj
 end function
 
-
+// @return {null}
 Obj.actionComputer = function()
 	while (true)
 		input = user_input("Enter the path of the file to be shown or nothing to go back:".LF)
@@ -53,6 +56,7 @@ Obj.actionComputer = function()
 	end while
 end function
 
+// @return {null}
 Obj.actionShell = function ()
 	get_shell.scp(Lib.libPath("metaxploit.so"), "/home/guest", self.shell)
 	get_shell.scp(Lib.libPath("crypto.so"), "/home/guest", self.shell)
@@ -60,7 +64,10 @@ Obj.actionShell = function ()
 	self.shell.start_terminal
 end function
 
+// @type Objs
 Objs = {}
+
+// @return {Objs}
 Objs.New = function (publicIp = null)
     objs = new Objs
     objs.publicIp = publicIp
@@ -70,11 +77,13 @@ Objs.New = function (publicIp = null)
     objs.withXFile = []
     return objs
 end function
+
 Objs.passwd = function()
 	for obj in self.withXFile
 	    return obj.xfile.contentAt("/etc/passwd")
 	end for
 end function
+
 Objs.users = function ()
     users = []
     passwd = self.passwd
@@ -83,11 +92,14 @@ Objs.users = function ()
             users.addUnique(line.valueBetween(null, ":"))
         end for
     end if
+    return users
 end function
 
-Objs.addBatch = function (lib, lanIp = "")
-	for address in Adrs.addressesFor(lib)
-		scanResult = Lib.metaxploit.scan_address(lib, address)
+// @return {null}
+Objs.addBatch = function (xlib, lanIp = "")
+    lib = xlib.lib
+	for address in Adrs.addressesFor(xlib.lib)
+		scanResult = Lib.metaxploit.scan_address(xlib.lib, address)
 		scanResult = scanResult.replace("decompiling source...\nsearching unsecure values...\n", "")
 		scanResult = scanResult.replace("\n\n\n", "")
 
@@ -97,14 +109,14 @@ Objs.addBatch = function (lib, lanIp = "")
 		for entry in entries
 			unsecValue = entry.valueBetween("<b>", "</b>")
 
-			print("Overflowing Address <b>" + address + "</b> with <b>" + unsecValue + "</b>")
-			data = lib.overflow(address, unsecValue, lanIp)
+			// print("Overflowing Address <b>" + address + "</b> with <b>" + unsecValue + "</b>")
+			data = xlib.lib.overflow(address, unsecValue, lanIp)
 			print("====================")
 
 			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
 
 			extra = (entry.LF).valuesBetween("* ", LF)
-			obj = Obj.New(data, address, unsecValue, extra)
+			obj = Obj.New(data, address, unsecValue, extra, xlib.lanIp)
 			self.all.push(obj)
 		end for
 	end for
@@ -113,12 +125,13 @@ Objs.addBatch = function (lib, lanIp = "")
 	self.withXFile = self.all.filter(Filters.byTruthyProp("xfile"))
 end function
 
+// @return {null}
 Objs.print = function ()
-	message = "Ix ADDRESS VALUE TYPE DATA"
+	message = "Ix LAN_IP TYPE DATA"
 	i = -1
 	for obj in self.withAction
 		i = i + 1
-		message = message.LF + i + " " + obj.address + " " + obj.unsecValue + " " + obj.type
+		message = message.LF + "$ $ $".f(i, obj.lanIp ,obj.type)
 		if (obj.type == "computer") then message = message + " "+ obj.xfile.user
 		if (obj.type == "shell") then message = message + " "+ obj.xfile.user
 		if (obj.type == "file") then
@@ -139,8 +152,10 @@ Objs.print = function ()
         end for
         print(message)
 	end if
+    print("Users: " +self.users.join(", "))
 end function
 
+// @return {null}
 Objs._connectSsh = function (user, password)
     shell = null
     if (self.publicIp) then
@@ -191,6 +206,7 @@ Objs.inputHandler.password = function (inputParams)
     self._connectSsh(user, password)
 end function
 
+// @return {null}
 Objs.handleInput = function (remote)
 	while true
 		inputParams = user_input("Enter the desired method:".LF).split(" ")

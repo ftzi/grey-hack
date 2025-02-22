@@ -2,8 +2,10 @@
 
 import_code("/root/utils/std")
 
+// @type Program
 Program = {}
 
+// @return {Program}
 Program.New = function (description = "")
     program = new Program
     program.description = description

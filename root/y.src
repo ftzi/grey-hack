@@ -5,7 +5,6 @@ Compile.selfCompile()
 import_code("/root/utils/obj")
 import_code("/root/utils/program")
 import_code("/root/utils/remote")
-import_code("/root/utils/csv")
 
 Y = {}
 Y.main = function ()
@@ -26,11 +25,21 @@ Y.main = function ()
 	remote = null
     ip = ifThenElse(is_valid_ip(program.args.ipOrLibName), program.args.ipOrLibName, null)
     objs = Objs.New(ip)
+    lanIp = program.args.lanIp
 
 	if (ip) then
 		remote = Remote.New(program.args.ipOrLibName)
         remote.print()
-    	objs.addBatch(remote.lib, program.args.lanIp)
+
+        sortXlibs = function (a, b)
+            if (a.lanIp == lanIp and b != lanIp) then return -1
+            if (a.lanIp != lanIp and b == lanIp) then return 1
+        end function
+
+        xlibsPrioritized = remote.xlibs.sort2(@sortXlibs)
+        for xlib in xlibsPrioritized
+            objs.addBatch(xlib, program.args.lanIp)
+        end for
 	else
         localLibName = "init.so" // TODO cycle through them automatically if none is specified.
         // Should get their versions and prefer the ones we have addresses for.
