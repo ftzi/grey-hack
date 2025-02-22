@@ -130,14 +130,14 @@ Program.argument = function (name, description = "")
         obj.type = "number"
         return argument
     end function
-    argument.optional = function ()
+    // Implies it's `optional`.
+    argument.default = function (defaultValue = null)
+        if (defaultValue != null) then
+            if (obj.type == "number" and not defaultValue isa number) then throw("defaultValue must be a number or null.")
+            if (obj.type == "string" and not defaultValue isa string) then throw("defaultValue must be a string or null.")
+        end if
         obj.optional = true
-        return argument
-    end function
-    argument.default = function (value)
-        if (obj.type == "number" and not value isa number) then throw(".default must be a number.")
-        if (obj.type == "string" and not value isa string) then throw(".default must be a string.")
-        obj.default = value
+        obj.default = defaultValue
         return argument
     end function
 

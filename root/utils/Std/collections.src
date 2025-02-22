@@ -10,6 +10,16 @@ map.get = function (keys)
 	return @data
 end function
 
+map.set = function (keys, value)
+    if not (keys isa list) then keys = [keys]
+    data = self
+    for key in keys[:-1]
+        if (not data.hasIndex(key)) then data[key] = {}
+        data = @data[key]
+    end for
+    data[keys[-1]] = value
+end function
+
 Filters = {}
 Filters.byTruthyProp = function (key)
     fn = function (item)
@@ -26,6 +36,21 @@ list.filter = function (fn)
 		if (fn(item)) then newList.push(item)
 	end for
 	return newList
+end function
+
+//
+list.sort2 = function (compareFn)
+    newList = self[:]
+    for i in range (0, newList.len - 1)
+        for j in range(0, newList.len - 2)
+            if (compareFn(newList[j], newList[j + 1]) > 0) then
+                temp = newList[j]
+                newList[j] = newList[j + 1]
+                newList[j + 1] = temp
+            end if
+        end for
+    end for
+    return newList
 end function
 
 // Safely accesses a list item by the index.
@@ -58,4 +83,9 @@ list.map = function (fn)
 		newList.push(fn(item))
 	end for
 	return newList
+end function
+
+list.toString = function (spaced = false)
+    if (spaced) then return "["+self.join(", ")+"]"
+    return "["+self.join(",")+"]"
 end function

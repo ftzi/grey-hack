@@ -10,9 +10,11 @@ Compile.debugMode = false
 Compile.buildList = []
 // All the relevant files and their contents.
 Compile.allSourcesAndContents = {}
-Compile.optionToSkip = "--skipSelfCompile"
 Compile.filesContent = {}
 Compile.watchIntervalSeconds = 2.5
+
+Compile.optionSkipSelfCompile = "--skipSelfCompile"
+Compile.optionSkipTests = "-T"
 
 Compile._valuesBetween = function (string, open, close)
     array = []
@@ -92,8 +94,8 @@ Compile.selfCompile = function ()
     // Skip self compile if there is no source file for the entry file.
     if (get_shell.host_computer.File(srcPath) == null) then return
 
-    indexOfSkip = params.indexOf(Compile.optionToSkip)
-    // Skip if the optionToSkip is passed.
+    indexOfSkip = params.indexOf(Compile.optionSkipSelfCompile)
+    // Skip if the optionSkipSelfCompile is passed.
 	if (indexOfSkip != null) then
         params.remove(indexOfSkip) // So it's not present in the final program if -x.
         return
@@ -102,7 +104,7 @@ Compile.selfCompile = function ()
 	Compile.compile(srcPath)
 
     // Relaunch
-	get_shell.launch(program_path, (params + [Compile.optionToSkip]).join(" "))
+	get_shell.launch(program_path, (params + [Compile.optionSkipSelfCompile]).join(" "))
 	exit() // So the rest of the original program isn't run.
 end function
 
@@ -141,6 +143,13 @@ Compile._main = function ()
         Compile.debugMode = true
     end if
 
+    skipTests = false
+    skipTestsIndex = params.indexOf(Compile.optionSkipTests)
+    if (skipTestsIndex != null) then
+        params.remove(skipTestsIndex)
+        skipTests = true
+    end if
+
     executeAfter = false
     executeAfterIndex = params.indexOf("-x")
     if (executeAfterIndex != null) then
@@ -163,17 +172,20 @@ Compile._main = function ()
 
     while true
         executablePath = Compile.compile(entryFile)
-        testsSuccess = Compile.runTests()
-        if (testsSuccess) then
-            if (executeAfter) then get_shell.launch(executablePath, params.join(" "))
-        end if
+
+        testsSuccess = true
+        if (not skipTests) then testsSuccess = Compile.runTests()
+        if (executeAfter and testsSuccess) then get_shell.launch(executablePath, params.join(" "))
+
         if (not watchMode) then break
+        
         print("Watching for changes in the files...")
         while true
             wait(Compile.watchIntervalSeconds)
             if (Compile.hasChangesInFiles()) then break
         end while
         print("Changes detected. Recompiling...")
+
         Compile.buildList = []
         Compile.allSourcesAndContents = {}
         Compile.filesContent = {}

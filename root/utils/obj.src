@@ -1,6 +1,7 @@
 import_code("/root/utils/lib")
 import_code("/root/utils/std")
 import_code("/root/utils/xfile")
+import_code("/root/utils/addresses")
 
 Obj = {}
 Obj.New = function(data, address, unsecValue, extra)
@@ -60,19 +61,33 @@ Obj.actionShell = function ()
 end function
 
 Objs = {}
-Objs.all = []
-Objs.withAction = []
-Objs.withShell = []
-Objs.withXFile = []
+Objs.New = function (publicIp = null)
+    objs = new Objs
+    objs.publicIp = publicIp
+    objs.all = []
+    objs.withAction = []
+    objs.withShell = []
+    objs.withXFile = []
+    return objs
+end function
 Objs.passwd = function()
-	for obj in Objs.withXFile
+	for obj in self.withXFile
 	    return obj.xfile.contentAt("/etc/passwd")
 	end for
 end function
+Objs.users = function ()
+    users = []
+    passwd = self.passwd
+    if (passwd) then
+        for line in passwd.trim.split(LF)
+            users.addUnique(line.valueBetween(null, ":"))
+        end for
+    end if
+end function
 
-Objs.setup = function (addresses, lib, extraArgs)
-	for address in addresses
-		scanResult = Lib.metaxploit().scan_address(lib, address)
+Objs.addBatch = function (lib, lanIp = "")
+	for address in Adrs.addressesFor(lib)
+		scanResult = Lib.metaxploit.scan_address(lib, address)
 		scanResult = scanResult.replace("decompiling source...\nsearching unsecure values...\n", "")
 		scanResult = scanResult.replace("\n\n\n", "")
 
@@ -83,25 +98,25 @@ Objs.setup = function (addresses, lib, extraArgs)
 			unsecValue = entry.valueBetween("<b>", "</b>")
 
 			print("Overflowing Address <b>" + address + "</b> with <b>" + unsecValue + "</b>")
-			data = lib.overflow(address, unsecValue, extraArgs)
+			data = lib.overflow(address, unsecValue, lanIp)
 			print("====================")
 
 			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
 
 			extra = (entry.LF).valuesBetween("* ", LF)
 			obj = Obj.New(data, address, unsecValue, extra)
-			Objs.all.push(obj)
+			self.all.push(obj)
 		end for
 	end for
-	Objs.withAction = Objs.all.filter(Filters.byTruthyProp("action"))
-	Objs.withShell = Objs.all.filter(Filters.byTruthyProp("shell"))
-	Objs.withXFile = Objs.all.filter(Filters.byTruthyProp("xfile"))
+	self.withAction = self.all.filter(Filters.byTruthyProp("action"))
+	self.withShell = self.all.filter(Filters.byTruthyProp("shell"))
+	self.withXFile = self.all.filter(Filters.byTruthyProp("xfile"))
 end function
 
 Objs.print = function ()
 	message = "Ix ADDRESS VALUE TYPE DATA"
 	i = -1
-	for obj in Objs.withAction
+	for obj in self.withAction
 		i = i + 1
 		message = message.LF + i + " " + obj.address + " " + obj.unsecValue + " " + obj.type
 		if (obj.type == "computer") then message = message + " "+ obj.xfile.user
@@ -115,10 +130,10 @@ Objs.print = function ()
 
 	print(format_columns(message).LF)
 
-    if (Objs.passwd) then
+    if (self.passwd) then
         message = "Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>].".LF
         i = 0
-        for line in Objs.passwd.trim.split(LF)
+        for line in self.passwd.trim.split(LF)
             message = "$p $) $".f(message, i, line).LF
             i = i + 1
         end for
@@ -126,17 +141,17 @@ Objs.print = function ()
 	end if
 end function
 
-Objs._connectSsh = function (remote, user, password)
+Objs._connectSsh = function (user, password)
     shell = null
-    if (remote) then
-        shell = get_shell.connect_service(remote.ip, 22, user, password)
+    if (self.publicIp) then
+        shell = get_shell.connect_service(self.publicIp, 22, user, password)
         // TODO check if port is open instead
         if (not shell or shell isa string) then
-            canConnectWithShell = Objs.withShell.len != 0
+            canConnectWithShell = self.withShell.len != 0
             message = "Using hacked shell to login as this user."
             if (not canConnectWithShell) then message = "There is no available shell to make the indirect login."
             print("Couldn't connect with ssh: " + shell + message)
-            if (canConnectWithShell) then Objs.withShell[0].shell.launch("sudo", "-s " + password)
+            if (canConnectWithShell) then self.withShell[0].shell.launch("sudo", "-s " + password)
             return
         end if
     else
@@ -146,8 +161,8 @@ Objs._connectSsh = function (remote, user, password)
 end function
 
 Objs.inputHandler = {}
-Objs.inputHandler.password = function (remote, inputParams)
-    if (not Objs.passwd) then return
+Objs.inputHandler.password = function (inputParams)
+    if (not self.passwd) then return
     decipherOnly = inputParams.has("-d")
     inputParams.delete("-d")
 
@@ -161,7 +176,7 @@ Objs.inputHandler.password = function (remote, inputParams)
 
     indexEntry = inputParams.get(1, "0").to_int
 
-    passwds = Objs.passwd.split(LF)
+    passwds = self.passwd.split(LF)
     chosenPasswd = passwds[indexEntry]
     user = chosenPasswd.valueBetween(null, ":")
 
@@ -173,22 +188,22 @@ Objs.inputHandler.password = function (remote, inputParams)
         if (decipherOnly) then return
     end if
 
-    Objs._connectSsh(remote, user, password)
+    self._connectSsh(user, password)
 end function
 
 Objs.handleInput = function (remote)
 	while true
 		inputParams = user_input("Enter the desired method:".LF).split(" ")
 		if (inputParams[0] == "p") then
-            Objs.inputHandler.password(remote, inputParams)
+            self.inputHandler.password(remote, inputParams)
 		else
             index = inputParams[0].to_int
-            if (not Objs.withAction.hasIndex(index)) then
+            if (not self.withAction.hasIndex(index)) then
                 print("Invalid option.")
                 continue
             end if
 
-			Objs.withAction[index].action()
+			self.withAction[index].action()
 		end if
 		print()
 	end while

@@ -1,0 +1,68 @@
+import_code("/root/utils/fs")
+import_code("/root/utils/Std/string")
+
+Csv = {}
+
+// So it won't conflict with lists
+Csv.separator=";"
+
+Csv.read = function (path)
+    content = Fs.read(path, false)
+    if (content == null) then return null
+
+    lines = content.split(LF)
+    columnsHeader = lines[0].split(Csv.separator)
+    data = []
+
+    for line in lines[1:]
+        obj = {}
+        columns = line.split(Csv.separator)
+        for i in range(0, columnsHeader.len - 1)
+            obj[columnsHeader[i]] = columns[i]
+        end for
+        data.push(obj)
+    end for
+
+    return data
+end function
+
+// @param {string} path
+// @param {list<string>} headers
+// @param {map} obj
+Csv.writeOrdered = function (path, headers, objOrObjs, level = 1)
+    if (not headers isa list or headers.len == 0) then throw("Headers must be a non-empty list.")
+    content = Fs.read(path, false)
+    if (content == null) then
+        content = headers.join(Csv.separator)
+    end if
+    lines = content.split(LF)
+    if (lines[0] != headers.join(Csv.separator)) then
+        throw("Headers don't match the file headers.")
+    end if
+
+    objs = objOrObjs
+    if (not objs isa list) then objs = [objOrObjs]
+
+    for obj in objs
+        firstColumn = obj[headers[0]]
+
+        insertionIndex = 1
+        for line in lines[1:]
+            columns = line.split(Csv.separator)
+            if (firstColumn <= columns[0]) then
+                break
+            else
+                insertionIndex = insertionIndex + 1
+            end if
+        end for
+
+        newLine = []
+        for header in headers
+            newLine.push(obj[header])
+        end for
+
+        lines.insert(insertionIndex, newLine.join(Csv.separator))
+    end for
+
+    Fs.write(path, lines.join(LF))
+end function

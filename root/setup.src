@@ -75,16 +75,16 @@ Setup.setupHomeFilesAndPermissions = function ()
     // This removes them to remove the temptation.
     cleanDesktop = function ()
         userDir = Fs.home.get_folders[0]
-        desktop = Fs.getFile(userDir.path.join("Desktop"))
+        desktop = Fs.file(userDir.path.join("Desktop"))
         for file in desktop.get_files
             if (file.is_symlink) then file.delete()
         end for
     end function
 
     Setup.setupRootPermissions()
-    Fs.getFile("/bin/sudo").chmod("g+x", true)
-    Fs.getFile("/usr/bin/Terminal.exe").chmod("g+x", true)
-    Fs.getFile("/usr/bin/Mail.exe").chmod("g+x", true)
+    Fs.file("/bin/sudo").chmod("g+x", true)
+    Fs.file("/usr/bin/Terminal.exe").chmod("g+x", true)
+    Fs.file("/usr/bin/Mail.exe").chmod("g+x", true)
 
     Fs.remove("/etc/passwd")
     Fs.remove("/home/guest")

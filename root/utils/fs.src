@@ -18,44 +18,46 @@ end function
 // @param {string} path
 // @return {file}
 // @throw
-Fs.getFile = function (path)
+Fs.file = function (path, throwIfMissing = true)
     file = self.computer.File(path)
-    if (not file) then throw("File not found at $.".f(path))
+    if (not file and throwIfMissing) then throw("File not found at $.".f(path))
     return file
-end function
-
-// Returns the "/" File.
-// @return {file}
-Fs.absoluteRoot = function ()
-    return self.getFile("/")
-end function
-
-// Returns the "/root" File.
-// @return {file}
-Fs.rootHome = function ()
-    return self.getFile("/root")
-end function
-
-// Returns the home dir File.
-// @return {file}
-Fs.home = function ()
-    return self.getFile("/home")
 end function
 
 // Returns the file content. Throws if the file doesn't exist.
 // @param {string} path
 // @return {string}
-Fs.read = function (path)
-    content = self.getFile(path).get_content
+Fs.read = function (path, throwIfMissing = true)
+    file = self.file(path, throwIfMissing)
+    if (not file) then return null
+    content = file.get_content
     if (content == null) then throw("Error reading the file $ content".f(path.bold))
     return content
+end function
+
+// Returns the "/" File.
+// @return {file}
+Fs.absoluteRoot = function ()
+    return self.file("/")
+end function
+
+// Returns the "/root" File.
+// @return {file}
+Fs.rootHome = function ()
+    return self.file("/root")
+end function
+
+// Returns the home dir File.
+// @return {file}
+Fs.home = function ()
+    return self.file("/home")
 end function
 
 // Removes a file or directory.
 // Ignores if the file doesn't exist.
 Fs.remove = function (path)
     if (self.exists(path)) then
-        error = self.getFile(path).delete()
+        error = self.file(path).delete()
         if (error) then throw("Error removing the file $: $.".f(path.bold, error))
     end if
 end function
@@ -73,7 +75,7 @@ end function
 // @param {string} path
 // @param {string} content
 // @return {file}
-Fs.create = function (path, content)
+Fs.write = function (path, content)
     self.remove(path)
     touchRes = self.computer.touch(path.parent, path.filename)
     if (touchRes isa string) then throw("Error touching file $ in create(): $".f(path, touchRes))
@@ -89,18 +91,18 @@ end function
 // @return {file} - The created executable.
 Fs.createExecutable = function (path, content, deleteSource = true)
     filename = path.filename
-    srcFile = self.create(path+".src", content)
+    srcFile = self.write(path+".src", content)
     buildResult = self.shell.build(srcFile.path, path.parent)
     if (buildResult) then exit("Failed to build executable at "+path+": " + buildResult)
     if (deleteSource) then srcFile.delete()
-    return self.getFile(path)
+    return self.file(path)
 end function
 
 // Creates an executable file with the content and run it. (TODO. should it?:) Deletes the created files.
 // @param {string} path
 // @param {string} content
 Fs.autorunCode = function (path, content)
-    self.create(path, content)
+    self.write(path, content)
     self.shell.build(path, path.parent)
     self.launch(path.remove(".src"))
 end function

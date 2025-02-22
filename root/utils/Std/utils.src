@@ -1,0 +1,8 @@
+Consts = {}
+Consts.programName = program_path.split("/")[-1]
+
+// Functions references can be passed so they are only run deppending on the `condition`
+ifThenElse = function (condition, ifTrue, ifFalse)
+    if (condition) then return ifTrue
+    return ifFalse
+end function

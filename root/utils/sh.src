@@ -7,7 +7,7 @@ Sh = {}
 Sh.shell = null
 Sh.fs = null
 
-Sh.init = function (shell)
+Sh.New = function (shell)
     sh = new Sh
     sh.shell = shell
     sh.computer = shell.host_computer
@@ -21,4 +21,4 @@ Sh.startTerminalAs = function (user, password)
 end function
 
 
-sh = Sh.create(get_shell)
+sh = Sh.New(get_shell)

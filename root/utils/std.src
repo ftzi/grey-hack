@@ -1,10 +1,9 @@
 // Common functions and utils.
+
+import_code("/root/utils/Std/utils")
 import_code("/root/utils/Std/string")
 import_code("/root/utils/Std/number")
 import_code("/root/utils/Std/collections")
-
-Consts = {}
-Consts.programName = program_path.split("/")[-1]
 
 // Exits and prints the message in a pretty way.
 // @param {string} message

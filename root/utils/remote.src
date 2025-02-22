@@ -1,28 +1,122 @@
+import_code("/root/utils/Std/utils")
+import_code("/root/utils/lib")
+import_code("/root/utils/addresses")
+
+Who = {}
+Who.New = function (ip)
+    who = new Who
+    whoisOutput = whois(ip)
+    whoisLines = whoisOutput.split(LF)
+    who.ip = ip
+    who.domain = whoisLines[0].split(":")[1].trim
+    who.admin = {}
+    who.admin.name = whoisLines[1].split(":")[1].trim
+    who.admin.email = whoisLines[2].split(":")[1].trim
+    who.admin.phone = whoisLines[3].split(":")[1].trim
+    return who
+end function
+
+Who.print = function ()
+    print("IP: $ Domain: $".f(self.ip.bold, self.domain.bold))
+    print("Admin: $ Email: $".f(self.admin.name.bold, self.admin.email.bold).LF)
+end function
+
+XLib = {}
+XLib.New = function (remote, port = null)
+    xlib = new XLib
+    xlib.remote = remote
+    if (port) then
+        xlib.service = remote.router.port_info(port).split(" ")[0] // [1] is lib version
+        xlib.portNumber = port.port_number
+        xlib.lanIp = port.get_lan_ip
+        xlib.canUse = remote.isLanIp or not port.is_closed
+    else
+        xlib.service = "router"
+        xlib.portNumber = 0
+        xlib.lanIp = remote.router.local_ip
+        xlib.canUse = true
+    end if
+    xlib.lib = Lib.loadRemote(remote.ip, xlib.portNumber)
+    xlib.hasAddresses = Adrs.hasLocalAddressesFor(xlib.lib)
+    xlib.name = xlib.lib.lib_name
+    xlib.version = xlib.lib.version
+    return xlib
+end function
+
+// Remote is not a good name. How should it be called? XRouter?
 Remote = {}
 
+Remote._sortXlibs = function (a, b)
+    if (a.lanIp < b.lanIp) then return -1
+    if (a.lanIp == b.lanIp) then
+        if (a.portNumber < b.portNumber) then return -1
+        return 1
+    end if
+    return 1
+end function
+
 Remote.New = function (ip)
-	if (not is_valid_ip(ip)) then exit("Invalid ip: " + ip)
-	if (not get_shell.ping(ip)) then exit("IP address not found")
+	if (not is_valid_ip(ip)) then throw("Invalid ip: " + ip)
+	if (not get_shell.ping(ip)) then throw("IP address not found")
 
-	remote = {
-		"ip": ip,
-		"isLanIp": is_lan_ip(ip),
-		"router": null,
-		"ports": null,
-	}
-
-	if remote.isLanIp then
-		remote.router = get_router
-	else
-		remote.router = get_router(ip)
-	end if
-
-	if remote.isLanIp then
-		remote.ports = remote.router.device_ports(ip)
-	else
-		remote.ports = remote.router.used_ports
-	end if
-	if typeof(remote.ports) == "string" then exit(remote.ports)
+    remote = new Remote
+    remote.ip = ip
+    remote.isLanIp = is_lan_ip(ip)
+    remote.router = get_router(ifThenElse(remote.isLanIp, "", ip))
+    remote.who = Who.New(ip)
+    remote.ports = Remote._getPorts(remote)
+    remote.xlibs = [XLib.New(remote, null)]
+    for port in remote.ports
+        xlib = XLib.New(remote, port)
+        remote.xlibs.push(xlib)
+    end for
+    remote.lib = remote.xlibs[0].lib // not needed? currently used as first option in y
+    remote.xlibs = remote.xlibs.sort2(@Remote._sortXlibs)
 
 	return remote
+end function
+
+// @return {list<port>}
+Remote._getPorts = function (remote)
+    ports = null
+    if is_lan_ip(remote.ip) then
+        ports = remote.router.device_ports(remote.ip)
+    else
+        ports = remote.router.used_ports
+    end if
+
+    if (ports == null) then ports = "IP address not found"
+	if (ports isa string) then throw("Error: " + ports)
+
+    return ports
+end function
+
+Remote.printFirewallRules = function ()
+    firewall_rules = self.router.firewall_rules
+    if (firewall_rules isa string) then throw(firewall_rules)
+
+    if firewall_rules.len == 0 then
+        print("No firewall rules found.".color("grey").LF)
+    else
+        firewallMessage = "ACTION PORT SOURCE_IP DESTINATION_IP"
+        for rules in firewall_rules
+            firewallMessage = firewallMessage.LF + rules
+        end for
+        print(format_columns(infirewallMessagefo).LF)
+    end if
+end function
+
+Remote.print = function ()
+    self.who.print()
+
+    info = "PORT STATE SERVICE VERSION LAN"
+    for xlib in self.xlibs
+        version = xlib.version + ifThenElse(xlib.hasAddresses, "+", "")
+        info = info.LF + [xlib.portNumber, ifThenElse(xlib.canUse, "open", "close"), xlib.service, version, xlib.lanIp].join(" ")
+    end for
+
+    formatted = format_columns(info).split(LF)
+    print(formatted[0].color("green"))
+    print(formatted[1:].join(LF).LF)
+    self.printFirewallRules()
 end function

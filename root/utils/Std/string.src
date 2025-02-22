@@ -127,7 +127,7 @@ end function
 // Returns the substring between two other substrings.
 // If "" or null is given to open, it will consider the beginning of the string; index 0.
 // If null is given to close, it will consider either a NewLine or the end of the string.
-string.valueBetween = function (open, close = null)
+string.valueBetween = function (open = null, close = null)
     if (open == null) then open = ""
     self = self.fixNewLine()
 
