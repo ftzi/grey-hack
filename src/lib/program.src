@@ -4,9 +4,7 @@
 #import Std from "std"
 
 /*
-  abs
-
-  @type {Program}
+  @type Program
  */
 Program = {}
 

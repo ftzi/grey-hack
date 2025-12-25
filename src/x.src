@@ -1,0 +1,114 @@
+/*
+  Dashboard/companion program.
+  Lists available tools and programs.
+ */
+#import Std from "lib/std"
+#import Setup from "tools/setup"
+#import Clean from "tools/clean"
+#import Y from "tools/y"
+
+X = {}
+
+/*
+  Returns the list of available tools.
+
+  @return {list}
+ */
+X.getTools = function ()
+    return [
+        {"key": "0", "name": "Setup", "fn": @Setup.run},
+        {"key": "1", "name": "Y (Hack)", "fn": @Y.run},
+        {"key": "2", "name": "Clean", "fn": @Clean.run}
+    ]
+end function
+
+/*
+  Returns a list of executable files in /usr/bin.
+
+  @return {list}
+ */
+X.getPrograms = function ()
+    programs = []
+    usrBin = get_shell.host_computer.File("/usr/bin")
+    if (usrBin == null) then return programs
+    for file in usrBin.get_files
+        if (file.is_binary) then programs.push(file)
+    end for
+    return programs
+end function
+
+/*
+  Gets the QWERTY key for a given index.
+
+  @param {number} index
+  @return {string}
+ */
+X.qwertyKey = function (index)
+    keys = "QWERTYUIOPASDFGHJKLZXCVBNM"
+    if (index < keys.len) then return keys[index]
+    return null
+end function
+
+/*
+  Prints the menu with tools and programs.
+
+  @param {list} tools
+  @param {list} programs
+ */
+X.printMenu = function (tools, programs)
+    print("=== Tools ===".bold)
+    for tool in tools
+        print("  $) $".f(tool.key, tool.name))
+    end for
+    print("")
+
+    print("=== Programs ===".bold)
+    index = 0
+    for program in programs
+        key = X.qwertyKey(index)
+        if (key == null) then break
+        print("  $) $".f(key, program.name))
+        index = index + 1
+    end for
+    print("")
+end function
+
+/*
+  Main entry point. Lists tools and programs and handles user input.
+ */
+X.main = function ()
+    while (true)
+        tools = X.getTools()
+        programs = X.getPrograms()
+
+        X.printMenu(tools, programs)
+
+        choice = user_input("Press key to launch (or q to quit): ", false, true)
+
+        if (choice.lower == "q") then exit("")
+
+        choice = choice.upper
+
+        // Check if it's a tool (0-9)
+        for tool in tools
+            if (choice == tool.key) then
+                print(Std.LF + "Running $...".f(tool.name).LF)
+                tool.fn()
+            end if
+        end for
+
+        // Check if it's a program (QWERTY keys)
+        index = 0
+        for program in programs
+            key = X.qwertyKey(index)
+            if (key == null) then break
+            if (choice == key) then
+                print(Std.LF + "Launching $...".f(program.name).LF)
+                get_shell.launch(program.path)
+            end if
+            index = index + 1
+        end for
+    end while
+end function
+
+X.main()

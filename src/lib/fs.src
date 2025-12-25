@@ -1,14 +1,11 @@
 #import Std from "std"
 
 /*
-  @type {Fs}
+  @type Fs
  */
 Fs = {}
 Fs.shell = get_shell
 
-/*
-  @type {computer}
- */
 Fs.computer = get_shell.host_computer
 
 /*

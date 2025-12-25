@@ -4,7 +4,7 @@
 #import Addresses from "addresses"
 
 /*
-  @type {Obj}
+  @type Obj
  */
 Obj = {}
 
@@ -76,14 +76,14 @@ Obj.actionShell = function ()
 end function
 
 /*
-  @type {Objs}
+  @type Objs
  */
 Objs = {}
 
 /*
   @param {string} publicIp
 
-  @return {Objs}
+  @return {Objs} - aaa
  */
 Objs.New = function (publicIp = null)
     objs = new Objs
@@ -271,3 +271,5 @@ Objs.handleInput = function (remote)
 		print()
 	end while
 end function
+
+module.exports = Objs

@@ -1,7 +1,7 @@
 /*
   Map containing various libs that are lazy loaded and utility functions.
 
-  @type {Lib}
+  @type Lib
  */
 Lib = {}
 

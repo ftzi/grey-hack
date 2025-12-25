@@ -1,6 +1,6 @@
 #import Csv from "csv"
 
-Adrs = {}
+Addresses = {}
 Addresses._addresses = null
 Addresses._filePath = "/root/data/addresses.csv"
 
@@ -87,4 +87,4 @@ Addresses.addressesFor = function (libOrLibName, version)
     return addresses
 end function
 
-module.exports = Adrs
+module.exports = Addresses

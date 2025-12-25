@@ -1,41 +1,29 @@
-#import Fs from "lib/fs"
-#import Std from "lib/std"
-#import Lib from "lib/lib"
+#import Fs from "../lib/fs"
+#import Std from "../lib/std"
+#import Lib from "../lib/lib"
 
 Setup = {}
 
 /*
-  Displays usage information and exits the program.
-
-  @param {string} message - Optional error message to display before usage.
+  Runs the setup process. Prompts for machine type and configures accordingly.
  */
-Setup.exitWithUsage = function (message = "")
-    if (message) then message = message.error.bold.LF
-    message = "Usage:".bold.LF
-    message = message + "  " + Std.programName + " home".LF
-    message = message + "  " + Std.programName + " server"
-    exit(message)
-end function
-
-/*
-  Main entry point for the setup program. Parses arguments and runs
-  the appropriate setup routine for home or server machines.
- */
-Setup.main = function ()
-    if not params.len or params[0] == "-h" then Setup.exitWithUsage()
-
+Setup.run = function ()
+print("HI")
     if (active_user != "root") then exit("You must be root to run this.")
 
-    if (params[0] == "home") then
+    isHome = user_input("Is this a home machine? (Y/n): ")
+    isHome = (isHome == "" or isHome.lower == "y")
+
+    if (isHome) then
         password = user_input("Enter your root password to setup the Terminal with root on init:".LF, true)
         print("Setting up home machine...")
         Setup.setupHome(password)
-    else if (params[0] == "server") then
+    else
         print("Setting up server machine...")
         Setup.setupServer()
-    else
-        Setup.exitWithUsage("Invalid parameter.")
     end if
+
+    print("Setup complete.")
 end function
 
 /*
@@ -127,4 +115,4 @@ Setup.setupHomeFilesAndPermissions = function ()
     cleanDesktop()
 end function
 
-Setup.main()
+module.exports = Setup

@@ -3,7 +3,7 @@
 #import Addresses from "addresses"
 
 /*
-  @type {Who}
+  @type Who
  */
 Who = {}
 
@@ -37,7 +37,7 @@ Who.print = function ()
 end function
 
 /*
-  @type {XLib}
+  @type XLib
   @property {Remote} remote
   @property {Lib} lib
   @property {string} service
@@ -81,7 +81,7 @@ end function
 /*
   Remote is not a good name. How should it be called? XRouter?
 
-  @type {Remote}
+  @type Remote
   @property {string} ip
   @property {bool} isLanIp
   @property {Router} router

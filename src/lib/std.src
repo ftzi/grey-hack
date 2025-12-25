@@ -233,11 +233,11 @@ end function
   Pads the string on the left to reach the specified length.
 
   @param {number} length
-  @param {string} char
+  @param {string|number} char
   @return {string}
  */
 string.padLeft = function (length, char = " ")
-    return (char * (length - self.len)) + self
+    return (Std.toString(char) * (length - self.len)) + self
 end function
 
 /*
