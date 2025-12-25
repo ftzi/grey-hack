@@ -8,11 +8,11 @@ test "string.valueBetween", function ()
 end function
 
 test "string.valuesBetween", function ()
-    str = "import_cod"+"e(""/root/utils/lib"")""\nimport_"+"code(""/root/utils/std"")""\n"
+    str = "import_cod"+"e(""/root/lib/lib"")""\nimport_"+"code(""/root/lib/std"")""\n"
     valuesBetween = str.valuesBetween("import_cod"+"e(""", """")
 	expect(valuesBetween.len).toBe(2)
-	expect(valuesBetween[0]).toBe("/root/utils/lib")
-	expect(valuesBetween[1]).toBe("/root/utils/std")
+	expect(valuesBetween[0]).toBe("/root/lib/lib")
+	expect(valuesBetween[1]).toBe("/root/lib/std")
 end function
 
 test "string.f", function ()
@@ -60,7 +60,7 @@ test "string.trim", function ()
 end function
 
 test "string.join", function ()
-    expect("/root".join("utils", "lib", "file.txt")).toBe("/root/utils/lib/file.txt")
+    expect("/root".join("utils", "lib", "file.txt")).toBe("/root/lib/lib/file.txt")
 end function
 
 test "string.parent", function ()

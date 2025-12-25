@@ -19,11 +19,11 @@ Y.main = function ()
     program.parse()
 
 	clear_screen()
-    print("> $ $".f(Consts.programName, params.join(" ")).LF)
+    print("> $ $".f(Std.programName, params.join(" ")).LF)
 
     port = program.opts.p
 	remote = null
-    ip = ifThenElse(is_valid_ip(program.args.ipOrLibName), program.args.ipOrLibName, null)
+    ip = Std.ifThenElse(is_valid_ip(program.args.ipOrLibName), program.args.ipOrLibName, null)
     objs = Objs.New(ip)
     lanIp = program.args.lanIp
 

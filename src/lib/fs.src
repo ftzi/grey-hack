@@ -1,4 +1,4 @@
-import_code("std.src")
+#import Std from "std"
 
 /*
   @type {Fs}
@@ -160,3 +160,5 @@ Fs.New = function (shell)
     fs.computer = shell.host_computer
     return fs
 end function
+
+modules.export = Fs

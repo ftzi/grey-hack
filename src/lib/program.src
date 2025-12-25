@@ -1,14 +1,18 @@
 /*
   Based on https://www.npmjs.com/package/commander
  */
-import_code("std.src")
+#import Std from "std"
 
 /*
+  abs
+
   @type {Program}
  */
 Program = {}
 
 /*
+  Creates a Program instance.
+
   @param {string} description
   @return {Program}
  */
@@ -25,7 +29,7 @@ end function
 
 Program.getUsage = function ()
     usage = ""
-    usage = usage + "<b>Usage:</b> "+Consts.programName
+    usage = usage + "<b>Usage:</b> "+Std.programName
     if (self._options.len > 0) then usage = usage + " [options]"
     for argument in self._arguments
         if (argument.optional) then

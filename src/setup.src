@@ -7,8 +7,8 @@ Setup = {}
 Setup.exitWithUsage = function (message = "")
     if (message) then message = message.error.bold.LF
     message = "Usage:".bold.LF
-    message = message + "  " + Consts.programName + " home".LF
-    message = message + "  " + Consts.programName + " server"
+    message = message + "  " + Std.programName + " home".LF
+    message = message + "  " + Std.programName + " server"
     exit(message)
 end function
 

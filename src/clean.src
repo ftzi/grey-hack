@@ -8,7 +8,7 @@ Clean = {}
 Clean.cleanTrash = function ()
     dirs = get_shell.host_computer.File("/home").get_folders + [get_shell.host_computer.File("/root")]
     for dir in dirs
-        print(dir.name+"/.Trash")
+        print(get_shell.host_computer.get_name)
         trash = get_shell.host_computer.File(dir.path+"/.Trash")
         if (trash != null) then trash.delete()
     end for
@@ -16,9 +16,7 @@ end function
 
 Clean.main = function ()
     if (params.len > 0 and params[0] == "-h") then exit("<b>Usage: clean. Removes all the .src and executables files in /root and also "+alsoRemove.join(", ")+".")
-    input = user_input("This will remove all the .src and executable files in /root and also the following: "+alsoRemove.join(", ")+". Proceed? (Y/n)\n")
 
-    if (input != "y" and input != "") then return
     for file in get_shell.host_computer.File("/root").get_files
         if (file.name.indexOf(".src") or (file.is_binary and file.name.indexOf(".") == null)) then file.delete()
     end for
@@ -27,7 +25,6 @@ Clean.main = function ()
         if (file != null) then file.delete()
     end for
     Clean.cleanTrash()
-    print("Cleaning complete. You can run ""npm start"" again in your real terminal to upload the source files again, and then in the game ""build c.src /root"" and then ""c"" to build them.")
 end function
 
 Clean.main()

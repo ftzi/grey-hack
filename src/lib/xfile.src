@@ -2,6 +2,13 @@ import_code("Std/collections.src")
 
 XFile = {}
 XFile._file = null
+
+/*
+  Creates an XFile instance.
+
+  @param {file} file
+  @return {XFile}
+ */
 XFile.New = function (file)
     xfile = new XFile
     xfile._file = file

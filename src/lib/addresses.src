@@ -1,4 +1,4 @@
-import_code("csv.src")
+#import Csv from "csv"
 
 Adrs = {}
 Adrs._addresses = null
@@ -57,3 +57,5 @@ Adrs.addressesFor = function (libOrLibName, version)
 
     return addresses
 end function
+
+modules.export = Adrs

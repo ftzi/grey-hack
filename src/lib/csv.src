@@ -1,5 +1,6 @@
-import_code("fs.src")
-import_code("Std/string.src")
+#import Fs from "fs"
+#import Std from "std"
+
 
 Csv = {}
 

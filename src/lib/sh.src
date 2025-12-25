@@ -1,8 +1,8 @@
 /*
   Improved shell.
  */
-import_code("fs.src")
-import_code("std.src")
+#import Fs from "fs"
+#import Std from "std"
 
 Sh = {}
 Sh.shell = null

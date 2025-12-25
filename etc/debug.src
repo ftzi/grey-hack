@@ -70,4 +70,4 @@ Debug.main = function ()
     print(""""+result.lineContent.trim.italic.bold+"""")
 end function
 
-if (Consts.programName == "debug") then Debug.main()
+if (Std.programName == "debug") then Debug.main()

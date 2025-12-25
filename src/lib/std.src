@@ -1,9 +1,10 @@
 // Common functions and utils.
 
-import_code("Std/utils.src")
 import_code("Std/string.src")
 import_code("Std/number.src")
 import_code("Std/collections.src")
+
+Std = {}
 
 /*
   Exits and prints the message in a pretty way.
@@ -11,6 +12,16 @@ import_code("Std/collections.src")
   @param {string} message
   @returns never
  */
-throw = function (message)
+Std.throw = function (message)
     exit(toString(message).error)
 end function
+
+Std.programName = program_path.split("/")[-1]
+
+// Functions references can be passed so they are only run deppending on the `condition`
+Std.ifThenElse = function (condition, ifTrue, ifFalse)
+    if (condition) then return ifTrue
+    return ifFalse
+end function
+
+module.exports = Std

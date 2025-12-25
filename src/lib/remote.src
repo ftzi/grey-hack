@@ -49,6 +49,7 @@ XLib = {}
 /*
   @param {Remote} remote
   @param {port} port
+
   @return {XLib}
  */
 XLib.New = function (remote, port = null)
@@ -111,7 +112,7 @@ Remote.New = function (ip)
     remote = new Remote
     remote.ip = ip
     remote.isLanIp = is_lan_ip(ip)
-    remote.router = get_router(ifThenElse(remote.isLanIp, "", ip))
+    remote.router = get_router(Std.ifThenElse(remote.isLanIp, "", ip))
     remote.who = Who.New(ip)
     remote.ports = Remote._getPorts(remote)
     remote.xlibs = [XLib.New(remote, null)]
@@ -169,8 +170,8 @@ Remote.print = function ()
 
     info = "PORT STATE SERVICE VERSION LAN"
     for xlib in self.xlibs
-        version = xlib.version + ifThenElse(xlib.hasAddresses, "+", "")
-        info = info.LF + [xlib.portNumber, ifThenElse(xlib.canUse, "open", "close"), xlib.service, version, xlib.lanIp].join(" ")
+        version = xlib.version + Std.ifThenElse(xlib.hasAddresses, "+", "")
+        info = info.LF + [xlib.portNumber, Std.ifThenElse(xlib.canUse, "open", "close"), xlib.service, version, xlib.lanIp].join(" ")
     end for
 
     formatted = format_columns(info).split(LF)
