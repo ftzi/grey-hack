@@ -1,7 +1,7 @@
 // This is just a dummy test file for the `debug` program.
 
-import_code("/root/tests/debug0")
-import_code("/root/tests/debug2")
+import_code("debug0.src")
+import_code("debug2.src")
 
 Filters = {}
 Filters.byTruthyProp = function (key)

@@ -1,6 +1,6 @@
 // Based on https://www.npmjs.com/package/commander
 
-import_code("/root/utils/std")
+import_code("std.src")
 
 // @type Program
 Program = {}

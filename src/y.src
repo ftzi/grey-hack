@@ -1,12 +1,10 @@
 // Main hacking tool. Eithers run remotely using an IP or locally for local exploits.
-import_code("/root/c.src")
-Compile.selfCompile()
-
-import_code("/root/utils/obj")
-import_code("/root/utils/program")
-import_code("/root/utils/remote")
+import_code("lib/obj.src")
+import_code("lib/program.src")
+import_code("lib/remote.src")
 
 Y = {}
+
 Y.main = function ()
     if not get_shell.host_computer.is_network_active then exit("No internet access.")
 

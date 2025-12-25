@@ -1,7 +1,7 @@
-import_code("/root/utils/test")
-import_code("/root/utils/fs")
-import_code("/root/utils/Std/string")
-import_code("/root/utils/csv")
+import_code("../test.src")
+import_code("../fs.src")
+import_code("../Std/string.src")
+import_code("../csv.src")
 
 test "Csv.read", function ()
     originalRead = @Fs.read

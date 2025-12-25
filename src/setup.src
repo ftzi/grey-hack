@@ -1,9 +1,6 @@
-import_code("/root/c.src")
-Compile.selfCompile()
-
-import_code("/root/utils/fs")
-import_code("/root/utils/std")
-import_code("/root/utils/lib")
+import_code("lib/fs.src")
+import_code("lib/std.src")
+import_code("lib/lib.src")
 
 Setup = {}
 

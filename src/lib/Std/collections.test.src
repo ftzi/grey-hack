@@ -1,5 +1,5 @@
-import_code("/root/utils/Std/collections")
-import_code("/root/utils/test")
+import_code("collections.src")
+import_code("../test.src")
 
 test "map.set", function ()
     obj = {}

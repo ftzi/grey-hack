@@ -1,12 +1,12 @@
 {
-    "name": "grey-hack",
-    "type": "module",
-    "scripts": {
-        "watch": "node --experimental-strip-types ./watch.ts",
-        "start": "npm run watch"
-    },
-    "dependencies": {
-        "chokidar": "4.0.3",
-        "greybel-js": "3.5.34"
-    }
+  "name": "grey-hack",
+  "type": "module",
+  "scripts": {
+    "watch": "bun ./watch.ts",
+    "start": "npm run watch"
+  },
+  "dependencies": {
+    "chokidar": "4.0.3",
+    "greybel-js": "^3.7.10"
+  }
 }

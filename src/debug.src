@@ -1,8 +1,5 @@
-import_code("/root/c.src")
-Compile.selfCompile()
-
-import_code("/root/utils/program")
-import_code("/root/utils/fs")
+import_code("lib/program.src")
+import_code("lib/fs.src")
 
 Debug = {}
 Debug.Result = {

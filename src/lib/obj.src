@@ -1,7 +1,7 @@
-import_code("/root/utils/lib")
-import_code("/root/utils/std")
-import_code("/root/utils/xfile")
-import_code("/root/utils/addresses")
+import_code("lib.src")
+import_code("std.src")
+import_code("xfile.src")
+import_code("addresses.src")
 
 // @type Obj
 Obj = {}

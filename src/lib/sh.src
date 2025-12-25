@@ -1,7 +1,7 @@
 // Improved shell.
 
-import_code("/root/utils/fs")
-import_code("/root/utils/std")
+import_code("fs.src")
+import_code("std.src")
 
 Sh = {}
 Sh.shell = null

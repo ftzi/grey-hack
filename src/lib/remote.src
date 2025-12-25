@@ -1,6 +1,6 @@
-import_code("/root/utils/Std/utils")
-import_code("/root/utils/lib")
-import_code("/root/utils/addresses")
+import_code("Std/utils.src")
+import_code("lib.src")
+import_code("addresses.src")
 
 // @type Who
 Who = {}

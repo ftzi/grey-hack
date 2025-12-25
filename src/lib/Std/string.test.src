@@ -1,5 +1,5 @@
-import_code("/root/utils/test.src")
-import_code("/root/utils/Std/string.src")
+import_code("../test.src.src")
+import_code("string.src.src")
 
 test "string.valueBetween", function ()
     expect("root:123".valueBetween("root:")).toBe("123")

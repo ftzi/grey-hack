@@ -1,6 +1,6 @@
-import_code("/root/utils/test")
-import_code("/root/utils/program")
-import_code("/root/try")
+import_code("../test.src")
+import_code("../program.src")
+import_code("../../try.src")
 
 // apply = function (fn, args = [])
 
@@ -84,7 +84,7 @@ test "program with all", function ()
     program.argument("port", "The port to use").number
 
     program.parse(["-x", "-i", "127.0.0.1", "/home", "8080"])
-    
+
     expect(program.opts.d).toBe(null)
     expect(program.opts.x).toBe(true)
     expect(program.opts.i).toBe("127.0.0.1")

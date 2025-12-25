@@ -1,4 +1,4 @@
-import_code("/root/utils/Std/collections")
+import_code("Std/collections.src")
 
 XFile = {}
 XFile._file = null
