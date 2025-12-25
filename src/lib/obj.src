@@ -140,9 +140,9 @@ Objs.addBatch = function (xlib, lanIp = "")
 			self.all.push(obj)
 		end for
 	end for
-	self.withAction = self.all.filter(Filters.byTruthyProp("action"))
-	self.withShell = self.all.filter(Filters.byTruthyProp("shell"))
-	self.withXFile = self.all.filter(Filters.byTruthyProp("xfile"))
+	self.withAction = self.all.filter(Std.Filters.byTruthyProp("action"))
+	self.withShell = self.all.filter(Std.Filters.byTruthyProp("shell"))
+	self.withXFile = self.all.filter(Std.Filters.byTruthyProp("xfile"))
 end function
 
 /*
