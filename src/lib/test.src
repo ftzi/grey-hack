@@ -31,7 +31,7 @@ end function
 
 Test.main()
 
-test = function (name, fn)
+Test.test = function (name, fn)
     Test.tests.push({"name": name, "fn": @fn})
 end function
 
@@ -49,6 +49,7 @@ Test.runTests = function ()
         get_custom_object.tests.successfulTests = get_custom_object.tests.successfulTests + 1
     end for
     get_custom_object.tests.success = true
+    print("<color=green>All "+get_custom_object.tests.successfulTests+" tests passed ("+get_custom_object.tests.successfulExpects+" expects).</color>")
 end function
 
 Test.prettyValue = function (value, bold = true)
@@ -83,7 +84,7 @@ Expect.toHave = function (expected)
     get_custom_object.tests.successfulExpects = get_custom_object.tests.successfulExpects + 1
 end function
 
-expect = function (value)
+Test.expect = function (value)
     exp = new Expect
     exp.value = value
     Test.expectIndex = Test.expectIndex + 1
@@ -107,3 +108,5 @@ Test.fnObj = function ()
     fnObj.fn = @fn
     return fnObj
 end function
+
+module.exports = Test

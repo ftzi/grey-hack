@@ -1,10 +1,14 @@
 // Common functions and utils.
 
-import_code("Std/string.src")
-import_code("Std/number.src")
-import_code("Std/collections.src")
-
 Std = {}
+
+Std.toString = function (value)
+    if (value == null) then return "null"
+    if (value isa string) then return value
+    if (value isa number) then return ""+value
+    if (value isa list) then return "["+value.join(", ")+"]"
+    if (value isa map) then return "Object"
+end function
 
 /*
   Exits and prints the message in a pretty way.
@@ -13,7 +17,7 @@ Std = {}
   @returns never
  */
 Std.throw = function (message)
-    exit(toString(message).error)
+    exit(Std.toString(message).error)
 end function
 
 Std.programName = program_path.split("/")[-1]
@@ -57,6 +61,7 @@ end function
 
 // The game most usually doesn't handle "\n" well. It uses char(10) instead.
 LF = char(10)
+Std.LF = LF
 
 // Safely accesses a string by the index.
 // Returns null if the index is invalid.
@@ -134,21 +139,13 @@ string.padRight = function (length, char = " ")
     return self + (char * (length - self.len))
 end function
 
-toString = function (value)
-    if (value == null) then return "null"
-    if (value isa string) then return value
-    if (value isa number) then return ""+value
-    if (value isa list) then return "["+value.join(", ")+"]"
-    if (value isa map) then return "Object"
-end function
-
 string.f = function (a,b,c,d,e,f,g)
     list = [a,b,c,d,e,f,g]
     index = 0
     newStr = ""
     for char in self
         if (char == "$") then
-            newStr = newStr + toString(list[index])
+            newStr = newStr + Std.toString(list[index])
             index = index + 1
         else
             newStr = newStr + char

@@ -1,6 +1,6 @@
-import_code("lib/fs.src")
-import_code("lib/std.src")
-import_code("lib/lib.src")
+#import Fs from "lib/fs"
+#import Std from "lib/std"
+#import Lib from "lib/lib"
 
 Setup = {}
 

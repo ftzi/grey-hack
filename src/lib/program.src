@@ -220,3 +220,5 @@ Program.parse = function (_params = null)
 
     if (self.opts.h) then self.exitWithUsage
 end function
+
+module.exports = Program

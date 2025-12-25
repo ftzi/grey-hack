@@ -88,3 +88,5 @@ Lib.loadRemote = function (ip, port)
     if (net.is_root_active_user) then exit("Root user is active!")
     return net.dump_lib
 end function
+
+module.exports = Lib

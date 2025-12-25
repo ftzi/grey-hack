@@ -1,12 +1,12 @@
 #import Csv from "csv"
 
 Adrs = {}
-Adrs._addresses = null
-Adrs._filePath = "/root/data/addresses.csv"
+Addresses._addresses = null
+Addresses._filePath = "/root/data/addresses.csv"
 
 // @return {map}
-Adrs._loadSaved = function ()
-    addresses = Csv.read(Adrs._filePath)
+Addresses._loadSaved = function ()
+    addresses = Csv.read(Addresses._filePath)
     if not addresses then
         print("Couldn't find any saved addresses.")
         return {}
@@ -19,32 +19,32 @@ Adrs._loadSaved = function ()
     return obj
 end function
 
-Adrs.addresses = function ()
-    if (Adrs._addresses == null) then Adrs._addresses = Adrs._loadSaved()
-    return Adrs._addresses
+Addresses.addresses = function ()
+    if (Addresses._addresses == null) then Addresses._addresses = Addresses._loadSaved()
+    return Addresses._addresses
 end function
 
-Adrs.hasLocalAddressesFor = function (libOrLibName, version)
+Addresses.hasLocalAddressesFor = function (libOrLibName, version)
     libName = libOrLibName
     version = version
     if (libOrLibName isa map) then
         libName = libOrLibName.lib_name
         version = libOrLibName.version
     end if
-    return Adrs.addresses.get([libName, version]) != null
+    return Addresses.addresses.get([libName, version]) != null
 end function
 
-Adrs.scan = function (lib)
+Addresses.scan = function (lib)
     print("Scanning Addresses for <b>$ $</b> using Metaxploit $.".f(lib.lib_name, lib.version, Lib.versionOf("metaxploit")))
     addresses = Lib.metaxploit.scan(lib)
-    print("Adding new addresses for $ $ to $".f(lib.lib_name, lib.version, Adrs._filePath))
+    print("Adding new addresses for $ $ to $".f(lib.lib_name, lib.version, Addresses._filePath))
     data = {"libName@version": lib.lib_name + "@" + lib.version, "addresses": addresses.toString}
-    Csv.writeOrdered(Adrs._filePath, ["libName@version", "addresses"], data)
-    Adrs.addresses.set([lib.lib_name, lib.version], addresses)
+    Csv.writeOrdered(Addresses._filePath, ["libName@version", "addresses"], data)
+    Addresses.addresses.set([lib.lib_name, lib.version], addresses)
     return addresses
 end function
 
-Adrs.addressesFor = function (libOrLibName, version)
+Addresses.addressesFor = function (libOrLibName, version)
     libName = libOrLibName
     version = version
     if (libOrLibName isa map) then
@@ -52,10 +52,10 @@ Adrs.addressesFor = function (libOrLibName, version)
         version = libOrLibName.version
     end if
 
-    addresses = Adrs.addresses.get([libName, version])
-    if (not addresses) then addresses = Adrs.scan(libOrLibName)
+    addresses = Addresses.addresses.get([libName, version])
+    if (not addresses) then addresses = Addresses.scan(libOrLibName)
 
     return addresses
 end function
 
-modules.export = Adrs
+module.exports = Adrs

@@ -1,22 +1,22 @@
-import_code("../Std/collections.src")
-import_code("../test.src")
+#import Std from "../std"
+#import Test from "../test"
 
-test "map.set", function ()
+Test.test "map.set", function ()
     obj = {}
     obj.set("a", 1)
-    expect(obj.a).toBe(1)
+    Test.expect(obj.a).toBe(1)
     obj.set(["b", "c"], 2)
-    expect(obj.b.c).toBe(2)
+    Test.expect(obj.b.c).toBe(2)
 end function
 
-test "list.sort2", function ()
+Test.test "list.sort2", function ()
     data = [3, 1, 2]
     sortFn = function (a, b)
         return a - b
     end function
     data = data.sort2(@sortFn)
-    expect(data[0]).toBe(1)
-    expect(data[2]).toBe(3)
+    Test.expect(data[0]).toBe(1)
+    Test.expect(data[2]).toBe(3)
 end function
 
 Test.runTests()

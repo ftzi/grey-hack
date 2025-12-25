@@ -1,6 +1,6 @@
-import_code("Std/utils.src")
-import_code("lib.src")
-import_code("addresses.src")
+#import Std from "std"
+#import Lib from "lib"
+#import Addresses from "addresses"
 
 /*
   @type {Who}
@@ -14,7 +14,7 @@ Who = {}
 Who.New = function (ip)
     who = new Who
     whoisOutput = whois(ip)
-    whoisLines = whoisOutput.split(LF)
+    whoisLines = whoisOutput.split(Std.LF)
     who.ip = ip
     who.domain = whoisLines[0].split(":")[1].trim
     who.admin = {}
@@ -67,7 +67,7 @@ XLib.New = function (remote, port = null)
         xlib.canUse = true
     end if
     xlib.lib = Lib.loadRemote(remote.ip, xlib.portNumber)
-    xlib.hasAddresses = Adrs.hasLocalAddressesFor(xlib.lib)
+    xlib.hasAddresses = Addresses.hasLocalAddressesFor(xlib.lib)
     xlib.name = xlib.lib.lib_name
     xlib.version = xlib.lib.version
     return xlib
@@ -174,8 +174,8 @@ Remote.print = function ()
         info = info.LF + [xlib.portNumber, Std.ifThenElse(xlib.canUse, "open", "close"), xlib.service, version, xlib.lanIp].join(" ")
     end for
 
-    formatted = format_columns(info).split(LF)
+    formatted = format_columns(info).split(Std.LF)
     print(formatted[0].color("green"))
-    print(formatted[1:].join(LF).LF)
+    print(formatted[1:].join(Std.LF).LF)
     self.printFirewallRules()
 end function

@@ -1,9 +1,9 @@
 /*
   Main hacking tool. Either runs remotely using an IP or locally for local exploits.
  */
-import_code("lib/obj.src")
-import_code("lib/program.src")
-import_code("lib/remote.src")
+#import Objs from "lib/obj.src"
+#import Program from "lib/program.src"
+#import Remote from "lib/remote.src"
 
 Y = {}
 

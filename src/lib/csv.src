@@ -13,7 +13,7 @@ Csv.read = function (path)
     content = Fs.read(path, false)
     if (content == null) then return null
 
-    lines = content.split(LF)
+    lines = content.split(Std.LF)
     columnsHeader = lines[0].split(Csv.separator)
     data = []
 
@@ -41,7 +41,7 @@ Csv.writeOrdered = function (path, headers, objOrObjs, level = 1)
     if (content == null) then
         content = headers.join(Csv.separator)
     end if
-    lines = content.split(LF)
+    lines = content.split(Std.LF)
     if (lines[0] != headers.join(Csv.separator)) then
         throw("Headers don't match the file headers.")
     end if
@@ -70,5 +70,7 @@ Csv.writeOrdered = function (path, headers, objOrObjs, level = 1)
         lines.insert(insertionIndex, newLine.join(Csv.separator))
     end for
 
-    Fs.write(path, lines.join(LF))
+    Fs.write(path, lines.join(Std.LF))
 end function
+
+module.exports = Csv

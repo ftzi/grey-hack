@@ -1,7 +1,7 @@
-import_code("lib.src")
+#import Lib from "lib"
 #import Std from "std"
-import_code("xfile.src")
-import_code("addresses.src")
+#import XFile from "xfile"
+#import Addresses from "addresses"
 
 /*
   @type {Obj}
@@ -105,7 +105,7 @@ Objs.users = function ()
     users = []
     passwd = self.passwd
     if (passwd) then
-        for line in passwd.trim.split(LF)
+        for line in passwd.trim.split(Std.LF)
             users.addUnique(line.valueBetween(null, ":"))
         end for
     end if
@@ -120,7 +120,7 @@ end function
  */
 Objs.addBatch = function (xlib, lanIp = "")
     lib = xlib.lib
-	for address in Adrs.addressesFor(xlib.lib)
+	for address in Addresses.addressesFor(xlib.lib)
 		scanResult = Lib.metaxploit.scan_address(xlib.lib, address)
 		scanResult = scanResult.replace("decompiling source...\nsearching unsecure values...\n", "")
 		scanResult = scanResult.replace("\n\n\n", "")
@@ -135,7 +135,7 @@ Objs.addBatch = function (xlib, lanIp = "")
 
 			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
 
-			extra = (entry.LF).valuesBetween("* ", LF)
+			extra = (entry.LF).valuesBetween("* ", Std.LF)
 			obj = Obj.New(data, address, unsecValue, extra, xlib.lanIp)
 			self.all.push(obj)
 		end for
@@ -168,7 +168,7 @@ Objs.print = function ()
     if (self.passwd) then
         message = "Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>].".LF
         i = 0
-        for line in self.passwd.trim.split(LF)
+        for line in self.passwd.trim.split(Std.LF)
             message = "$p $) $".f(message, i, line).LF
             i = i + 1
         end for
@@ -217,7 +217,7 @@ Objs.inputHandler.password = function (inputParams)
 
     indexEntry = inputParams.get(1, "0").to_int
 
-    passwds = self.passwd.split(LF)
+    passwds = self.passwd.split(Std.LF)
     chosenPasswd = passwds[indexEntry]
     user = chosenPasswd.valueBetween(null, ":")
 

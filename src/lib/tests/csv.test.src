@@ -1,9 +1,9 @@
-import_code("../test.src")
-import_code("../fs.src")
-import_code("../Std/string.src")
-import_code("../csv.src")
+#import Test from "../test"
+#import Fs from "../fs"
+#import Std from "../std"
+#import Csv from "../csv"
 
-test "Csv.read", function ()
+Test.test "Csv.read", function ()
     originalRead = @Fs.read
     Fs.read = function (path, _)
         return "name;age".LF+"John;25".LF+"Jane;30".LF+"Jack;35"
@@ -11,18 +11,18 @@ test "Csv.read", function ()
 
     data = Csv.read("")
 
-    expect(data.len).toBe(3)
-    expect(data[0]["name"]).toBe("John")
-    expect(data[0]["age"]).toBe("25")
-    expect(data[1]["name"]).toBe("Jane")
-    expect(data[1]["age"]).toBe("30")
-    expect(data[2]["name"]).toBe("Jack")
-    expect(data[2]["age"]).toBe("35")
+    Test.expect(data.len).toBe(3)
+    Test.expect(data[0]["name"]).toBe("John")
+    Test.expect(data[0]["age"]).toBe("25")
+    Test.expect(data[1]["name"]).toBe("Jane")
+    Test.expect(data[1]["age"]).toBe("30")
+    Test.expect(data[2]["name"]).toBe("Jack")
+    Test.expect(data[2]["age"]).toBe("35")
 
     Fs.read = @originalRead
 end function
 
-test "Csv.writeOrdered", function ()
+Test.test "Csv.writeOrdered", function ()
     originalRead = @Fs.read
     originalWrite = @Fs.write
 
@@ -37,10 +37,10 @@ test "Csv.writeOrdered", function ()
     end function
 
     Csv.writeOrdered("", ["name", "age"], {"name": "Charlie", "age": "32"})
-    expect(state.content).toBe("name;age".LF+"Alpha;25".LF+"Bravo;30".LF+"Charlie;32".LF+"Delta;35")
+    Test.expect(state.content).toBe("name;age".LF+"Alpha;25".LF+"Bravo;30".LF+"Charlie;32".LF+"Delta;35")
 
     Csv.writeOrdered("", ["name", "age"], [{"name": "Charlie", "age": "32"}, {"name": "0zero", "age": "31"}, {"name": "Zeta", "age": "18"}])
-    expect(state.content).toBe("name;age".LF+"0zero;31".LF+"Alpha;25".LF+"Bravo;30".LF+"Charlie;32".LF+"Delta;35".LF+"Zeta;18")
+    Test.expect(state.content).toBe("name;age".LF+"0zero;31".LF+"Alpha;25".LF+"Bravo;30".LF+"Charlie;32".LF+"Delta;35".LF+"Zeta;18")
 
     Fs.read = @originalRead
     Fs.write = @originalWrite

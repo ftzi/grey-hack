@@ -161,4 +161,4 @@ Fs.New = function (shell)
     return fs
 end function
 
-modules.export = Fs
+module.exports = Fs

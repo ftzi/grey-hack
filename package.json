@@ -3,10 +3,14 @@
   "type": "module",
   "scripts": {
     "watch": "bun ./watch.ts",
-    "start": "npm run watch"
+    "start": "npm run watch",
+    "test": "bun ./test.ts"
   },
   "dependencies": {
     "chokidar": "4.0.3",
     "greybel-js": "^3.7.10"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.5"
   }
 }

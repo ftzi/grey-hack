@@ -1,4 +1,4 @@
-import_code("Std/collections.src")
+#import Std from "std"
 
 XFile = {}
 XFile._file = null

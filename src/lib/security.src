@@ -1,6 +1,9 @@
 /*
   https://discord.com/channels/415878436104437770/415880860257222656/1339975263018156187
  */
-corruptLog = function ()
+Security = {}
+Security.corruptLog = function ()
     Fs.write("/var/system.log", "banana")
 end function
+
+module.exports = Security
