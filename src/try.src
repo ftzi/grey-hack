@@ -3,10 +3,16 @@ if (not get_custom_object.hasIndex("try")) then
     get_custom_object.try.objs = []
 end if
 
-// Catches errors run during the call of the given function without breaking your program.
-// Returns an object with `.error` and `.data` properties.
-// `.error` is true if an error happened, string if `exit()` was called, and false if the function executed successfully.
-// `.data` is the return of the function if it executed successfully.
+/*
+  Catches errors run during the call of the given function without breaking your program.
+  Returns an object with `.error` and `.data` properties.
+  `.error` is true if an error happened, string if `exit()` was called, and false if the function executed successfully.
+  `.data` is the return of the function if it executed successfully.
+
+  @param {function} fn
+  @param {boolean} silentExit
+  @return {map}
+ */
 try = function (fn, silentExit = true)
     tryObj = {}
     tryObj.error = true
@@ -31,7 +37,9 @@ try = function (fn, silentExit = true)
     }
 end function
 
-// Executed by the launched program.
+/*
+  Executed by the launched program.
+ */
 if (program_path.split("/")[-1] == "try") then
     tryObj = get_custom_object.try.objs.pop()
     if (not tryObj) then exit("No ""try"" object found in the ""get_custom_object"".")

@@ -1,11 +1,17 @@
-// Based on https://www.npmjs.com/package/commander
-
+/*
+  Based on https://www.npmjs.com/package/commander
+ */
 import_code("std.src")
 
-// @type Program
+/*
+  @type {Program}
+ */
 Program = {}
 
-// @return {Program}
+/*
+  @param {string} description
+  @return {Program}
+ */
 Program.New = function (description = "")
     program = new Program
     program.description = description
@@ -92,7 +98,9 @@ Program._parseArguments = function ()
     end for
 end function
 
-// self.throwWithUsage("The option "+opt.name+" does not exist.")
+/*
+  @todo handle The option does not exist error message
+ */
 Program._parseOptions = function ()
     for option in self._options
         nameNoDash = self._removeDashes(option.name)
@@ -193,7 +201,11 @@ Program.option = function (name, description = "")
     return option
 end function
 
-// You can pass the params to parse, or it will use the global `params`. Useful for testing.
+/*
+  You can pass the params to parse, or it will use the global `params`. Useful for testing.
+
+  @param {list} _params
+ */
 Program.parse = function (_params = null)
     if (not _params) then _params = params[:] // Can't _params = params in this function args
     self._params = _params

@@ -1,4 +1,6 @@
-// Main hacking tool. Eithers run remotely using an IP or locally for local exploits.
+/*
+  Main hacking tool. Either runs remotely using an IP or locally for local exploits.
+ */
 import_code("lib/obj.src")
 import_code("lib/program.src")
 import_code("lib/remote.src")

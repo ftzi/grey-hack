@@ -56,16 +56,18 @@ Setup.setupRootPermissions = function ()
     Fs.absoluteRoot.chmod("o-rwx", true)
 end function
 
-// Setup.setupAptSources = function ()
-//     content = "{".LF
-//     content = content + """official_server"": true,".LF
-//     content = content + """sourceList"": {".LF
-//     content = content + """118.213.30.73"": 1542".LF
-//     content = content + "}".LF
-//     content = content + "}"
-//     error = Lib.aptClient.update()
-//     if (error) then throw("Error in apt-get update: " + error)
-// end function
+/*
+  Setup.setupAptSources = function ()
+     content = "{".LF
+     content = content + """official_server"": true,".LF
+     content = content + """sourceList"": {".LF
+     content = content + """118.213.30.73"": 1542".LF
+     content = content + "}".LF
+     content = content + "}"
+     error = Lib.aptClient.update()
+     if (error) then throw("Error in apt-get update: " + error)
+  end function
+ */
 
 Setup.setupHomeFilesAndPermissions = function ()
     // As everything now requires root, we can't execute or open files on the Desktop with the cursor.

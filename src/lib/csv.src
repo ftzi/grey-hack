@@ -3,7 +3,9 @@ import_code("Std/string.src")
 
 Csv = {}
 
-// So it won't conflict with lists
+/*
+  So it won't conflict with lists
+ */
 Csv.separator=";"
 
 Csv.read = function (path)
@@ -26,9 +28,12 @@ Csv.read = function (path)
     return data
 end function
 
-// @param {string} path
-// @param {list<string>} headers
-// @param {map} obj
+/*
+  @param {string} path
+  @param {list<string>} headers
+  @param {map} objOrObjs
+  @param {number} level
+ */
 Csv.writeOrdered = function (path, headers, objOrObjs, level = 1)
     if (not headers isa list or headers.len == 0) then throw("Headers must be a non-empty list.")
     content = Fs.read(path, false)

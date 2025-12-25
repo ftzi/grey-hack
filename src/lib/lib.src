@@ -1,6 +1,8 @@
-// Map containing various libs that are lazy loaded and utility functions.
+/*
+  Map containing various libs that are lazy loaded and utility functions.
 
-// @type Lib
+  @type {Lib}
+ */
 Lib = {}
 
 Lib._libs = {}
@@ -10,21 +12,32 @@ Lib._getLib = function (name)
     return Lib._libs[name]
 end function
 
-// @return {metaxploit}
+/*
+  @return {metaxploit}
+ */
 Lib.metaxploit = function()
     return Lib._getLib("metaxploit")
 end function
-// @return {crypto}
+
+/*
+  @return {crypto}
+ */
 Lib.crypto = function()
     return Lib._getLib("crypto")
 end function
-// @return {aptClient}
+
+/*
+  @return {aptClient}
+ */
 Lib.aptClient = function()
     return Lib._getLib("aptclient")
 end function
 
-// @param {string}
-// @return {string}
+/*
+  @param {string} name
+  @param {boolean} installIfMissing
+  @return {string}
+ */
 Lib.libPath = function (name, installIfMissing)
     libPath = "/lib/" + name
     if (get_shell.host_computer.File(libPath)) then return libPath
@@ -39,16 +52,24 @@ Lib.libPath = function (name, installIfMissing)
     return libPath
 end function
 
-// Returns the version of a local library
-// @param {string}
-// @return {string}
+/*
+  Returns the version of a local library
+
+  @param {string} name
+  @return {string}
+ */
 Lib.versionOf = function (name)
     if (name.indexOf(".so") == null) then name = name + ".so"
     return Lib.metaxploit.load(Lib.libPath(name, false)).version
 end function
 
-// Loads a lib either by reading it from the "/lib" or from the current path.
-// No need to provide the lib extension (".so").
+/*
+  Loads a lib either by reading it from the "/lib" or from the current path.
+  No need to provide the lib extension (".so").
+
+  @param {string} name
+  @return {object}
+ */
 Lib.load = function (name)
     if (name.indexOf(".so") == null) then name = name + ".so"
     lib = include_lib(Lib.libPath(name, true))
@@ -56,9 +77,11 @@ Lib.load = function (name)
     return lib
 end function
 
-// @param {string} ip
-// @param {number} port
-// @return {metaLib}
+/*
+  @param {string} ip
+  @param {number} port
+  @return {metaLib}
+ */
 Lib.loadRemote = function (ip, port)
     net = Lib.metaxploit.net_use(ip, port)
     if not net then exit("Error: can't connect to net session")

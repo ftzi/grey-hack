@@ -2,9 +2,15 @@ import_code("Std/utils.src")
 import_code("lib.src")
 import_code("addresses.src")
 
-// @type Who
+/*
+  @type {Who}
+ */
 Who = {}
-// @return {Who}
+
+/*
+  @param {string} ip
+  @return {Who}
+ */
 Who.New = function (ip)
     who = new Who
     whoisOutput = whois(ip)
@@ -18,24 +24,33 @@ Who.New = function (ip)
     return who
 end function
 
-// @return {null}
+/*
+  @return {null}
+ */
 Who.print = function ()
     print("IP: $ Domain: $".f(self.ip.bold, self.domain.bold))
     print("Admin: $ Email: $".f(self.admin.name.bold, self.admin.email.bold).LF)
 end function
 
-// @type XLib
-// @property {Remote} remote
-// @property {Lib} lib
-// @property {string} service
-// @property {number} portNumber
-// @property {string} lanIp
-// @property {number} canUse
-// @property {number} hasAddresses
-// @property {string} name
-// @property {string} version
+/*
+  @type {XLib}
+  @property {Remote} remote
+  @property {Lib} lib
+  @property {string} service
+  @property {number} portNumber
+  @property {string} lanIp
+  @property {number} canUse
+  @property {number} hasAddresses
+  @property {string} name
+  @property {string} version
+ */
 XLib = {}
-// @return {XLib}
+
+/*
+  @param {Remote} remote
+  @param {port} port
+  @return {XLib}
+ */
 XLib.New = function (remote, port = null)
     xlib = new XLib
     xlib.remote = remote
@@ -57,18 +72,25 @@ XLib.New = function (remote, port = null)
     return xlib
 end function
 
-// Remote is not a good name. How should it be called? XRouter?
-// @type Remote
-// @property {string} ip
-// @property {bool} isLanIp
-// @property {Router} router
-// @property {Who} who
-// @property {list<port>} ports
-// @property {list<XLib>} xlibs
-// @property {XLib} lib
+/*
+  Remote is not a good name. How should it be called? XRouter?
+
+  @type {Remote}
+  @property {string} ip
+  @property {bool} isLanIp
+  @property {Router} router
+  @property {Who} who
+  @property {list<port>} ports
+  @property {list<XLib>} xlibs
+  @property {XLib} lib
+ */
 Remote = {}
 
-// @return {number}
+/*
+  @param {XLib} a
+  @param {XLib} b
+  @return {number}
+ */
 Remote._sortXlibs = function (a, b)
     if (a.lanIp < b.lanIp) then return -1
     if (a.lanIp == b.lanIp) then
@@ -78,7 +100,10 @@ Remote._sortXlibs = function (a, b)
     return 1
 end function
 
-// @return {Remote}
+/*
+  @param {string} ip
+  @return {Remote}
+ */
 Remote.New = function (ip)
 	if (not is_valid_ip(ip)) then throw("Invalid ip: " + ip)
 	if (not get_shell.ping(ip)) then throw("IP address not found")
@@ -100,7 +125,10 @@ Remote.New = function (ip)
 	return remote
 end function
 
-// @return {list<port>}
+/*
+  @param {Remote} remote
+  @return {list<port>}
+ */
 Remote._getPorts = function (remote)
     ports = null
     if is_lan_ip(remote.ip) then
@@ -115,7 +143,9 @@ Remote._getPorts = function (remote)
     return ports
 end function
 
-// @return {null}
+/*
+  @return {null}
+ */
 Remote.printFirewallRules = function ()
     firewall_rules = self.router.firewall_rules
     if (firewall_rules isa string) then throw(firewall_rules)
@@ -131,7 +161,9 @@ Remote.printFirewallRules = function ()
     end if
 end function
 
-// @return {null}
+/*
+  @return {null}
+ */
 Remote.print = function ()
     self.who.print()
 

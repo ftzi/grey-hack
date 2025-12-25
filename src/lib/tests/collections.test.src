@@ -1,4 +1,4 @@
-import_code("collections.src")
+import_code("std.src")
 import_code("../test.src")
 
 test "map.set", function ()

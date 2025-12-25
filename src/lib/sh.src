@@ -1,5 +1,6 @@
-// Improved shell.
-
+/*
+  Improved shell.
+ */
 import_code("fs.src")
 import_code("std.src")
 
@@ -7,13 +8,18 @@ Sh = {}
 Sh.shell = null
 Sh.fs = null
 
+/*
+  @param {Shell} shell
+
+  @return {Sh}
+ */
 Sh.New = function (shell)
     sh = new Sh
     sh.shell = shell
     sh.computer = shell.host_computer
     sh.build = @shell.build
     sh.fs = Fs.New(shell)
-    return Sh
+    return sh
 end function
 
 Sh.startTerminalAs = function (user, password)

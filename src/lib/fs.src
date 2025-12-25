@@ -1,32 +1,48 @@
 import_code("std.src")
 
-// @type Fs
+/*
+  @type {Fs}
+ */
 Fs = {}
 Fs.shell = get_shell
-// @type {computer}
+
+/*
+  @type {computer}
+ */
 Fs.computer = get_shell.host_computer
 
-// Returns if the file or dir at the given path exists
-// @param {string} path
-// @return {boolean}
+/*
+  Returns if the file or dir at the given path exists
+
+  @param {string} path
+  @return {boolean}
+ */
 Fs.exists = function (path)
     file = self.computer.File(path)
     return file != null
 end function
 
-// Returns the file. Throws if the file doesn't exist.
-// @param {string} path
-// @return {file}
-// @throw
+/*
+  Returns the file. Throws if the file doesn't exist.
+
+  @param {string} path
+  @param {boolean} throwIfMissing
+  @return {file}
+  @throw
+ */
 Fs.file = function (path, throwIfMissing = true)
     file = self.computer.File(path)
     if (not file and throwIfMissing) then throw("File not found at $.".f(path))
     return file
 end function
 
-// Returns the file content. Throws if the file doesn't exist.
-// @param {string} path
-// @return {string}
+/*
+  Returns the file content. Throws if the file doesn't exist.
+
+  @param {string} path
+  @param {boolean} throwIfMissing
+  @return {string}
+ */
 Fs.read = function (path, throwIfMissing = true)
     file = self.file(path, throwIfMissing)
     if (not file) then return null
@@ -35,26 +51,39 @@ Fs.read = function (path, throwIfMissing = true)
     return content
 end function
 
-// Returns the "/" File.
-// @return {file}
+/*
+  Returns the "/" File.
+
+  @return {file}
+ */
 Fs.absoluteRoot = function ()
     return self.file("/")
 end function
 
-// Returns the "/root" File.
-// @return {file}
+/*
+  Returns the "/root" File.
+
+  @return {file}
+ */
 Fs.rootHome = function ()
     return self.file("/root")
 end function
 
-// Returns the home dir File.
-// @return {file}
+/*
+  Returns the home dir File.
+
+  @return {file}
+ */
 Fs.home = function ()
     return self.file("/home")
 end function
 
-// Removes a file or directory.
-// Ignores if the file doesn't exist.
+/*
+  Removes a file or directory.
+  Ignores if the file doesn't exist.
+
+  @param {string} path
+ */
 Fs.remove = function (path)
     if (self.exists(path)) then
         error = self.file(path).delete()
@@ -62,19 +91,24 @@ Fs.remove = function (path)
     end if
 end function
 
-// @param {string} path
-// @throw
+/*
+  @param {string} dirPath
+  @throw
+ */
 Fs.ensureDir = function (dirPath)
     if (get_shell.host_computer.File(dirPath)) then return
     res = self.shell.host_computer.create_folder(dirPath.parent, dirPath.filename)
     if (res isa string) then throw("Error ensuring the dir $: $.".f(dirPath.bold, res))
 end function
 
-// Creates a file with the given content. Overwrites if exists.
-// Returns the created `File`.
-// @param {string} path
-// @param {string} content
-// @return {file}
+/*
+  Creates a file with the given content. Overwrites if exists.
+  Returns the created `File`.
+
+  @param {string} path
+  @param {string} content
+  @return {file}
+ */
 Fs.write = function (path, content)
     self.remove(path)
     touchRes = self.computer.touch(path.parent, path.filename)
@@ -85,10 +119,14 @@ Fs.write = function (path, content)
     return file
 end function
 
-// Creates an executable at the given path with the given content.
-// @param {string} path
-// @param {string} content
-// @return {file} - The created executable.
+/*
+  Creates an executable at the given path with the given content.
+
+  @param {string} path
+  @param {string} content
+  @param {boolean} deleteSource
+  @return {file} The created executable.
+ */
 Fs.createExecutable = function (path, content, deleteSource = true)
     filename = path.filename
     srcFile = self.write(path+".src", content)
@@ -98,17 +136,24 @@ Fs.createExecutable = function (path, content, deleteSource = true)
     return self.file(path)
 end function
 
-// Creates an executable file with the content and run it. (TODO. should it?:) Deletes the created files.
-// @param {string} path
-// @param {string} content
+/*
+  Creates an executable file with the content and run it.
+  Deletes the created files.
+
+  @param {string} path
+  @param {string} content
+  @todo should this actually delete the files?
+ */
 Fs.autorunCode = function (path, content)
     self.write(path, content)
     self.shell.build(path, path.parent)
     self.launch(path.remove(".src"))
 end function
 
-// @param {shell}
-// @return {Fs}
+/*
+  @param {shell} shell
+  @return {Fs}
+ */
 Fs.New = function (shell)
     fs = new Fs
     fs.shell = shell

@@ -28,10 +28,13 @@ XFile.get_folders = function()
     return self._file.get_folders.map(@XFile.New)
 end function
 
-// Navigates to the given path by using the file as starting point.
-// The path can start with `/` to be absolute or without to be relative.
-// @param {string}
-// @param {XFile|null}
+/*
+  Navigates to the given path by using the file as starting point.
+  The path can start with `/` to be absolute or without to be relative.
+
+  @param {string} path
+  @return {XFile|null}
+ */
 XFile.getAt = function (path)
     file = self._file
     isPathAbsolute = path[0] == "/"
@@ -59,7 +62,9 @@ XFile.contentAt = function (path)
     if (xfile) then return xfile.get_content
 end function
 
-// @return {string} The current user for the given file's context.
+/*
+  @return {string} The current user for the given file's context.
+ */
 XFile.user = function()
     root = self.getAt("/")
     if root.has_permission("w") then return "root"

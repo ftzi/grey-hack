@@ -1,9 +1,11 @@
-// Program responsible for running test files.
-// Tests are run automatically by our `c` program,
-// which compiles the programs and its dependencies automatically and then run the tests.
-// This intentionally has no imports so no imports can cause internal errors.
+/*
+  Program responsible for running test files.
+  Tests are run automatically by our `c` program,
+  which compiles the programs and its dependencies automatically and then run the tests.
+  This intentionally has no imports so no imports can cause internal errors.
 
-// TODO change so by importing this file, the test file will self-call with a try/catch (sure?)
+  @todo change so by importing this file, the test file will self-call with a try/catch (sure?)
+ */
 
 Test = {}
 Test.tests = []
@@ -33,7 +35,9 @@ test = function (name, fn)
     Test.tests.push({"name": name, "fn": @fn})
 end function
 
-// Call this in the end of your test file so the compiler can know when all tests passed.
+/*
+  Call this in the end of your test file so the compiler can know when all tests passed.
+ */
 Test.runTests = function ()
     get_custom_object.tests.finishedSetup = true
     get_custom_object.tests.totalTests = Test.tests.len
@@ -86,7 +90,11 @@ expect = function (value)
     return exp
 end function
 
-// Returns an object containing a mocked function.
+/*
+  Returns an object containing a mocked function.
+
+  @return {map}
+ */
 Test.fnObj = function ()
     fnObj = {
         "timesCalled": 0,

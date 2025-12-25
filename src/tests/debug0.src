@@ -1,11 +1,10 @@
-// This is just a dummy test file for the `debug` program.
+/*
+  This is just a dummy test file for the `debug` program.
+ */
 
 Compile = {}
-// Files which were accessed.
 Compile.debugMode = false
-// Source files which are going to be / were built, so we don't build them again.
 Compile.buildList = []
-// All the relevant files and their contents.
 Compile.allSourcesAndContents = {}
 Compile.optionToSkip = "--skipSelfCompile"
 Compile.filesContent = {}

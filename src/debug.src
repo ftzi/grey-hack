@@ -8,9 +8,11 @@ Debug.Result = {
     "lineContent": null,
     "error": null,
 }
-// @param {string} entryFilePath
-// @param {number} targetLineNumber
-// @return {Debug.Result}
+/*
+  @param {string} entryFilePath
+  @param {number} targetLineNumber
+  @return {Debug.Result}
+ */
 Debug.findLine = function (entryFilePath, targetLineNumber)
     entryFilePath = entryFilePath.ensureSuffix(".src").absolutePath()
     if (targetLineNumber < 1) then throw("The target line must be greater than 0.")

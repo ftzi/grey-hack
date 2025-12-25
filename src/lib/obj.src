@@ -3,21 +3,28 @@ import_code("std.src")
 import_code("xfile.src")
 import_code("addresses.src")
 
-// @type Obj
+/*
+  @type {Obj}
+ */
 Obj = {}
-// @return {Obj}
+
+/*
+  @param {any} data
+  @param {number} address
+  @param {any} unsecValue
+  @param {list} extra
+  @param {string} lanIp
+
+  @return {Obj}
+ */
 Obj.New = function(data, address, unsecValue, extra, lanIp = null)
 	obj = new Obj
 	obj.type = typeof(data)
 	obj.address = address
-	// The value given by the `scan_address`, to be used in `overflow` with its corresponding `address`.
 	obj.unsecValue = unsecValue
-	// The "* XYZ" that is shown when running `scan_address`
 	obj.extra = extra
 	obj.shell = null
-	// A computer object this Object might point to.
 	obj.computer = null
-	// Any file, used to reach other files and informations.
 	obj.xfile = null
 	obj.action = null
     obj.lanIp = lanIp
@@ -37,7 +44,9 @@ Obj.New = function(data, address, unsecValue, extra, lanIp = null)
 	return obj
 end function
 
-// @return {null}
+/*
+  @return {null}
+ */
 Obj.actionComputer = function()
 	while (true)
 		input = user_input("Enter the path of the file to be shown or nothing to go back:".LF)
@@ -56,7 +65,9 @@ Obj.actionComputer = function()
 	end while
 end function
 
-// @return {null}
+/*
+  @return {null}
+ */
 Obj.actionShell = function ()
 	get_shell.scp(Lib.libPath("metaxploit.so"), "/home/guest", self.shell)
 	get_shell.scp(Lib.libPath("crypto.so"), "/home/guest", self.shell)
@@ -64,10 +75,16 @@ Obj.actionShell = function ()
 	self.shell.start_terminal
 end function
 
-// @type Objs
+/*
+  @type {Objs}
+ */
 Objs = {}
 
-// @return {Objs}
+/*
+  @param {string} publicIp
+
+  @return {Objs}
+ */
 Objs.New = function (publicIp = null)
     objs = new Objs
     objs.publicIp = publicIp
@@ -95,7 +112,12 @@ Objs.users = function ()
     return users
 end function
 
-// @return {null}
+/*
+  @param {XLib} xlib
+  @param {string} lanIp
+
+  @return {null}
+ */
 Objs.addBatch = function (xlib, lanIp = "")
     lib = xlib.lib
 	for address in Adrs.addressesFor(xlib.lib)
@@ -104,12 +126,10 @@ Objs.addBatch = function (xlib, lanIp = "")
 		scanResult = scanResult.replace("\n\n\n", "")
 
 		entries = scanResult.split("\n\n")
-		if entries[entries.len -1] == "" then entries.pop() // Remove last empty string
+		if entries[entries.len -1] == "" then entries.pop()
 
 		for entry in entries
 			unsecValue = entry.valueBetween("<b>", "</b>")
-
-			// print("Overflowing Address <b>" + address + "</b> with <b>" + unsecValue + "</b>")
 			data = xlib.lib.overflow(address, unsecValue, lanIp)
 			print("====================")
 
@@ -125,7 +145,9 @@ Objs.addBatch = function (xlib, lanIp = "")
 	self.withXFile = self.all.filter(Filters.byTruthyProp("xfile"))
 end function
 
-// @return {null}
+/*
+  @return {null}
+ */
 Objs.print = function ()
 	message = "Ix LAN_IP TYPE DATA"
 	i = -1
@@ -155,12 +177,16 @@ Objs.print = function ()
     print("Users: " +self.users.join(", "))
 end function
 
-// @return {null}
+/*
+  @param {string} user
+  @param {string} password
+
+  @return {null}
+ */
 Objs._connectSsh = function (user, password)
     shell = null
     if (self.publicIp) then
         shell = get_shell.connect_service(self.publicIp, 22, user, password)
-        // TODO check if port is open instead
         if (not shell or shell isa string) then
             canConnectWithShell = self.withShell.len != 0
             message = "Using hacked shell to login as this user."
@@ -206,7 +232,11 @@ Objs.inputHandler.password = function (inputParams)
     self._connectSsh(user, password)
 end function
 
-// @return {null}
+/*
+  @param {Remote} remote
+
+  @return {null}
+ */
 Objs.handleInput = function (remote)
 	while true
 		inputParams = user_input("Enter the desired method:".LF).split(" ")

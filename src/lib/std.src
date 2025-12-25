@@ -5,9 +5,12 @@ import_code("Std/string.src")
 import_code("Std/number.src")
 import_code("Std/collections.src")
 
-// Exits and prints the message in a pretty way.
-// @param {string} message
-// @returns never
+/*
+  Exits and prints the message in a pretty way.
+
+  @param {string} message
+  @returns never
+ */
 throw = function (message)
     exit(toString(message).error)
 end function
