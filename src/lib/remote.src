@@ -8,6 +8,8 @@
 Who = {}
 
 /*
+  Creates a new Who object by performing a whois lookup on the given IP.
+
   @param {string} ip
   @return {Who}
  */
@@ -25,6 +27,8 @@ Who.New = function (ip)
 end function
 
 /*
+  Prints the IP, domain, admin name, and email information.
+
   @return {null}
  */
 Who.print = function ()
@@ -47,9 +51,10 @@ end function
 XLib = {}
 
 /*
+  Creates a new XLib object representing a library on a remote port.
+
   @param {Remote} remote
   @param {port} port
-
   @return {XLib}
  */
 XLib.New = function (remote, port = null)
@@ -88,6 +93,8 @@ end function
 Remote = {}
 
 /*
+  Comparison function for sorting XLib objects by LAN IP and port number.
+
   @param {XLib} a
   @param {XLib} b
   @return {number}
@@ -102,6 +109,8 @@ Remote._sortXlibs = function (a, b)
 end function
 
 /*
+  Creates a new Remote object for the given IP, loading router and port info.
+
   @param {string} ip
   @return {Remote}
  */
@@ -127,6 +136,8 @@ Remote.New = function (ip)
 end function
 
 /*
+  Retrieves the list of ports for a remote target based on its IP type.
+
   @param {Remote} remote
   @return {list<port>}
  */
@@ -145,6 +156,8 @@ Remote._getPorts = function (remote)
 end function
 
 /*
+  Prints the firewall rules for the remote router.
+
   @return {null}
  */
 Remote.printFirewallRules = function ()
@@ -163,6 +176,8 @@ Remote.printFirewallRules = function ()
 end function
 
 /*
+  Prints full remote information including whois data, ports, and firewall rules.
+
   @return {null}
  */
 Remote.print = function ()

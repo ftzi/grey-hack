@@ -4,6 +4,11 @@
 
 Setup = {}
 
+/*
+  Displays usage information and exits the program.
+
+  @param {string} message - Optional error message to display before usage.
+ */
 Setup.exitWithUsage = function (message = "")
     if (message) then message = message.error.bold.LF
     message = "Usage:".bold.LF
@@ -12,6 +17,10 @@ Setup.exitWithUsage = function (message = "")
     exit(message)
 end function
 
+/*
+  Main entry point for the setup program. Parses arguments and runs
+  the appropriate setup routine for home or server machines.
+ */
 Setup.main = function ()
     if not params.len or params[0] == "-h" then Setup.exitWithUsage()
 
@@ -29,6 +38,12 @@ Setup.main = function ()
     end if
 end function
 
+/*
+  Sets up a home machine with init.d scripts, file permissions,
+  and cleans up sensitive files.
+
+  @param {string} password - The root password for terminal auto-login.
+ */
 Setup.setupHome = function (password)
     setupInitD = function (password)
         program = "print(""Welcome back! 0x31F01"")".LF // Random code that might help to know if the file was compromised or not. Can be later improved.
@@ -41,6 +56,10 @@ Setup.setupHome = function (password)
     setupInitD(password)
 end function
 
+/*
+  Sets up a server machine by configuring root permissions
+  and removing unnecessary directories.
+ */
 Setup.setupServer = function ()
     Setup.setupRootPermissions()
     // Setup.setupAptSources()
@@ -48,6 +67,10 @@ Setup.setupServer = function ()
     Fs.remove("/bin/sudo")
 end function
 
+/*
+  Configures the root filesystem with restrictive permissions,
+  setting ownership to root and removing all group/user/other access.
+ */
 Setup.setupRootPermissions = function ()
     Fs.absoluteRoot.set_owner("root", true)
     Fs.absoluteRoot.set_group("root", true)
@@ -69,6 +92,11 @@ end function
   end function
  */
 
+/*
+  Configures home machine files and permissions. Sets root permissions,
+  grants execute access to essential binaries, removes sensitive files,
+  and cleans up desktop symlinks.
+ */
 Setup.setupHomeFilesAndPermissions = function ()
     // As everything now requires root, we can't execute or open files on the Desktop with the cursor.
     // This removes them to remove the temptation.

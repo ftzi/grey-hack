@@ -9,6 +9,12 @@ Csv = {}
  */
 Csv.separator=";"
 
+/*
+  Reads a CSV file and parses it into a list of objects.
+
+  @param {string} path
+  @return {list<map>}
+ */
 Csv.read = function (path)
     content = Fs.read(path, false)
     if (content == null) then return null
@@ -30,10 +36,11 @@ Csv.read = function (path)
 end function
 
 /*
+  Writes one or more objects to a CSV file in sorted order based on the first column.
+
   @param {string} path
   @param {list<string>} headers
-  @param {map} objOrObjs
-  @param {number} level
+  @param {map|list<map>} objOrObjs
  */
 Csv.writeOrdered = function (path, headers, objOrObjs, level = 1)
     if (not headers isa list or headers.len == 0) then throw("Headers must be a non-empty list.")

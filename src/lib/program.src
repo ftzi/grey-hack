@@ -27,6 +27,11 @@ Program.New = function (description = "")
     return program
 end function
 
+/*
+  Generates and returns the usage/help text for the program.
+
+  @return {string}
+ */
 Program.getUsage = function ()
     usage = ""
     usage = usage + "<b>Usage:</b> "+Std.programName
@@ -67,20 +72,37 @@ Program.getUsage = function ()
     return usage
 end function
 
+/*
+  Exits the program and prints the usage text.
+ */
 Program.exitWithUsage = function ()
     exit(self.getUsage)
 end function
 
+/*
+  Exits the program with an error message followed by the usage text.
+
+  @param {string} errorMessage
+ */
 Program.throwWithUsage = function (errorMessage)
     exit(LF+errorMessage.error.LF.LF+self.getUsage)
 end function
 
+/*
+  Removes leading dashes from an option name.
+
+  @param {string} option
+  @return {string}
+ */
 Program._removeDashes = function (option)
     if (option.indexOf("--") == 0) then return option[2:]
     if (option.indexOf("-") == 0) then return option[1:]
     exit("Found no dashes for the option "+option)
 end function
 
+/*
+  Parses positional arguments from the command line parameters.
+ */
 Program._parseArguments = function ()
     hadOptional = false
     for argument in self._arguments
@@ -103,6 +125,8 @@ Program._parseArguments = function ()
 end function
 
 /*
+  Parses options (flags) from the command line parameters.
+
   @todo handle The option does not exist error message
  */
 Program._parseOptions = function ()
@@ -133,6 +157,13 @@ Program._parseOptions = function ()
     end for
 end function
 
+/*
+  Defines a positional argument for the program.
+
+  @param {string} name
+  @param {string} description
+  @return {Argument}
+ */
 Program.argument = function (name, description = "")
     if (description) then description = description.ensureSuffix(".")
 
@@ -158,6 +189,13 @@ Program.argument = function (name, description = "")
     return argument
 end function
 
+/*
+  Defines an option (flag) for the program.
+
+  @param {string} name
+  @param {string} description
+  @return {Option}
+ */
 Program.option = function (name, description = "")
     if (description) then description = description.ensureSuffix(".")
     invalid = function ()
@@ -206,6 +244,8 @@ Program.option = function (name, description = "")
 end function
 
 /*
+  Parses command line parameters and populates args and opts.
+
   You can pass the params to parse, or it will use the global `params`. Useful for testing.
 
   @param {list} _params

@@ -4,7 +4,11 @@ Adrs = {}
 Addresses._addresses = null
 Addresses._filePath = "/root/data/addresses.csv"
 
-// @return {map}
+/*
+  Loads saved addresses from the CSV file.
+
+  @return {map}
+ */
 Addresses._loadSaved = function ()
     addresses = Csv.read(Addresses._filePath)
     if not addresses then
@@ -19,11 +23,23 @@ Addresses._loadSaved = function ()
     return obj
 end function
 
+/*
+  Returns the cached addresses, loading from file if not yet loaded.
+
+  @return {map}
+ */
 Addresses.addresses = function ()
     if (Addresses._addresses == null) then Addresses._addresses = Addresses._loadSaved()
     return Addresses._addresses
 end function
 
+/*
+  Checks if local addresses exist for a given library and version.
+
+  @param {map|string} libOrLibName - A library object or library name string
+  @param {string} version - The library version (used if libOrLibName is a string)
+  @return {boolean}
+ */
 Addresses.hasLocalAddressesFor = function (libOrLibName, version)
     libName = libOrLibName
     version = version
@@ -34,6 +50,12 @@ Addresses.hasLocalAddressesFor = function (libOrLibName, version)
     return Addresses.addresses.get([libName, version]) != null
 end function
 
+/*
+  Scans a library for addresses using Metaxploit and saves them to the CSV file.
+
+  @param {map} lib - The library object to scan
+  @return {list}
+ */
 Addresses.scan = function (lib)
     print("Scanning Addresses for <b>$ $</b> using Metaxploit $.".f(lib.lib_name, lib.version, Lib.versionOf("metaxploit")))
     addresses = Lib.metaxploit.scan(lib)
@@ -44,6 +66,13 @@ Addresses.scan = function (lib)
     return addresses
 end function
 
+/*
+  Gets addresses for a library, scanning if not already cached.
+
+  @param {map|string} libOrLibName - A library object or library name string
+  @param {string} version - The library version (used if libOrLibName is a string)
+  @return {list}
+ */
 Addresses.addressesFor = function (libOrLibName, version)
     libName = libOrLibName
     version = version

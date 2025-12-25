@@ -22,6 +22,12 @@ Sh.New = function (shell)
     return sh
 end function
 
+/*
+  Starts a terminal session as a different user by creating an autorun script.
+
+  @param {string} user
+  @param {string} password
+ */
 Sh.startTerminalAs = function (user, password)
     self.fs.autorunCode("/home".join(user, "loginAs"), "get_shell("""+user+""","""+rootPassword+""").start_terminal")
 end function

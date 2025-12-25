@@ -15,22 +15,48 @@ XFile.New = function (file)
     return xfile
 end function
 
+/*
+  Returns the path of the file.
+
+  @return {string}
+ */
 XFile.path = function()
     return self._file.path
 end function
 
+/*
+  Returns the content of the file.
+
+  @return {string}
+ */
 XFile.get_content = function()
     return self._file.get_content
 end function
 
+/*
+  Checks if the file has the specified permission.
+
+  @param {string} permission
+  @return {boolean}
+ */
 XFile.has_permission = function(permission)
     return self._file.has_permission(permission)
 end function
 
+/*
+  Returns the name of the file.
+
+  @return {string}
+ */
 XFile.name = function()
     return self._file.name
 end function
 
+/*
+  Returns all subdirectories as XFile instances.
+
+  @return {list<XFile>}
+ */
 XFile.get_folders = function()
     return self._file.get_folders.map(@XFile.New)
 end function
@@ -64,6 +90,12 @@ XFile.getAt = function (path)
 	if (file.path == absolutePath) then return XFile.New(file) else return null
 end function
 
+/*
+  Returns the content of the file at the given path.
+
+  @param {string} path
+  @return {string|null}
+ */
 XFile.contentAt = function (path)
     xfile = self.getAt(path)
     if (xfile) then return xfile.get_content

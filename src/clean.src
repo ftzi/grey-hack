@@ -5,6 +5,10 @@
 
 alsoRemove = ["/root/lib", "/root/tests"]
 Clean = {}
+
+/*
+  Removes .Trash folders from all user home directories and /root.
+ */
 Clean.cleanTrash = function ()
     dirs = get_shell.host_computer.File("/home").get_folders + [get_shell.host_computer.File("/root")]
     for dir in dirs
@@ -14,6 +18,10 @@ Clean.cleanTrash = function ()
     end for
 end function
 
+/*
+  Main entry point. Removes all .src and executable files in /root,
+  deletes directories specified in alsoRemove, and cleans trash folders.
+ */
 Clean.main = function ()
     if (params.len > 0 and params[0] == "-h") then exit("<b>Usage: clean. Removes all the .src and executables files in /root and also "+alsoRemove.join(", ")+".")
 

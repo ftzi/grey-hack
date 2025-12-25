@@ -95,12 +95,22 @@ Objs.New = function (publicIp = null)
     return objs
 end function
 
+/*
+  Retrieves the contents of /etc/passwd from the first available xfile.
+
+  @return {string|null}
+ */
 Objs.passwd = function()
 	for obj in self.withXFile
 	    return obj.xfile.contentAt("/etc/passwd")
 	end for
 end function
 
+/*
+  Extracts unique usernames from the passwd file.
+
+  @return {list}
+ */
 Objs.users = function ()
     users = []
     passwd = self.passwd
@@ -202,6 +212,13 @@ Objs._connectSsh = function (user, password)
 end function
 
 Objs.inputHandler = {}
+
+/*
+  Handles password-related input commands to decipher and connect via SSH.
+
+  @param {list} inputParams
+  @return {null}
+ */
 Objs.inputHandler.password = function (inputParams)
     if (not self.passwd) then return
     decipherOnly = inputParams.has("-d")

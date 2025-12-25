@@ -92,6 +92,8 @@ Fs.remove = function (path)
 end function
 
 /*
+  Ensures a directory exists at the given path, creating it if necessary.
+
   @param {string} dirPath
   @throw
  */

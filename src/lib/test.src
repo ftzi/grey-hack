@@ -14,6 +14,9 @@ Test.debugMode = false
 Test.currentTest = null
 Test.expectIndex = 0
 
+/*
+  Initializes the test framework by setting up the global test state object.
+ */
 Test.main = function ()
     get_custom_object.tests = {
         "finishedSetup": false,
@@ -31,6 +34,12 @@ end function
 
 Test.main()
 
+/*
+  Registers a test case with a name and a function to execute.
+
+  @param {string} name
+  @param {function} fn
+ */
 Test.test = function (name, fn)
     Test.tests.push({"name": name, "fn": @fn})
 end function
@@ -52,6 +61,13 @@ Test.runTests = function ()
     print("<color=green>All "+get_custom_object.tests.successfulTests+" tests passed ("+get_custom_object.tests.successfulExpects+" expects).</color>")
 end function
 
+/*
+  Formats a value for display in test output with optional bold styling.
+
+  @param {any} value
+  @param {boolean} bold
+  @return {string}
+ */
 Test.prettyValue = function (value, bold = true)
 	pretty = value
 	if (value == null) then pretty = "null"
@@ -63,12 +79,22 @@ end function
 Expect = {}
 Expect.value = null
 
+/*
+  Exits the program with a formatted error message for a failed test.
+
+  @param {string} message
+ */
 Test.throw = function (message)
     text = "<color=red>Error in test ""<b>"+Test.currentTest+"</b>"" ("+program_path+", expect #"+Test.expectIndex+"):\n</color>"
     text = text + "<color=red>"+message+"</color>"
     exit(text)
 end function
 
+/*
+  Asserts that the expected value equals the actual value.
+
+  @param {any} expected
+ */
 Expect.toBe = function (expected)
     if (self.value != expected) then
         Test.throw("Expected "+Test.prettyValue(expected)+" but received "+Test.prettyValue(self.value)+".")
@@ -76,6 +102,11 @@ Expect.toBe = function (expected)
     get_custom_object.tests.successfulExpects = get_custom_object.tests.successfulExpects + 1
 end function
 
+/*
+  Asserts that the value contains the expected element.
+
+  @param {any} expected
+ */
 Expect.toHave = function (expected)
     if (self.value isa number) then Test.throw("Can't use toHave() with a number. Expect is "+Test.prettyValue(self.value)+".")
     if (self.value.indexOf(expected) == null) then
@@ -84,6 +115,12 @@ Expect.toHave = function (expected)
     get_custom_object.tests.successfulExpects = get_custom_object.tests.successfulExpects + 1
 end function
 
+/*
+  Creates an Expect object for making assertions on the given value.
+
+  @param {any} value
+  @return {Expect}
+ */
 Test.expect = function (value)
     exp = new Expect
     exp.value = value

@@ -7,12 +7,20 @@ Lib = {}
 
 Lib._libs = {}
 
+/*
+  Retrieves a library by name, loading it if not already cached.
+
+  @param {string} name
+  @return {object}
+ */
 Lib._getLib = function (name)
     if (not Lib._libs.hasIndex(name)) then Lib._libs[name] = Lib.load(name)
     return Lib._libs[name]
 end function
 
 /*
+  Returns the metaxploit library instance.
+
   @return {metaxploit}
  */
 Lib.metaxploit = function()
@@ -20,6 +28,8 @@ Lib.metaxploit = function()
 end function
 
 /*
+  Returns the crypto library instance.
+
   @return {crypto}
  */
 Lib.crypto = function()
@@ -27,6 +37,8 @@ Lib.crypto = function()
 end function
 
 /*
+  Returns the aptClient library instance.
+
   @return {aptClient}
  */
 Lib.aptClient = function()
@@ -34,6 +46,8 @@ Lib.aptClient = function()
 end function
 
 /*
+  Returns the path to a library, searching in /lib and current directory.
+
   @param {string} name
   @param {boolean} installIfMissing
   @return {string}
@@ -78,6 +92,8 @@ Lib.load = function (name)
 end function
 
 /*
+  Loads a library from a remote network session.
+
   @param {string} ip
   @param {number} port
   @return {metaLib}

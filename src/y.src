@@ -7,6 +7,10 @@
 
 Y = {}
 
+/*
+  Main entry point for the hacking tool. Parses command-line arguments and
+  either runs remotely against an IP address or locally for local exploits.
+ */
 Y.main = function ()
     if not get_shell.host_computer.is_network_active then exit("No internet access.")
 
@@ -31,6 +35,13 @@ Y.main = function ()
 		remote = Remote.New(program.args.ipOrLibName)
         remote.print()
 
+        /*
+          Sorts xlibs to prioritize the one matching the specified lanIp.
+
+          @param {xlib} a
+          @param {xlib} b
+          @return {number}
+         */
         sortXlibs = function (a, b)
             if (a.lanIp == lanIp and b != lanIp) then return -1
             if (a.lanIp != lanIp and b == lanIp) then return 1

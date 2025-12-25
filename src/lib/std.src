@@ -2,6 +2,12 @@
 
 Std = {}
 
+/*
+  Converts a value to its string representation.
+
+  @param {any} value
+  @return {string}
+ */
 Std.toString = function (value)
     if (value == null) then return "null"
     if (value isa string) then return value
@@ -22,13 +28,28 @@ end function
 
 Std.programName = program_path.split("/")[-1]
 
-// Functions references can be passed so they are only run deppending on the `condition`
+/*
+  Returns ifTrue if condition is truthy, otherwise returns ifFalse.
+  Function references can be passed so they are only run depending on the condition.
+
+  @param {any} condition
+  @param {any} ifTrue
+  @param {any} ifFalse
+  @return {any}
+ */
 Std.ifThenElse = function (condition, ifTrue, ifFalse)
     if (condition) then return ifTrue
     return ifFalse
 end function
 
 Std.Filters = {}
+
+/*
+  Creates a filter function that checks if an item has a truthy value for the given key.
+
+  @param {string} key
+  @return {function}
+ */
 Std.Filters.byTruthyProp = function (key)
     fn = function (item)
         return (item.get(key)) != null and (item.get(key)) != false and (item.get(key)) != 0 and (item.get(key)) != ""
@@ -44,10 +65,20 @@ end function
 */
 
 
+/*
+  Converts a number to a string.
+
+  @return {string}
+ */
 number.to_str = function (number)
     return ""+number
 end function
 
+/*
+  Wraps the number in bold HTML tags.
+
+  @return {string}
+ */
 number.bold = function (number)
     return "<b>"+self+"</b>"
 end function
@@ -72,73 +103,166 @@ string.get = function (index, default = null)
 	if (self.hasIndex(index)) then return self[index] else return default
 end function
 
+/*
+  Replaces escaped newlines with the proper line feed character.
+
+  @return {string}
+ */
 string.fixNewLine = function ()
     self = self.replace("\n", LF)
     self = self.replace("\\n", LF)
     return self
 end function
 
-// Line Feed. Adds the newline char to the end of the string.
+/*
+  Adds a line feed character to the end of the string.
+
+  @return {string}
+ */
 string.LF = function ()
     return self+LF // "\n" makes some native commands throw, like .build. Let's use char(10) as it's what's expected.
 end function
 
+/*
+  Wraps the string in bold HTML tags.
+
+  @return {string}
+ */
 string.bold = function ()
     return "<b>"+self+"</b>"
 end function
 
+/*
+  Wraps the string in italic HTML tags.
+
+  @return {string}
+ */
 string.italic = function ()
     return "<i>"+self+"</i>"
 end function
 
+/*
+  Wraps the string in color HTML tags with the specified color.
+
+  @param {string} color
+  @return {string}
+ */
 string.color = function (color)
     return "<color="+color+">"+self+"</color=>"
 end function
 
-// Colors the string with the error color.
+/*
+  Colors the string with the error color (red).
+
+  @return {string}
+ */
 string.error = function ()
     return self.color("red")
 end function
 
+/*
+  Wraps the string in underline HTML tags.
+
+  @return {string}
+ */
 string.underline = function ()
     return "<u>"+self+"</u>"
 end function
 
+/*
+  Wraps the string in center alignment HTML tags.
+
+  @return {string}
+ */
 string.center=function()
     return "<align=center>"+self+"</align>"
 end function
 
-// Returns true if the string has the given substring.
-// @return {number}
+/*
+  Returns true if the string contains the given substring.
+
+  @param {string} item
+  @return {number}
+ */
 string.has = function (item)
 	return self.indexOf(item) != null
 end function
 
+/*
+  Ensures the string starts with the given prefix.
+
+  @param {string} prefix
+  @return {string}
+ */
 string.ensurePrefix = function (prefix)
     if (self[0:prefix.len] != prefix) then return prefix + self
     return self
 end function
+/*
+  Ensures the string ends with the given suffix.
+
+  @param {string} suffix
+  @return {string}
+ */
 string.ensureSuffix = function (suffix)
     if (self[-suffix.len:] != suffix) then return self + suffix
     return self
 end function
+/*
+  Removes the prefix from the string if it exists.
+
+  @param {string} prefix
+  @return {string}
+ */
 string.removePrefix = function (prefix)
     if (self[0:prefix.len] == prefix) then return self[prefix.len:]
     return self
 end function
+/*
+  Removes the suffix from the string if it exists.
+
+  @param {string} suffix
+  @return {string}
+ */
 string.removeSuffix = function (suffix)
     if (self[-suffix.len:] == suffix) then return self[:-suffix.len]
     return self
 end function
 
+/*
+  Pads the string on the left to reach the specified length.
+
+  @param {number} length
+  @param {string} char
+  @return {string}
+ */
 string.padLeft = function (length, char = " ")
     return (char * (length - self.len)) + self
 end function
 
+/*
+  Pads the string on the right to reach the specified length.
+
+  @param {number} length
+  @param {string} char
+  @return {string}
+ */
 string.padRight = function (length, char = " ")
     return self + (char * (length - self.len))
 end function
 
+/*
+  Formats the string by replacing $ placeholders with the provided arguments.
+
+  @param {any} a
+  @param {any} b
+  @param {any} c
+  @param {any} d
+  @param {any} e
+  @param {any} f
+  @param {any} g
+  @return {string}
+ */
 string.f = function (a,b,c,d,e,f,g)
     list = [a,b,c,d,e,f,g]
     index = 0
@@ -154,7 +278,11 @@ string.f = function (a,b,c,d,e,f,g)
     return newStr
 end function
 
-// Removes whitespaces from both ends of the string.
+/*
+  Removes whitespaces from both ends of the string.
+
+  @return {string}
+ */
 string.trim = function ()
     self = self.fixNewLine()
     removables = [" ", LF]
@@ -178,9 +306,15 @@ string.trim = function ()
 	return self
 end function
 
-// Returns the substring between two other substrings.
-// If "" or null is given to open, it will consider the beginning of the string; index 0.
-// If null is given to close, it will consider either a NewLine or the end of the string.
+/*
+  Returns the substring between two other substrings.
+  If "" or null is given to open, it will consider the beginning of the string.
+  If null is given to close, it will consider either a NewLine or the end of the string.
+
+  @param {string} open
+  @param {string} close
+  @return {string}
+ */
 string.valueBetween = function (open = null, close = null)
     if (open == null) then open = ""
     self = self.fixNewLine()
@@ -197,8 +331,13 @@ string.valueBetween = function (open = null, close = null)
     if (tail != null) then return self[head + open.len:tail]
 end function
 
-// Returns all the occurrences as a list of the substrings
-// between two other substrings
+/*
+  Returns all occurrences as a list of substrings between two other substrings.
+
+  @param {string} open
+  @param {string} close
+  @return {list}
+ */
 string.valuesBetween = function (open, close)
 	array = []
 	head = null
@@ -214,7 +353,16 @@ string.valuesBetween = function (open, close)
 	return array
 end function
 
-// Joins the self path and the given ones with `/`.
+/*
+  Joins the self path and the given ones with `/`.
+
+  @param {string} a
+  @param {string} b
+  @param {string} c
+  @param {string} d
+  @param {string} e
+  @return {string}
+ */
 string.join = function (a, b, c, d, e)
     paths = [a, b, c, d, e]
     for path in paths
@@ -224,15 +372,29 @@ string.join = function (a, b, c, d, e)
     return self
 end function
 
+/*
+  Returns the parent path of the current path string.
+
+  @return {string}
+ */
 string.parent = function ()
     return parent_path(self)
 end function
 
+/*
+  Extracts the filename from a path string.
+
+  @return {string}
+ */
 string.filename = function ()
     return self.removeSuffix("/").split("/")[-1]
 end function
 
-// If the string is not an absolute path, it will add the current path to it.
+/*
+  If the string is not an absolute path, it will add the current path to it.
+
+  @return {string}
+ */
 string.absolutePath = function ()
     if (self[0] != "/") then return current_path + "/" + self
     return self
@@ -244,9 +406,14 @@ end function
     ====================================================
 */
 
-// Safely gets the value of an object by passing the keys to access it.
-// Pass either a string or a list of keys to deeply access it.
-// Returns null if the final property is not found.
+/*
+  Safely gets the value of an object by passing the keys to access it.
+  Pass either a string or a list of keys to deeply access it.
+  Returns null if the final property is not found.
+
+  @param {string|list} keys
+  @return {any}
+ */
 map.get = function (keys)
 	if not (keys isa list) then keys = [keys]
 	data = self
@@ -256,6 +423,14 @@ map.get = function (keys)
 	return @data
 end function
 
+/*
+  Sets a value in the object by passing the keys to access it.
+  Pass either a string or a list of keys to deeply set the value.
+  Creates intermediate objects if they do not exist.
+
+  @param {string|list} keys
+  @param {any} value
+ */
 map.set = function (keys, value)
     if not (keys isa list) then keys = [keys]
     data = self
@@ -266,7 +441,12 @@ map.set = function (keys, value)
     data[keys[-1]] = value
 end function
 
-// Removes the items of a list when the given function returns not-true for each item.
+/*
+  Removes items from a list when the given function returns not-true for each item.
+
+  @param {function} fn
+  @return {list}
+ */
 list.filter = function (fn)
 	newList = []
 	for item in self
@@ -283,6 +463,11 @@ end function
 */
 
 
+/*
+  Returns an object with filter helper methods for the list.
+
+  @return {map}
+ */
 list.filterBy = function()
     _self = self
     filters = {}
@@ -294,6 +479,12 @@ list.filterBy = function()
 end function
 
 
+/*
+  Sorts the list using a custom comparison function.
+
+  @param {function} compareFn
+  @return {list}
+ */
 list.sort2 = function (compareFn)
     newList = self[:]
     for i in range (0, newList.len - 1)
@@ -308,30 +499,53 @@ list.sort2 = function (compareFn)
     return newList
 end function
 
-// Safely accesses a list item by the index.
-// Returns null if the index is invalid.
+/*
+  Safely accesses a list item by the index.
+  Returns null if the index is invalid.
+
+  @param {number} index
+  @param {any} default
+  @return {any}
+ */
 list.get = function (index, default = null)
 	if (self.hasIndex(index)) then return @self[index] else return default
 end function
 
-// Returns true if the list includes the given item.
-// @return {number}
+/*
+  Returns true if the list includes the given item.
+
+  @param {any} item
+  @return {number}
+ */
 list.has = function (item)
 	return self.indexOf(item) != null
 end function
 
-// Only adds if the list doesn't have this item yet.
+/*
+  Only adds the item if the list doesn't have it yet.
+
+  @param {any} item
+ */
 list.addUnique = function (item)
     if (not self.has(item)) then self.push(item)
 end function
 
-// Deletes the first occurrence of an item in the list. Mutates that list.
+/*
+  Deletes the first occurrence of an item in the list. Mutates the list.
+
+  @param {any} item
+ */
 list.delete = function (item)
     index = self.indexOf(item)
     if (index != null) then self.remove(index)
 end function
 
-// Transforms each item of a list by using the given function.
+/*
+  Transforms each item of a list by using the given function.
+
+  @param {function} fn
+  @return {list}
+ */
 list.map = function (fn)
 	newList = []
 	for item in self
@@ -340,6 +554,12 @@ list.map = function (fn)
 	return newList
 end function
 
+/*
+  Converts the list to a string representation.
+
+  @param {number} spaced
+  @return {string}
+ */
 list.toString = function (spaced = false)
     if (spaced) then return "["+self.join(", ")+"]"
     return "["+self.join(",")+"]"
