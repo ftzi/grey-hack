@@ -4,7 +4,8 @@
   "scripts": {
     "watch": "bun ./watch.ts",
     "start": "npm run watch",
-    "test": "bun ./test.ts"
+    "test": "bun ./test.ts",
+    "x": "bunx greybel execute src/x.src"
   },
   "dependencies": {
     "chokidar": "4.0.3",

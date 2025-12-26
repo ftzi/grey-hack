@@ -1,3 +1,5 @@
+#import Std from "std"
+
 /*
   Map containing various libs that are lazy loaded and utility functions.
 
@@ -73,8 +75,7 @@ end function
   @return {string}
  */
 Lib.versionOf = function (name)
-    if (name.indexOf(".so") == null) then name = name + ".so"
-    return Lib.metaxploit.load(Lib.libPath(name, false)).version
+    return Lib.metaxploit.load(Lib.libPath(name.ensureSuffix(".so"), false)).version
 end function
 
 /*
@@ -87,7 +88,7 @@ end function
 Lib.load = function (name)
     if (name.indexOf(".so") == null) then name = name + ".so"
     lib = include_lib(Lib.libPath(name, true))
-    if not lib then exit("Error loading the lib "+name)
+    if not lib then exit("Error loading the lib " + name)
     return lib
 end function
 
@@ -98,7 +99,7 @@ end function
   @param {number} port
   @return {metaLib}
  */
-Lib.loadRemote = function (ip, port)
+Lib.fromIpAndPort = function (ip, port)
     net = Lib.metaxploit.net_use(ip, port)
     if not net then exit("Error: can't connect to net session")
     if (net.is_root_active_user) then exit("Root user is active!")

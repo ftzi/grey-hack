@@ -2,11 +2,12 @@
   Dashboard/companion program.
   Lists available tools and programs.
  */
-#import Std from "lib/std"
 #import Setup from "tools/setup"
 #import Clean from "tools/clean"
 #import Y from "tools/y"
 
+print(Fs.home)
+Setup.run
 X = {}
 
 /*
@@ -16,11 +17,18 @@ X = {}
  */
 X.getTools = function ()
     return [
-        {"key": "0", "name": "Setup", "fn": @Setup.run},
-        {"key": "1", "name": "Y (Hack)", "fn": @Y.run},
-        {"key": "2", "name": "Clean", "fn": @Clean.run}
+        {"key": "1", "name": "Hack", "fn": @Y.run},
+        {"key": "2", "name": "Setup", "fn": @Setup.run},
+        {"key": "3", "name": "Clean", "fn": @Clean.run}
     ]
 end function
+
+/*
+  @type Program
+  @property {string} name
+  @property {string} path
+ */
+Program = {}
 
 /*
   Returns a list of executable files in /usr/bin.
@@ -83,17 +91,19 @@ X.main = function ()
 
         X.printMenu(tools, programs)
 
-        choice = user_input("Press key to launch (or q to quit): ", false, true)
+        choice = user_input("Press key to launch (or 0 to quit): ", false, true)
+        print(choice)
 
-        if (choice.lower == "q") then exit("")
+        if (choice == "0") then exit("")
 
         choice = choice.upper
 
         // Check if it's a tool (0-9)
         for tool in tools
             if (choice == tool.key) then
-                print(Std.LF + "Running $...".f(tool.name).LF)
+                clear_screen()
                 tool.fn()
+                print()
             end if
         end for
 
@@ -103,7 +113,7 @@ X.main = function ()
             key = X.qwertyKey(index)
             if (key == null) then break
             if (choice == key) then
-                print(Std.LF + "Launching $...".f(program.name).LF)
+                clear_screen()
                 get_shell.launch(program.path)
             end if
             index = index + 1

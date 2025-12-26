@@ -34,20 +34,13 @@ Addresses.addresses = function ()
 end function
 
 /*
-  Checks if local addresses exist for a given library and version.
+  Checks if local addresses exist for a given library.
 
-  @param {map|string} libOrLibName - A library object or library name string
-  @param {string} version - The library version (used if libOrLibName is a string)
+  @param {map} lib - A library object
   @return {boolean}
  */
-Addresses.hasLocalAddressesFor = function (libOrLibName, version)
-    libName = libOrLibName
-    version = version
-    if (libOrLibName isa map) then
-        libName = libOrLibName.lib_name
-        version = libOrLibName.version
-    end if
-    return Addresses.addresses.get([libName, version]) != null
+Addresses.hasLocalAddressesFor = function (lib)
+    return Addresses.addresses.get([lib.lib_name, lib.version]) != null
 end function
 
 /*
@@ -69,20 +62,15 @@ end function
 /*
   Gets addresses for a library, scanning if not already cached.
 
-  @param {map|string} libOrLibName - A library object or library name string
-  @param {string} version - The library version (used if libOrLibName is a string)
+  @param {map} lib - A library object
   @return {list}
  */
-Addresses.addressesFor = function (libOrLibName, version)
-    libName = libOrLibName
-    version = version
-    if (libOrLibName isa map) then
-        libName = libOrLibName.lib_name
-        version = libOrLibName.version
-    end if
+Addresses.addressesFor = function (lib)
+    libName = lib.lib_name
+    version = lib.version
 
     addresses = Addresses.addresses.get([libName, version])
-    if (not addresses) then addresses = Addresses.scan(libOrLibName)
+    if (not addresses) then addresses = Addresses.scan(lib)
 
     return addresses
 end function

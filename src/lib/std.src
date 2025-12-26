@@ -148,7 +148,7 @@ end function
   @return {string}
  */
 string.color = function (color)
-    return "<color="+color+">"+self+"</color=>"
+    return "<color="+color+">"+self+"</color>"
 end function
 
 /*

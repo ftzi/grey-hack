@@ -4,50 +4,50 @@
 #import Addresses from "addresses"
 
 /*
-  @type Obj
+  @type Breach
  */
-Obj = {}
+Breach = {}
 
 /*
   @param {any} data
   @param {number} address
-  @param {any} unsecValue
+  @param {string} unsecZone
   @param {list} extra
   @param {string} lanIp
 
-  @return {Obj}
+  @return {Breach}
  */
-Obj.New = function(data, address, unsecValue, extra, lanIp = null)
-	obj = new Obj
-	obj.type = typeof(data)
-	obj.address = address
-	obj.unsecValue = unsecValue
-	obj.extra = extra
-	obj.shell = null
-	obj.computer = null
-	obj.xfile = null
-	obj.action = null
-    obj.lanIp = lanIp
+Breach.New = function(data, address, unsecZone, extra, lanIp = null)
+	breach = new Breach
+	breach.type = typeof(data)
+	breach.address = address
+	breach.unsecZone = unsecZone
+	breach.extra = extra
+	breach.shell = null
+	breach.computer = null
+	breach.xfile = null
+	breach.action = null
+    breach.lanIp = lanIp
 
-	if (obj.type == "shell") then
-		obj.shell = data
-		obj.computer = obj.shell.host_computer
-		obj.xfile = XFile.New(obj.computer.File("/"))
-		obj.action = @obj.actionShell
-	else if (obj.type == "computer") then
-		obj.computer = data
-		obj.xfile = XFile.New(obj.computer.File("/"))
-		obj.action = @obj.actionComputer
-	else if (obj.type == "file") then
-		obj.xfile = XFile.New(data)
+	if (breach.type == "shell") then
+		breach.shell = data
+		breach.computer = breach.shell.host_computer
+		breach.xfile = XFile.New(breach.computer.File("/"))
+		breach.action = @breach.actionShell
+	else if (breach.type == "computer") then
+		breach.computer = data
+		breach.xfile = XFile.New(breach.computer.File("/"))
+		breach.action = @breach.actionComputer
+	else if (breach.type == "file") then
+		breach.xfile = XFile.New(data)
 	end if
-	return obj
+	return breach
 end function
 
 /*
   @return {null}
  */
-Obj.actionComputer = function()
+Breach.actionComputer = function()
 	while (true)
 		input = user_input("Enter the path of the file to be shown or nothing to go back:".LF)
 		if (input == "") then return
@@ -68,7 +68,7 @@ end function
 /*
   @return {null}
  */
-Obj.actionShell = function ()
+Breach.actionShell = function ()
 	get_shell.scp(Lib.libPath("metaxploit.so"), "/home/guest", self.shell)
 	get_shell.scp(Lib.libPath("crypto.so"), "/home/guest", self.shell)
 	get_shell.scp(program_path, "/home/guest", self.shell)
@@ -76,23 +76,24 @@ Obj.actionShell = function ()
 end function
 
 /*
-  @type Objs
+  @type Breachs
  */
-Objs = {}
+Breachs = {}
 
 /*
-  @param {string} publicIp
+    Create a new Breachs instance.
 
-  @return {Objs} - aaa
+    @param {string|null} publicIp
+    @return {Breachs}
  */
-Objs.New = function (publicIp = null)
-    objs = new Objs
-    objs.publicIp = publicIp
-    objs.all = []
-    objs.withAction = []
-    objs.withShell = []
-    objs.withXFile = []
-    return objs
+Breachs.New = function (publicIp = null)
+    breaches = new Breachs
+    breaches.publicIp = publicIp
+    breaches.all = []
+    breaches.withAction = []
+    breaches.withShell = []
+    breaches.withXFile = []
+    return breaches
 end function
 
 /*
@@ -100,9 +101,9 @@ end function
 
   @return {string|null}
  */
-Objs.passwd = function()
-	for obj in self.withXFile
-	    return obj.xfile.contentAt("/etc/passwd")
+Breachs.passwd = function()
+	for breach in self.withXFile
+	    return breach.xfile.contentAt("/etc/passwd")
 	end for
 end function
 
@@ -111,7 +112,7 @@ end function
 
   @return {list}
  */
-Objs.users = function ()
+Breachs.users = function ()
     users = []
     passwd = self.passwd
     if (passwd) then
@@ -123,15 +124,15 @@ Objs.users = function ()
 end function
 
 /*
-  @param {XLib} xlib
-  @param {string} lanIp
+  Scans and exploits a remote library.
 
-  @return {null}
+  @param {RemoteLib} remoteLib
+  @param {string} lanIp
  */
-Objs.addBatch = function (xlib, lanIp = "")
-    lib = xlib.lib
-	for address in Addresses.addressesFor(xlib.lib)
-		scanResult = Lib.metaxploit.scan_address(xlib.lib, address)
+Breachs.scanAndExploit = function (remoteLib, lanIp = "")
+    lib = remoteLib.lib
+	for address in Addresses.addressesFor(lib)
+		scanResult = Lib.metaxploit.scan_address(lib, address)
 		scanResult = scanResult.replace("decompiling source...\nsearching unsecure values...\n", "")
 		scanResult = scanResult.replace("\n\n\n", "")
 
@@ -139,15 +140,47 @@ Objs.addBatch = function (xlib, lanIp = "")
 		if entries[entries.len -1] == "" then entries.pop()
 
 		for entry in entries
-			unsecValue = entry.valueBetween("<b>", "</b>")
-			data = xlib.lib.overflow(address, unsecValue, lanIp)
+			unsecZone = entry.valueBetween("<b>", "</b>")
+			data = lib.overflow(address, unsecZone, lanIp)
 			print("====================")
 
 			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
 
 			extra = (entry.LF).valuesBetween("* ", Std.LF)
-			obj = Obj.New(data, address, unsecValue, extra, xlib.lanIp)
-			self.all.push(obj)
+			breach = Breach.New(data, address, unsecZone, extra, remoteLib.lanIp)
+			self.all.push(breach)
+		end for
+	end for
+	self.withAction = self.all.filter(Std.Filters.byTruthyProp("action"))
+	self.withShell = self.all.filter(Std.Filters.byTruthyProp("shell"))
+	self.withXFile = self.all.filter(Std.Filters.byTruthyProp("xfile"))
+end function
+
+/*
+  Scans and exploits a local library.
+
+  @param {lib} lib
+  @param {string} lanIp
+ */
+Breachs.scanAndExploitLocal = function (lib, lanIp = "")
+	for address in Addresses.addressesFor(lib)
+		scanResult = Lib.metaxploit.scan_address(lib, address)
+		scanResult = scanResult.replace("decompiling source...\nsearching unsecure values...\n", "")
+		scanResult = scanResult.replace("\n\n\n", "")
+
+		entries = scanResult.split("\n\n")
+		if entries[entries.len -1] == "" then entries.pop()
+
+		for entry in entries
+			unsecZone = entry.valueBetween("<b>", "</b>")
+			data = lib.overflow(address, unsecZone, lanIp)
+			print("====================")
+
+			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
+
+			extra = (entry.LF).valuesBetween("* ", Std.LF)
+			breach = Breach.New(data, address, unsecZone, extra, lanIp)
+			self.all.push(breach)
 		end for
 	end for
 	self.withAction = self.all.filter(Std.Filters.byTruthyProp("action"))
@@ -158,18 +191,18 @@ end function
 /*
   @return {null}
  */
-Objs.print = function ()
+Breachs.print = function ()
 	message = "Ix LAN_IP TYPE DATA"
 	i = -1
-	for obj in self.withAction
+	for breach in self.withAction
 		i = i + 1
-		message = message.LF + "$ $ $".f(i, obj.lanIp ,obj.type)
-		if (obj.type == "computer") then message = message + " "+ obj.xfile.user
-		if (obj.type == "shell") then message = message + " "+ obj.xfile.user
-		if (obj.type == "file") then
+		message = message.LF + "$ $ $".f(i, breach.lanIp ,breach.type)
+		if (breach.type == "computer") then message = message + " "+ breach.xfile.user
+		if (breach.type == "shell") then message = message + " "+ breach.xfile.user
+		if (breach.type == "file") then
 			message = message + " " + file.path
 			if (file.is_folder) then message = message + "/"
-			message = message + " " + file.permissions + " " + obj.xfile.user
+			message = message + " " + file.permissions + " " + breach.xfile.user
 		end if
 	end for
 
@@ -193,7 +226,7 @@ end function
 
   @return {null}
  */
-Objs._connectSsh = function (user, password)
+Breachs._connectSsh = function (user, password)
     shell = null
     if (self.publicIp) then
         shell = get_shell.connect_service(self.publicIp, 22, user, password)
@@ -211,7 +244,7 @@ Objs._connectSsh = function (user, password)
     if (shell isa map) then shell.start_terminal else print("Could not connect via ssh to "+user+"@"+password+". Error: "+shell)
 end function
 
-Objs.inputHandler = {}
+Breachs.inputHandler = {}
 
 /*
   Handles password-related input commands to decipher and connect via SSH.
@@ -219,7 +252,7 @@ Objs.inputHandler = {}
   @param {list} inputParams
   @return {null}
  */
-Objs.inputHandler.password = function (inputParams)
+Breachs.inputHandler.password = function (inputParams)
     if (not self.passwd) then return
     decipherOnly = inputParams.has("-d")
     inputParams.delete("-d")
@@ -254,7 +287,7 @@ end function
 
   @return {null}
  */
-Objs.handleInput = function (remote)
+Breachs.handleInput = function (remote)
 	while true
 		inputParams = user_input("Enter the desired method:".LF).split(" ")
 		if (inputParams[0] == "p") then
@@ -272,4 +305,4 @@ Objs.handleInput = function (remote)
 	end while
 end function
 
-module.exports = Objs
+module.exports = Breachs

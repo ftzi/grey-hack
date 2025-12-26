@@ -3,27 +3,27 @@
 #import Addresses from "addresses"
 
 /*
-  @type Who
+  @type WhoIs
  */
-Who = {}
+WhoIs = {}
 
 /*
-  Creates a new Who object by performing a whois lookup on the given IP.
+  Creates a new WhoIs object by performing a whois lookup on the given IP.
 
   @param {string} ip
-  @return {Who}
+  @return {WhoIs}
  */
-Who.New = function (ip)
-    who = new Who
+WhoIs.New = function (ip)
+    whoIs = new WhoIs
     whoisOutput = whois(ip)
     whoisLines = whoisOutput.split(Std.LF)
-    who.ip = ip
-    who.domain = whoisLines[0].split(":")[1].trim
-    who.admin = {}
-    who.admin.name = whoisLines[1].split(":")[1].trim
-    who.admin.email = whoisLines[2].split(":")[1].trim
-    who.admin.phone = whoisLines[3].split(":")[1].trim
-    return who
+    whoIs.ip = ip
+    whoIs.domain = whoisLines[0].split(":")[1].trim
+    whoIs.admin = {}
+    whoIs.admin.name = whoisLines[1].split(":")[1].trim
+    whoIs.admin.email = whoisLines[2].split(":")[1].trim
+    whoIs.admin.phone = whoisLines[3].split(":")[1].trim
+    return whoIs
 end function
 
 /*
@@ -31,13 +31,13 @@ end function
 
   @return {null}
  */
-Who.print = function ()
+WhoIs.print = function ()
     print("IP: $ Domain: $".f(self.ip.bold, self.domain.bold))
     print("Admin: $ Email: $".f(self.admin.name.bold, self.admin.email.bold).LF)
 end function
 
 /*
-  @type XLib
+  @type RemoteLib
   @property {Remote} remote
   @property {Lib} lib
   @property {string} service
@@ -48,34 +48,34 @@ end function
   @property {string} name
   @property {string} version
  */
-XLib = {}
+RemoteLib = {}
 
 /*
-  Creates a new XLib object representing a library on a remote port.
+  Creates a new RemoteLib object representing a library on a remote port.
 
   @param {Remote} remote
-  @param {port} port
-  @return {XLib}
+  @param {port|null} port
+  @return {RemoteLib}
  */
-XLib.New = function (remote, port = null)
-    xlib = new XLib
-    xlib.remote = remote
+RemoteLib.New = function (remote, port = null)
+    remoteLib = new RemoteLib
+    remoteLib.remote = remote
     if (port) then
-        xlib.service = remote.router.port_info(port).split(" ")[0] // [1] is lib version
-        xlib.portNumber = port.port_number
-        xlib.lanIp = port.get_lan_ip
-        xlib.canUse = remote.isLanIp or not port.is_closed
+        remoteLib.service = remote.router.port_info(port).split(" ")[0] // [1] is lib version
+        remoteLib.portNumber = port.port_number
+        remoteLib.lanIp = port.get_lan_ip
+        remoteLib.canUse = remote.isLanIp or not port.is_closed
     else
-        xlib.service = "router"
-        xlib.portNumber = 0
-        xlib.lanIp = remote.router.local_ip
-        xlib.canUse = true
+        remoteLib.service = "router"
+        remoteLib.portNumber = 0
+        remoteLib.lanIp = remote.router.local_ip
+        remoteLib.canUse = true
     end if
-    xlib.lib = Lib.loadRemote(remote.ip, xlib.portNumber)
-    xlib.hasAddresses = Addresses.hasLocalAddressesFor(xlib.lib)
-    xlib.name = xlib.lib.lib_name
-    xlib.version = xlib.lib.version
-    return xlib
+    remoteLib.lib = Lib.fromIpAndPort(remote.ip, remoteLib.portNumber)
+    remoteLib.hasAddresses = Addresses.hasLocalAddressesFor(remoteLib.lib)
+    remoteLib.name = remoteLib.lib.lib_name
+    remoteLib.version = remoteLib.lib.version
+    return remoteLib
 end function
 
 /*
@@ -85,21 +85,20 @@ end function
   @property {string} ip
   @property {bool} isLanIp
   @property {Router} router
-  @property {Who} who
+  @property {WhoIs} whoIs
   @property {list<port>} ports
-  @property {list<XLib>} xlibs
-  @property {XLib} lib
+  @property {list<RemoteLib>} remoteLibs
  */
 Remote = {}
 
 /*
-  Comparison function for sorting XLib objects by LAN IP and port number.
+  Comparison function for sorting RemoteLib objects by LAN IP and port number.
 
-  @param {XLib} a
-  @param {XLib} b
+  @param {RemoteLib} a
+  @param {RemoteLib} b
   @return {number}
  */
-Remote._sortXlibs = function (a, b)
+Remote._sortRemoteLibs = function (a, b)
     if (a.lanIp < b.lanIp) then return -1
     if (a.lanIp == b.lanIp) then
         if (a.portNumber < b.portNumber) then return -1
@@ -122,15 +121,14 @@ Remote.New = function (ip)
     remote.ip = ip
     remote.isLanIp = is_lan_ip(ip)
     remote.router = get_router(Std.ifThenElse(remote.isLanIp, "", ip))
-    remote.who = Who.New(ip)
+    remote.whoIs = WhoIs.New(ip)
     remote.ports = Remote._getPorts(remote)
-    remote.xlibs = [XLib.New(remote, null)]
+    remote.remoteLibs = [RemoteLib.New(remote, null)]
     for port in remote.ports
-        xlib = XLib.New(remote, port)
-        remote.xlibs.push(xlib)
+        remoteLib = RemoteLib.New(remote, port)
+        remote.remoteLibs.push(remoteLib)
     end for
-    remote.lib = remote.xlibs[0].lib // not needed? currently used as first option in y
-    remote.xlibs = remote.xlibs.sort2(@Remote._sortXlibs)
+    remote.remoteLibs = remote.remoteLibs.sort2(@Remote._sortRemoteLibs)
 
 	return remote
 end function
@@ -181,12 +179,12 @@ end function
   @return {null}
  */
 Remote.print = function ()
-    self.who.print()
+    self.whoIs.print()
 
     info = "PORT STATE SERVICE VERSION LAN"
-    for xlib in self.xlibs
-        version = xlib.version + Std.ifThenElse(xlib.hasAddresses, "+", "")
-        info = info.LF + [xlib.portNumber, Std.ifThenElse(xlib.canUse, "open", "close"), xlib.service, version, xlib.lanIp].join(" ")
+    for remoteLib in self.remoteLibs
+        version = remoteLib.version + Std.ifThenElse(remoteLib.hasAddresses, "+", "")
+        info = info.LF + [remoteLib.portNumber, Std.ifThenElse(remoteLib.canUse, "open", "close"), remoteLib.service, version, remoteLib.lanIp].join(" ")
     end for
 
     formatted = format_columns(info).split(Std.LF)
@@ -194,3 +192,5 @@ Remote.print = function ()
     print(formatted[1:].join(Std.LF).LF)
     self.printFirewallRules()
 end function
+
+module.exports = Remote

@@ -1,7 +1,7 @@
 /*
   Main hacking tool. Either runs remotely using an IP or locally for local exploits.
  */
-#import Objs from "../lib/obj"
+#import Breachs from "../lib/breach"
 #import Remote from "../lib/remote"
 #import Lib from "../lib/lib"
 
@@ -16,55 +16,57 @@ Y.run = function ()
 	clear_screen()
     print("=== Hacking Tool ===".bold.LF)
 
-    ipOrLibName = user_input("IP address (or press Enter for local): ")
+    ip = user_input("IP address (or press Enter for local): ")
+    if (ip == "") then ip = null
+
     lanIp = ""
     port = 0
     targetUser = "root"
 
-    ip = null
-    if (ipOrLibName) then
-        ip = Std.ifThenElse(is_valid_ip(ipOrLibName), ipOrLibName, null)
-        if (ip) then
-            lanIp = user_input("LAN IP (optional): ")
-            portInput = user_input("Port (default 0): ")
-            if (portInput) then port = portInput.to_int
-            userInput = user_input("Target user (default root): ")
-            if (userInput) then targetUser = userInput
+    if (ip) then
+        if (is_valid_ip(ip) == false) then
+            exit("Invalid IP address.")
         end if
+
+        lanIp = user_input("LAN IP (optional): ")
+        portInput = user_input("Port (default 0): ")
+        if (portInput) then port = portInput.to_int
+        userInput = user_input("Target user (default root): ")
+        if (userInput) then targetUser = userInput
     end if
 
 	remote = null
-    objs = Objs.New(ip)
+    breaches = Breachs.New(ip)
 
 	if (ip) then
-		remote = Remote.New(ipOrLibName)
+		remote = Remote.New(ip)
         remote.print()
 
         /*
-          Sorts xlibs to prioritize the one matching the specified lanIp.
+          Sorts remoteLibs to prioritize the one matching the specified lanIp.
 
-          @param {xlib} a
-          @param {xlib} b
+          @param {remoteLib} a
+          @param {remoteLib} b
           @return {number}
          */
-        sortXlibs = function (a, b)
+        sortRemoteLibs = function (a, b)
             if (a.lanIp == lanIp and b != lanIp) then return -1
             if (a.lanIp != lanIp and b == lanIp) then return 1
         end function
 
-        xlibsPrioritized = remote.xlibs.sort2(@sortXlibs)
-        for xlib in xlibsPrioritized
-            objs.addBatch(xlib, lanIp)
+        remoteLibsPrioritized = remote.remoteLibs.sort2(@sortRemoteLibs)
+        for remoteLib in remoteLibsPrioritized
+            breaches.scanAndExploit(remoteLib, lanIp)
         end for
 	else
         localLibName = "init.so" // TODO cycle through them automatically if none is specified.
         // Should get their versions and prefer the ones we have addresses for.
 		lib = Lib.metaxploit.load("/lib/"+localLibName)
-        objs.addBatch(lib, lanIp)
+        breaches.scanAndExploitLocal(lib, lanIp)
 	end if
 
-    objs.print()
-	objs.handleInput(remote)
+    breaches.print()
+	breaches.handleInput(remote)
 end function
 
 module.exports = Y

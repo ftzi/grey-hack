@@ -1,6 +1,5 @@
-#import Fs from "../lib/fs"
 #import Std from "../lib/std"
-#import Lib from "../lib/lib"
+#import Fs from "../lib/fs"
 
 Setup = {}
 
@@ -8,8 +7,10 @@ Setup = {}
   Runs the setup process. Prompts for machine type and configures accordingly.
  */
 Setup.run = function ()
-print("HI")
-    if (active_user != "root") then exit("You must be root to run this.")
+    if (active_user != "root") then
+        print("You must be root to run this.".error)
+        return
+    end if
 
     isHome = user_input("Is this a home machine? (Y/n): ")
     isHome = (isHome == "" or isHome.lower == "y")

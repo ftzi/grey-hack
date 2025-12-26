@@ -15,6 +15,7 @@ const build = async () => {
     buildPending = true;
     return;
   }
+  console.clear();
 
   isBuilding = true;
   console.log("Building...");
