@@ -13,35 +13,34 @@ Y = {}
 Y.run = function ()
     if not get_shell.host_computer.is_network_active then exit("No internet access.")
 
-	clear_screen()
-    print("=== Hacking Tool ===".bold.LF)
-
     ip = user_input("IP address (or press Enter for local): ")
     if (ip == "") then ip = null
 
     lanIp = ""
     port = 0
-    targetUser = "root"
+    // targetUser = "root"
+	remote = null
 
     if (ip) then
         if (is_valid_ip(ip) == false) then
             exit("Invalid IP address.")
         end if
 
+        remote = Remote.New(ip)
+        remote.print()
+
         lanIp = user_input("LAN IP (optional): ")
-        portInput = user_input("Port (default 0): ")
-        if (portInput) then port = portInput.to_int
-        userInput = user_input("Target user (default root): ")
-        if (userInput) then targetUser = userInput
+
+        // portInput = user_input("Port (default 0): ")
+        // if (portInput) then port = portInput.to_int
+
+        // userInput = user_input("Target user (default root): ")
+        // if (userInput) then targetUser = userInput
     end if
 
-	remote = null
     breaches = Breachs.New(ip)
 
 	if (ip) then
-		remote = Remote.New(ip)
-        remote.print()
-
         /*
           Sorts remoteLibs to prioritize the one matching the specified lanIp.
 

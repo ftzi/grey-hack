@@ -45,10 +45,10 @@ Lib.libPath = function (name, installIfMissing)
     localLibPath = current_path + "/" + name
     if (get_shell.host_computer.File(localLibPath)) then return localLibPath
     if (not installIfMissing) then
-        throw("Can't find the <b>" + name + "</b> lib in the /lib path or the current folder.")
+        Std.throw("Can't find the <b>" + name + "</b> lib in the /lib path or the current folder.")
     end if
 
     error = Lib.aptClient.install(name)
-    if (error) then throw ("Error installing the missing library "+name+": "+error)
+    if (error) then Std.throw ("Error installing the missing library "+name+": "+error)
     return libPath
 end function

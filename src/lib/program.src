@@ -176,8 +176,8 @@ Program.argument = function (name, description = "")
     // Implies it's `optional`.
     argument.default = function (defaultValue = null)
         if (defaultValue != null) then
-            if (obj.type == "number" and not defaultValue isa number) then throw("defaultValue must be a number or null.")
-            if (obj.type == "string" and not defaultValue isa string) then throw("defaultValue must be a string or null.")
+            if (obj.type == "number" and not defaultValue isa number) then Std.throw("defaultValue must be a number or null.")
+            if (obj.type == "string" and not defaultValue isa string) then Std.throw("defaultValue must be a string or null.")
         end if
         obj.optional = true
         obj.default = defaultValue
@@ -232,9 +232,9 @@ Program.option = function (name, description = "")
         return option
     end function
     option.default = function (value)
-        if (obj.type == "boolean") then throw("Can't set a default value for a boolean option.")
-        if (obj.type == "number" and not value isa number) then throw(".default must be a number.")
-        if (obj.type == "string" and not value isa string) then throw(".default must be a string.")
+        if (obj.type == "boolean") then Std.throw("Can't set a default value for a boolean option.")
+        if (obj.type == "number" and not value isa number) then Std.throw(".default must be a number.")
+        if (obj.type == "string" and not value isa string) then Std.throw(".default must be a string.")
         obj.default = value
         return option
     end function

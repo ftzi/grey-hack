@@ -29,7 +29,7 @@ end function
  */
 Fs.file = function (path, throwIfMissing = true)
     file = self.computer.File(path)
-    if (not file and throwIfMissing) then throw("File not found at $.".f(path))
+    if (not file and throwIfMissing) then Std.throw("File not found at $.".f(path))
     return file
 end function
 
@@ -44,7 +44,7 @@ Fs.read = function (path, throwIfMissing = true)
     file = self.file(path, throwIfMissing)
     if (not file) then return null
     content = file.get_content
-    if (content == null) then throw("Error reading the file $ content".f(path.bold))
+    if (content == null) then Std.throw("Error reading the file $ content".f(path.bold))
     return content
 end function
 
@@ -84,7 +84,7 @@ end function
 Fs.remove = function (path)
     if (self.exists(path)) then
         error = self.file(path).delete()
-        if (error) then throw("Error removing the file $: $.".f(path.bold, error))
+        if (error) then Std.throw("Error removing the file $: $.".f(path.bold, error))
     end if
 end function
 
@@ -97,7 +97,7 @@ end function
 Fs.ensureDir = function (dirPath)
     if (get_shell.host_computer.File(dirPath)) then return
     res = self.shell.host_computer.create_folder(dirPath.parent, dirPath.filename)
-    if (res isa string) then throw("Error ensuring the dir $: $.".f(dirPath.bold, res))
+    if (res isa string) then Std.throw("Error ensuring the dir $: $.".f(dirPath.bold, res))
 end function
 
 /*
@@ -111,10 +111,10 @@ end function
 Fs.write = function (path, content)
     self.remove(path)
     touchRes = self.computer.touch(path.parent, path.filename)
-    if (touchRes isa string) then throw("Error touching file $ in create(): $".f(path, touchRes))
+    if (touchRes isa string) then Std.throw("Error touching file $ in create(): $".f(path, touchRes))
     file = self.computer.File(path)
     result = file.set_content(content.fixNewLine())
-    if (result != 1) then throw("Error setting content of file $ in create(): $".f(path, result))
+    if (result != 1) then Std.throw("Error setting content of file $ in create(): $".f(path, result))
     return file
 end function
 

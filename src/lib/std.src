@@ -28,6 +28,16 @@ end function
 
 Std.programName = program_path.split("/")[-1]
 
+Std.isTruthy = function (value)
+    return (value != null and value != false and value != 0 and value != "")
+end function
+
+Std.isFalsy = function (value)
+    return not Std.isTruthy(value)
+end function
+
+
+
 /*
   Returns ifTrue if condition is truthy, otherwise returns ifFalse.
   Function references can be passed so they are only run depending on the condition.
@@ -40,6 +50,11 @@ Std.programName = program_path.split("/")[-1]
 Std.ifThenElse = function (condition, ifTrue, ifFalse)
     if (condition) then return ifTrue
     return ifFalse
+end function
+
+Std.elseDefault = function (value, defaultValue)
+    if (value != null) then return value
+    return defaultValue
 end function
 
 Std.Filters = {}
@@ -93,6 +108,10 @@ end function
 // The game most usually doesn't handle "\n" well. It uses char(10) instead.
 LF = char(10)
 Std.LF = LF
+
+// Non-breaking space character for formatting
+NBSP = char(160)
+Std.NBSP = NBSP
 
 // Safely accesses a string by the index.
 // Returns null if the index is invalid.

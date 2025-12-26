@@ -20,7 +20,7 @@ const build = async () => {
   isBuilding = true;
   console.log("Building...");
   for (const target of buildTargets) {
-    await $`bunx greybel build ${target} -ci -ac`.quiet();
+    await $`bunx greybel build ${target} -ci -ac --env-files .env`.quiet();
     console.log(`Built ${target}`);
   }
   console.log("Build complete.\n");

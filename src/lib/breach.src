@@ -5,6 +5,11 @@
 
 /*
   @type Breach
+
+  @property {number} address
+  @property {string} unsecZone
+  @property {shell} shell
+  @property {computer} computer
  */
 Breach = {}
 
@@ -87,13 +92,13 @@ Breachs = {}
     @return {Breachs}
  */
 Breachs.New = function (publicIp = null)
-    breaches = new Breachs
-    breaches.publicIp = publicIp
-    breaches.all = []
-    breaches.withAction = []
-    breaches.withShell = []
-    breaches.withXFile = []
-    return breaches
+  breaches = new Breachs
+  breaches.publicIp = publicIp
+  breaches.all = []
+  breaches.withAction = []
+  breaches.withShell = []
+  breaches.withXFile = []
+  return breaches
 end function
 
 /*
@@ -103,7 +108,7 @@ end function
  */
 Breachs.passwd = function()
 	for breach in self.withXFile
-	    return breach.xfile.contentAt("/etc/passwd")
+    return breach.xfile.contentAt("/etc/passwd")
 	end for
 end function
 

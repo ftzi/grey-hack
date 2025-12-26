@@ -1,8 +1,9 @@
 #import Csv from "csv"
+#import Lib from "lib"
 
 Addresses = {}
 Addresses._addresses = null
-Addresses._filePath = "/root/data/addresses.csv"
+Addresses._filePath = "/root/addresses.csv"
 
 /*
   Loads saved addresses from the CSV file.

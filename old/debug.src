@@ -15,7 +15,7 @@ Debug.Result = {
  */
 Debug.findLine = function (entryFilePath, targetLineNumber)
     entryFilePath = entryFilePath.ensureSuffix(".src").absolutePath()
-    if (targetLineNumber < 1) then throw("The target line must be greater than 0.")
+    if (targetLineNumber < 1) then Std.throw("The target line must be greater than 0.")
 
     state = {}
     state.totalLineCount = 0
@@ -64,7 +64,7 @@ Debug.main = function ()
 
     result = Debug.findLine(program.args.srcFile, program.args.targetLine)
     if (result.error) then
-        throw(result.error)
+        Std.throw(result.error)
     end if
     print("Found the line $ at $@$ with the content:".f(program.args.targetLine.bold, result.filePath.bold, result.line.bold).color("green"))
     print(""""+result.lineContent.trim.italic.bold+"""")

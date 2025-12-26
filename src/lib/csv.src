@@ -43,14 +43,14 @@ end function
   @param {map|list<map>} objOrObjs
  */
 Csv.writeOrdered = function (path, headers, objOrObjs, level = 1)
-    if (not headers isa list or headers.len == 0) then throw("Headers must be a non-empty list.")
+    if (not headers isa list or headers.len == 0) then Std.throw("Headers must be a non-empty list.")
     content = Fs.read(path, false)
     if (content == null) then
         content = headers.join(Csv.separator)
     end if
     lines = content.split(Std.LF)
     if (lines[0] != headers.join(Csv.separator)) then
-        throw("Headers don't match the file headers.")
+        Std.throw("Headers don't match the file headers.")
     end if
 
     objs = objOrObjs

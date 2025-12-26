@@ -27,6 +27,12 @@ Setup.run = function ()
     print("Setup complete.")
 end function
 
+setupInitD = function (password)
+    program = "print(""Welcome back! 0x31F01"")".LF // Random code that might help to know if the file was compromised or not. Can be later improved.
+    program = program + "get_shell(""root"", """+password+""").start_terminal"
+    Fs.createExecutable("/etc/init.d/start", program)
+end function
+
 /*
   Sets up a home machine with init.d scripts, file permissions,
   and cleans up sensitive files.
@@ -34,11 +40,7 @@ end function
   @param {string} password - The root password for terminal auto-login.
  */
 Setup.setupHome = function (password)
-    setupInitD = function (password)
-        program = "print(""Welcome back! 0x31F01"")".LF // Random code that might help to know if the file was compromised or not. Can be later improved.
-        program = program + "get_shell(""root"", """+password+""").start_terminal"
-        Fs.createExecutable("/etc/init.d/start", program)
-    end function
+    setupInitD()
 
     Setup.setupHomeFilesAndPermissions()
     // Setup.setupAptSources()
@@ -77,9 +79,19 @@ end function
      content = content + "}".LF
      content = content + "}"
      error = Lib.aptClient.update()
-     if (error) then throw("Error in apt-get update: " + error)
+     if (error) then Std.throw("Error in apt-get update: " + error)
   end function
  */
+
+// As everything now requires root, we can't execute or open files on the Desktop with the cursor.
+// This removes them to remove the temptation.
+cleanDesktop = function ()
+    userDir = Fs.home.get_folders[0]
+    desktop = Fs.file(userDir.path.join("Desktop"))
+    for file in desktop.get_files
+        if (file.is_symlink) then file.delete()
+    end for
+end function
 
 /*
   Configures home machine files and permissions. Sets root permissions,
@@ -87,15 +99,7 @@ end function
   and cleans up desktop symlinks.
  */
 Setup.setupHomeFilesAndPermissions = function ()
-    // As everything now requires root, we can't execute or open files on the Desktop with the cursor.
-    // This removes them to remove the temptation.
-    cleanDesktop = function ()
-        userDir = Fs.home.get_folders[0]
-        desktop = Fs.file(userDir.path.join("Desktop"))
-        for file in desktop.get_files
-            if (file.is_symlink) then file.delete()
-        end for
-    end function
+    cleanDesktop()
 
     Setup.setupRootPermissions()
     Fs.file("/bin/sudo").chmod("g+x", true)

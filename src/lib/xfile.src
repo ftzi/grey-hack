@@ -116,3 +116,5 @@ XFile.user = function()
 
     return "guest"
 end function
+
+module.exports = XFile

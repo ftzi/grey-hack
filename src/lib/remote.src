@@ -114,8 +114,8 @@ end function
   @return {Remote}
  */
 Remote.New = function (ip)
-	if (not is_valid_ip(ip)) then throw("Invalid ip: " + ip)
-	if (not get_shell.ping(ip)) then throw("IP address not found")
+	if (not is_valid_ip(ip)) then Std.throw("Invalid ip: " + ip)
+	if (not get_shell.ping(ip)) then Std.throw("IP address not found")
 
     remote = new Remote
     remote.ip = ip
@@ -148,7 +148,7 @@ Remote._getPorts = function (remote)
     end if
 
     if (ports == null) then ports = "IP address not found"
-	if (ports isa string) then throw("Error: " + ports)
+	if (ports isa string) then Std.throw("Error: " + ports)
 
     return ports
 end function
@@ -160,7 +160,7 @@ end function
  */
 Remote.printFirewallRules = function ()
     firewall_rules = self.router.firewall_rules
-    if (firewall_rules isa string) then throw(firewall_rules)
+    if (firewall_rules isa string) then Std.throw(firewall_rules)
 
     if firewall_rules.len == 0 then
         print("No firewall rules found.".color("grey").LF)
@@ -181,10 +181,10 @@ end function
 Remote.print = function ()
     self.whoIs.print()
 
-    info = "PORT STATE SERVICE VERSION LAN"
+    info = "PORT STATE SERVICE LIB VERSION LAN"
     for remoteLib in self.remoteLibs
         version = remoteLib.version + Std.ifThenElse(remoteLib.hasAddresses, "+", "")
-        info = info.LF + [remoteLib.portNumber, Std.ifThenElse(remoteLib.canUse, "open", "close"), remoteLib.service, version, remoteLib.lanIp].join(" ")
+        info = info.LF + [remoteLib.portNumber, Std.ifThenElse(remoteLib.canUse, "open", "close"), remoteLib.service, remoteLib.name, version, remoteLib.lanIp].join(" ")
     end for
 
     formatted = format_columns(info).split(Std.LF)

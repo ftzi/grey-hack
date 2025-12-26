@@ -2,13 +2,22 @@
   Dashboard/companion program.
   Lists available tools and programs.
  */
+#import Std from "lib/std"
 #import Setup from "tools/setup"
 #import Clean from "tools/clean"
 #import Y from "tools/y"
+#import Lib from "lib/lib"
 
-print(Fs.home)
-Setup.run
 X = {}
+
+Decipher = {}
+Decipher.run = function ()
+  encrypted = user_input("Enter the encrypted text: ")
+  print("Deciphering <b>"+encrypted+"</b>...")
+  wait(0.01)
+  decrypted = Lib.crypto.decipher(Std.ifThenElse(encrypted.has(":"), encrypted.valueBetween(":"), encrypted))
+  print("Decrypted text: <b>" + decrypted + "</b>".LF)
+end function
 
 /*
   Returns the list of available tools.
@@ -16,32 +25,38 @@ X = {}
   @return {list}
  */
 X.getTools = function ()
-    return [
-        {"key": "1", "name": "Hack", "fn": @Y.run},
-        {"key": "2", "name": "Setup", "fn": @Setup.run},
-        {"key": "3", "name": "Clean", "fn": @Clean.run}
-    ]
+  return [
+    {"key": "1", "name": "Hack", "module": Y},
+    {"key": "2", "name": "Setup", "module": Setup},
+    {"key": "3", "name": "Clean", "module": Clean},
+    {"key": "4", "name": "Decipher", "module": Decipher}
+  ]
 end function
 
 /*
   @type Program
   @property {string} name
   @property {string} path
+  @property {string|null} params
  */
 Program = {}
 
 /*
   Returns a list of executable files in /usr/bin.
 
-  @return {list}
+  @return {list<Program>}
  */
 X.getPrograms = function ()
     programs = []
     usrBin = get_shell.host_computer.File("/usr/bin")
     if (usrBin == null) then return programs
     for file in usrBin.get_files
-        if (file.is_binary) then programs.push(file)
+        if (file.is_binary) then programs.push({"name": file.name.removeSuffix(".exe"), "path": file.path})
     end for
+
+    // Add special programs
+    programs.push({"name": "HackShop", "path": "/usr/bin/Browser.exe", "params": #envar HACKSHOP_IP})
+
     return programs
 end function
 
@@ -58,43 +73,177 @@ X.qwertyKey = function (index)
 end function
 
 /*
-  Prints the menu with tools and programs.
+  Maps program names to their assigned keys.
+  Returns a map of program names to keys, with unmapped programs
+  assigned to sequential available QWERTY keys.
+
+  @param {list} programs
+  @return {map}
+ */
+X.getProgramKeyMap = function (programs)
+    // Predefined mappings for known programs
+    predefinedKeys = {
+        "FileExplorer": "F",
+        "Terminal": "T",
+        "Mail": "E",
+        "Browser": "B",
+        "Notepad": "N",
+        "Settings": "S",
+        "LogViewer": "L",
+        "CodeEditor": "C",
+        "ImageViewer": "I",
+        "PDFReader": "P",
+        "Map": "M",
+        "Manual": "K",
+        "ScanLan": "L",
+        "HackShop": "H"
+    }
+
+    keyMap = {}
+    usedKeys = {}
+    allKeys = "QWERTYUIOPASDFGHJKLZXCVBNM"
+    nextKeyIndex = 0
+
+    // First, assign predefined keys
+    for program in programs
+        if (predefinedKeys.hasIndex(program.name)) then
+            key = predefinedKeys[program.name]
+            keyMap[program.name] = key
+            usedKeys[key] = true
+        end if
+    end for
+
+    // Then, assign sequential keys to unmapped programs
+    for program in programs
+        if (not keyMap.hasIndex(program.name)) then
+            // Find next available key
+            while (nextKeyIndex < allKeys.len)
+                key = allKeys[nextKeyIndex]
+                nextKeyIndex = nextKeyIndex + 1
+                if (not usedKeys.hasIndex(key)) then
+                    keyMap[program.name] = key
+                    usedKeys[key] = true
+                    break
+                end if
+            end while
+        end if
+    end for
+
+    return keyMap
+end function
+
+/*
+  Prints the menu with tools and programs using column formatting.
 
   @param {list} tools
-  @param {list} programs
+  @param {list<Program>} programs
  */
 X.printMenu = function (tools, programs)
-    print("=== Tools ===".bold)
-    for tool in tools
-        print("  $) $".f(tool.key, tool.name))
-    end for
-    print("")
+    message = ""
+    maxRows = 8
 
-    print("=== Programs ===".bold)
-    index = 0
-    for program in programs
-        key = X.qwertyKey(index)
-        if (key == null) then break
-        print("  $) $".f(key, program.name))
-        index = index + 1
+    // Get key mapping for programs
+    keyMap = X.getProgramKeyMap(programs)
+
+    // Predefined program names (to determine bracket type)
+    predefinedPrograms = {
+        "FileExplorer": true,
+        "Terminal": true,
+        "Mail": true,
+        "Browser": true,
+        "Notepad": true,
+        "Settings": true,
+        "LogViewer": true,
+        "CodeEditor": true,
+        "ImageViewer": true,
+        "PDFReader": true,
+        "Map": true,
+        "Manual": true,
+        "ScanLan": true,
+        "Hackstore": true
+    }
+
+    // Split programs into columns of 8
+    programColumns = []
+    columnIndex = 0
+    for i in range(0, programs.len - 1)
+        if (i % maxRows == 0) then
+            programColumns.push([])
+            columnIndex = programColumns.len - 1
+        end if
+        programColumns[columnIndex].push(programs[i])
     end for
-    print("")
+
+    // Build header row
+    headers = ["Tools"]
+    for i in range(0, programColumns.len - 1)
+        headers.push("Programs")
+    end for
+    message = headers.join(" ") + char(10)
+
+    // Build data rows
+    for rowIndex in range(0, maxRows - 1)
+        row = []
+
+        // Add tool to first column
+        if (rowIndex < tools.len) then
+            tool = tools[rowIndex]
+            row.push(tool.key + ")" + Std.NBSP + tool.name + Std.NBSP + Std.NBSP)
+        else
+            row.push("-")
+        end if
+
+        // Add programs from each column
+        programKeyIndex = rowIndex
+        for colIndex in range(0, programColumns.len - 1)
+            col = programColumns[colIndex]
+            if (rowIndex < col.len) then
+                program = col[rowIndex]
+                key = keyMap[program.name]
+                if (key != null) then
+                    // Use ) for predefined programs, ] for dynamically assigned
+                    bracket = ")"
+                    if (not predefinedPrograms.hasIndex(program.name)) then bracket = "]"
+                    row.push(key + bracket + Std.NBSP + program.name + Std.NBSP + Std.NBSP)
+                else
+                    row.push("-")
+                end if
+            else
+                row.push("-")
+            end if
+            programKeyIndex = programKeyIndex + maxRows
+        end for
+
+        message = message + row.join(" ")
+        if (rowIndex < maxRows - 1) then message = message + char(10)
+    end for
+
+    print(format_columns(message) + char(10))
 end function
 
 /*
   Main entry point. Lists tools and programs and handles user input.
  */
 X.main = function ()
+    clear_screen()
+
     while (true)
         tools = X.getTools()
         programs = X.getPrograms()
+        keyMap = X.getProgramKeyMap(programs)
 
         X.printMenu(tools, programs)
 
-        choice = user_input("Press key to launch (or 0 to quit): ", false, true)
+        choice = user_input("Press key to launch (or X to quit): ", false, true)
+
+        if (["LeftShift"].has(choice)) then
+            clear_screen()
+            continue
+        end if
+
         print(choice)
 
-        if (choice == "0") then exit("")
+        if (choice.lower == "x") then exit("")
 
         choice = choice.upper
 
@@ -102,21 +251,19 @@ X.main = function ()
         for tool in tools
             if (choice == tool.key) then
                 clear_screen()
-                tool.fn()
+                tool.module.run()
                 print()
             end if
         end for
 
-        // Check if it's a program (QWERTY keys)
-        index = 0
+        // Check if it's a program (using key mapping)
         for program in programs
-            key = X.qwertyKey(index)
-            if (key == null) then break
-            if (choice == key) then
+            key = keyMap[program.name]
+            if (key != null and choice == key) then
                 clear_screen()
-                get_shell.launch(program.path)
+                get_shell.launch(program.path, Std.elseDefault(program.get("params"), ""))
+                break
             end if
-            index = index + 1
         end for
     end while
 end function
