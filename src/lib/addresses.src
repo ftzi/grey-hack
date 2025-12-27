@@ -8,7 +8,7 @@
 */
 Addresses = {}
 Addresses._addresses = null
-Addresses.kv = Kv.New("/root/addresses.csv")
+Addresses.kv = Kv.New("/root/addresses.kv")
 
 /*
   Loads saved addresses from the CSV file.
@@ -22,7 +22,12 @@ Addresses._loadSaved = function ()
     obj = {}
     for address in addresses
         libName_version = address[0].split("@")
-        obj.set([libName_version[0], libName_version[1]], address[1][1:-1].split(","))
+        addressStrings = address[1].split(",")
+        addressList = []
+        for addrStr in addressStrings
+            addressList.push(addrStr.to_int)
+        end for
+        obj.set([libName_version[0], libName_version[1]], addressList)
     end for
     return obj
 end function
@@ -56,8 +61,9 @@ end function
 Addresses.scan = function (lib)
     print("Scanning Addresses for <b>$ $</b> using Metaxploit $.".f(lib.lib_name, lib.version, Lib.versionOf("metaxploit")))
     addresses = Lib.metaxploit.scan(lib)
-    print("Adding new addresses for $ $ to $".f(lib.lib_name, lib.version, "/root/addresses.csv"))
-    Addresses.kv.setKv([lib.lib_name + "@" + lib.version, addresses.toString])
+    print("Adding new addresses for $ $ to $".f(lib.lib_name, lib.version, "/root/addresses.kv"))
+    addressesStr = addresses.join(",")
+    Addresses.kv.setKv([lib.lib_name + "@" + lib.version, addressesStr])
     Addresses.addresses.set([lib.lib_name, lib.version], addresses)
     return addresses
 end function

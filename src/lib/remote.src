@@ -71,10 +71,10 @@ RemoteLib.New = function (remote, port = null)
         remoteLib.lanIp = remote.router.local_ip
         remoteLib.canUse = true
     end if
-    remoteLib.lib = Lib.fromIpAndPort(remote.ip, remoteLib.portNumber)
-    remoteLib.hasAddresses = Addresses.hasLocalAddressesFor(remoteLib.lib)
-    remoteLib.name = remoteLib.lib.lib_name
-    remoteLib.version = remoteLib.lib.version
+    remoteLib.metaLib = Lib.fromIpAndPort(remote.ip, remoteLib.portNumber)
+    remoteLib.hasAddresses = Addresses.hasLocalAddressesFor(remoteLib.metaLib)
+    remoteLib.name = remoteLib.metaLib.lib_name
+    remoteLib.version = remoteLib.metaLib.version
     return remoteLib
 end function
 

@@ -1,3 +1,5 @@
+#import Fs from "fs"
+
 /*
   Security utilities for system log manipulation.
 

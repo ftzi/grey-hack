@@ -1,6 +1,7 @@
 #import Breachs from "breaches"
 #import Std from "std"
-
+#import XCrypto from "xcrypto"
+#import Breach from "breach"
 /*
   UI and interaction layer for Breachs.
   Extends the Breachs type with display and input handling methods.
@@ -14,7 +15,7 @@
   @return {string}
  */
 Breachs._formatBreachData = function(breach, index)
-    line = "$ $ $".f(index, breach.lanIp, breach.type)
+    line = "$ $".f(index, breach.type)
 
     if (breach.type == "computer" or breach.type == "shell") then
         if (breach.xfile) then line = line + " " + breach.xfile.user
@@ -40,7 +41,14 @@ Breachs._formatPasswdSection = function()
     message = "Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>].".LF
     i = 0
     for line in self.passwd.trim.split(Std.LF)
-        message = "$p $) $".f(message, i, line).LF
+        encrypted = line.split(":")[1]
+        cachedPasswd = XCrypto.getFromCache(encrypted)
+        data = line
+        if (cachedPasswd) then
+          data = "$:[$]".f(line.split(":")[0], cachedPasswd.bold)
+        end if
+
+        message += "p $) $".f(i, data).LF
         i = i + 1
     end for
     return message
@@ -52,11 +60,13 @@ end function
   @return {null}
  */
 Breachs.print = function()
-    message = "Ix LAN_IP TYPE DATA"
-    for i in range(0, self.withAction.len - 1)
-        breach = self.withAction[i]
-        message = message.LF + self._formatBreachData(breach, i)
-    end for
+    message = "Ix TYPE DATA"
+    if (self.withAction.len > 0) then
+        for i in range(0, self.withAction.len - 1)
+            breach = self.withAction[i]
+            message = message.LF + self._formatBreachData(breach, i)
+        end for
+    end if
 
     print(format_columns(message).LF)
 
@@ -104,6 +114,7 @@ Breachs._connectSsh = function(user, password)
     end if
 
     if (shell isa map) then
+        Breach.seedShellFiles(shell)
         shell.start_terminal
     else
         print("Could not connect via ssh to " + user + ". Error: " + shell)
@@ -142,7 +153,7 @@ end function
   @return {string|null}
  */
 Breachs._decipherPassword = function(encryptedPass, user)
-    password = self.xcrypto._getFromCache(encryptedPass)
+    password = XCrypto.getFromCache(encryptedPass)
     if (password) then
         print("Password of <b>" + user + "</b> retrieved from cache: <b>" + password + "</b>".LF)
         return password
@@ -150,7 +161,7 @@ Breachs._decipherPassword = function(encryptedPass, user)
 
     print("Deciphering the password of <b>" + user + "</b>...")
     wait(0.01)
-    password = self.xcrypto.decipher(encryptedPass)
+    password = XCrypto.decipher(encryptedPass)
     if (not password) then
         print("Error: Failed to decipher password")
         return null
@@ -249,6 +260,15 @@ end function
   @return {null}
  */
 Breachs.handleInput = function(remote)
+    if (self.withAction.len == 0) then
+        if (self.passwd) then
+            print("No breaches found, but passwords are available. Use 'p' to decipher.".LF)
+        else
+            print("No breaches or passwords available.")
+            return
+        end if
+    end if
+
     while true
         inputParams = user_input("Enter the desired method:".LF).split(" ")
         if (inputParams.len == 0 or not inputParams[0]) then

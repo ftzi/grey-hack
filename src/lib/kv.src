@@ -52,6 +52,11 @@ end function
   @param {list} arrOrArrs - Single array [key, value] or array of arrays [[key1, val1], [key2, val2]]
  */
 Kv.setKv = function(arrOrArrs)
+
+    if (not Fs.file(self.path).has_permission("w")) then
+      print("Skipping write of kv due to missing permissions")
+      return
+    end if
     // Normalize to array of arrays
     entries = arrOrArrs
     if (entries.len > 0 and not entries[0] isa list) then

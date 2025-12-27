@@ -3,7 +3,7 @@
 #import XFile from "../xfile"
 #import Fs from "../fs"
 
-Test.test "Breachs.New initializes with xcrypto", function ()
+Test.test "Breachs.New initializes with required properties", function ()
 	originalExists = @Fs.exists
 	originalWrite = @Fs.write
 
@@ -22,7 +22,6 @@ Test.test "Breachs.New initializes with xcrypto", function ()
 	Test.expect(breaches.withAction.len).toBe(0)
 	Test.expect(breaches.withShell.len).toBe(0)
 	Test.expect(breaches.withXFile.len).toBe(0)
-	Test.expect(breaches.xcrypto != null).toBe(true)
 
 	Fs.exists = @originalExists
 	Fs.write = @originalWrite

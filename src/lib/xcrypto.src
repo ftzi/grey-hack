@@ -6,22 +6,9 @@
   XCrypto - Extended crypto functionality with password caching
 
   @type XCrypto
-  @property {string} cachePath - Path to the password cache Kv file
  */
 XCrypto = {}
-
-/*
-  Creates a new XCrypto instance with a cache file.
-
-  @param {string} cachePath - Path to the Kv cache file
-  @return {XCrypto}
- */
-XCrypto.New = function ()
-	xcrypto = new XCrypto
-	xcrypto.cachePath = "/root/passwords.csv"
-	xcrypto.kv = Kv.New(xcrypto.cachePath)
-	return xcrypto
-end function
+XCrypto.kv = Kv.New("/root/passwords.kv")
 
 /*
   Deciphers a password using cache-first approach.
@@ -35,7 +22,7 @@ XCrypto.decipher = function (encrypted)
 	if (not encrypted) then return null
 
 	// Check cache first
-	cached = self._getFromCache(encrypted)
+	cached = self.getFromCache(encrypted)
 	if (cached) then return cached
 
 	// Decipher using crypto library
@@ -54,7 +41,7 @@ end function
   @param {string} encrypted - The encrypted password hash
   @return {string|null} - The cached decrypted password or null
  */
-XCrypto._getFromCache = function (encrypted)
+XCrypto.getFromCache = function (encrypted)
 	data = self.kv.read()
 	if (not data) then return null
 
@@ -92,7 +79,7 @@ XCrypto.decipherTool = function ()
 		encryptedHash = encrypted.valueBetween(":")
 	end if
 
-	cached = self._getFromCache(encryptedHash)
+	cached = self.getFromCache(encryptedHash)
 
 	if (cached) then
 		print("Password retrieved from cache: <b>" + cached + "</b>".LF)

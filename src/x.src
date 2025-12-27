@@ -25,13 +25,13 @@ X.predefinedKeys = {
     "Map": "M",
     "Manual": "K",
     "ScanLan": "L",
-    "HackShop": "H"
+    "HackShop": "H",
+    "AdminMonitor": "A",
 }
 
 Decipher = {}
 Decipher.run = function ()
-  xcrypto = XCrypto.New()
-  xcrypto.decipherTool()
+  XCrypto.decipherTool()
 end function
 
 /*
@@ -168,7 +168,7 @@ X.printMenu = function (tools, programs)
     for i in range(0, programColumns.len - 1)
         headers.push("Programs")
     end for
-    message = headers.join(" ") + char(10)
+    message = headers.join(" ").LF
 
     // Build data rows
     for rowIndex in range(0, maxRows - 1)
@@ -177,7 +177,7 @@ X.printMenu = function (tools, programs)
         // Add tool to first column
         if (rowIndex < toolsList.len) then
             tool = toolsList[rowIndex]
-            row.push(tool.key + ")" + Std.NBSP + tool.name + Std.NBSP + Std.NBSP)
+            row.push(tool.key + ")" + Std.NBSP + tool.name + Std.NBSP)
         else
             row.push("-")
         end if
@@ -190,19 +190,19 @@ X.printMenu = function (tools, programs)
                 // Use ) for predefined programs, ] for dynamically assigned
                 bracket = ")"
                 if (not X.predefinedKeys.hasIndex(program.name)) then bracket = "]"
-                row.push(program.key + bracket + Std.NBSP + program.name + Std.NBSP + Std.NBSP)
+                row.push(program.key + bracket + Std.NBSP + program.name + Std.NBSP)
             else
                 row.push("-")
             end if
         end for
 
         message = message + row.join(" ")
-        if (rowIndex < maxRows - 1) then message = message + char(10)
+        if (rowIndex < maxRows - 1) then message = message.LF
     end for
 
     computer = get_shell.host_computer
     print("Hi, $. $. $ @ $".f(active_user, current_date, computer.public_ip, computer.local_ip).LF)
-    print(format_columns(message) + char(10))
+    print(format_columns(message).LF)
 end function
 
 /*
@@ -249,33 +249,21 @@ X.main = function ()
 
         X.printMenu(tools, programs)
 
-
         choice = user_input("Press key to launch (or X to relaunch): ", false, true)
-        while (["LeftShift", "RightShift"].has(choice))
-            choice = user_input("", false, true)
-        end while
-
-        // Check if it's a shift+number (!, @, #, $) to launch tool in new terminal
-        shiftNumberMap = {"!": "1", "@": "2", "#": "3", "$": "4", "%": "5", "^": "6", "&": "7", "*": "8", "(": "9"}
-        if (shiftNumberMap.hasIndex(choice)) then
-            toolNumber = shiftNumberMap[choice]
-            get_shell.launch("/usr/bin/Terminal.exe", "x -r " + toolNumber)
-            continue
-        end if
 
         if (choice.lower == "x") then
-            get_shell.launch("/root/x", "")
+            get_shell.launch(launch_path, "")
             exit("")
         end if
 
         choice = choice.upper
 
-        // Check if it's a tool (0-9)
+        // Check if it's a tool (1-4) - launch in new terminal
         tool = tools.get(choice)
         if (tool != null) then
+            get_shell.launch("/usr/bin/Terminal.exe", launch_path + " -r " + choice)
             clear_screen()
-            tool.module.run()
-            print()
+            continue
         end if
 
         // Check if it's a program

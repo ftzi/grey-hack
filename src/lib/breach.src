@@ -12,7 +12,6 @@
   @property {computer|null} computer - Computer access if available
   @property {XFile|null} xfile - File system access wrapper
   @property {function|null} action - Action handler for this breach type
-  @property {string|null} lanIp - LAN IP address
  */
 Breach = {}
 
@@ -23,11 +22,10 @@ Breach = {}
   @param {number} address - Memory address of the vulnerability
   @param {string} unsecZone - Vulnerable memory zone identifier
   @param {list} extra - Additional metadata about the breach
-  @param {string} lanIp - LAN IP address
 
   @return {Breach}
  */
-Breach.New = function(data, address, unsecZone, extra, lanIp = null)
+Breach.New = function(data, address, unsecZone, extra)
 	breach = new Breach
 	breach.type = typeof(data)
 	breach.address = address
@@ -37,7 +35,6 @@ Breach.New = function(data, address, unsecZone, extra, lanIp = null)
 	breach.computer = null
 	breach.xfile = null
 	breach.action = null
-	breach.lanIp = lanIp
 
 	if (breach.type == "shell") then
 		breach.shell = data
@@ -94,15 +91,30 @@ Breach.actionComputer = function()
 end function
 
 /*
+  Seeds essential tools to a shell.
+  Copies metaxploit, crypto libraries and program to the target shell.
+
+  @param {shell} shell - Target shell to seed files to
+  @return {null}
+ */
+Breach.seedShellFiles = function (shell)
+	get_shell.scp(Lib.libPath("metaxploit.so"), "/home/guest", shell)
+	get_shell.scp(Lib.libPath("crypto.so"), "/home/guest", shell)
+
+  result = get_shell.scp(program_path, "/home/guest", shell)
+  if typeof(result) == "string" then
+    print("There was an error while sending file: " + result)
+  end if
+end function
+
+/*
   Interactive action for shell-type breaches.
-  Copies essential tools and starts an interactive terminal.
+  Seeds tools and starts an interactive terminal.
 
   @return {null}
  */
 Breach.actionShell = function ()
-	get_shell.scp(Lib.libPath("metaxploit.so"), "/home/guest", self.shell)
-	get_shell.scp(Lib.libPath("crypto.so"), "/home/guest", self.shell)
-	get_shell.scp(program_path, "/home/guest", self.shell)
+	Breach.seedShellFiles(self.shell)
 	self.shell.start_terminal
 end function
 

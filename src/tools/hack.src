@@ -18,31 +18,28 @@ Hack.promptForIp = function()
 
     prompt = "IP address (or L for local"
     if (previousIp) then
-        prompt = prompt + ", P for previous: " + previousIp
+        prompt = prompt + ", Enter for previous: " + previousIp
     end if
     prompt = prompt + "): "
 
     while true
-        input = user_input(prompt)
-        input = input.trim()
+      input = user_input(prompt)
+      input = input.trim()
 
-        // Handle empty input - default to local
-        if (input == "") then return null
+      // Handle empty input - default to local
+      if (input == "" and previousIp) then return previousIp
 
-        // Handle local option
-        if (input.upper == "L") then return null
+      // Handle local option
+      if (input.upper == "L") then return null
 
-        // Handle previous IP option
-        if (input.upper == "P" and previousIp) then return previousIp
+      // Validate IP address
+      if (is_valid_ip(input)) then
+        LocalKv.hack.lastIp.set(input)
+        return input
+      end if
 
-        // Validate IP address
-        if (is_valid_ip(input)) then
-            LocalKv.hack.lastIp.set(input)
-            return input
-        end if
-
-        // Invalid input - show error and prompt again
-        print("Invalid IP address or option. Please try again.".error)
+      // Invalid input - show error and prompt again
+      print("Invalid IP address or option. Please try again.".error)
     end while
 end function
 
@@ -50,55 +47,55 @@ end function
   Runs the hacking tool. Prompts for IP, port, and other parameters.
  */
 Hack.run = function ()
-    if not get_shell.host_computer.is_network_active then exit("No internet access.")
+  if not get_shell.host_computer.is_network_active then exit("No internet access.")
 
-    ip = Hack.promptForIp()
+  ip = Hack.promptForIp()
 
-    lanIp = ""
-    port = 0
-    // targetUser = "root"
+  optArgs = ""
+  port = 0
+  // targetUser = "root"
 	remote = null
 
-    if (ip) then
-        remote = Remote.New(ip)
-        remote.print()
+  if (ip) then
+    remote = Remote.New(ip)
+    remote.print()
 
-        lanIp = user_input("LAN IP (optional): ")
+    optArgs = user_input("OptArgs (optional): ")
 
-        // portInput = user_input("Port (default 0): ")
-        // if (portInput) then port = portInput.to_int
+    // portInput = user_input("Port (default 0): ")
+    // if (portInput) then port = portInput.to_int
 
-        // userInput = user_input("Target user (default root): ")
-        // if (userInput) then targetUser = userInput
-    end if
+    // userInput = user_input("Target user (default root): ")
+    // if (userInput) then targetUser = userInput
+  end if
 
-    breaches = Breachs.New(ip)
+  breaches = Breachs.New(ip)
 
 	if (ip) then
-        /*
-          Sorts remoteLibs to prioritize the one matching the specified lanIp.
+    // /*
+    //   Sorts remoteLibs to prioritize the one matching the specified optArgs.
 
-          @param {remoteLib} a
-          @param {remoteLib} b
-          @return {number}
-         */
-        sortRemoteLibs = function (a, b)
-            if (a.lanIp == lanIp and b != lanIp) then return -1
-            if (a.lanIp != lanIp and b == lanIp) then return 1
-        end function
+    //   @param {remoteLib} a
+    //   @param {remoteLib} b
+    //   @return {number}
+    //  */
+    // sortRemoteLibs = function (a, b)
+    //     if (a.optArgs == optArgs and b != optArgs) then return -1
+    //     if (a.optArgs != optArgs and b == optArgs) then return 1
+    // end function
+    // remoteLibsPrioritized = .sort2(@sortRemoteLibs)
 
-        remoteLibsPrioritized = remote.remoteLibs.sort2(@sortRemoteLibs)
-        for remoteLib in remoteLibsPrioritized
-            breaches.scanAndExploit(remoteLib, lanIp)
-        end for
+    for remoteLib in remote.remoteLibs
+        breaches.scanAndExploit(remoteLib, optArgs)
+    end for
 	else
-        localLibName = "init.so" // TODO cycle through them automatically if none is specified.
-        // Should get their versions and prefer the ones we have addresses for.
+    localLibName = "init.so" // TODO cycle through them automatically if none is specified.
+    // Should get their versions and prefer the ones we have addresses for.
 		lib = Lib.metaxploit.load("/lib/"+localLibName)
-        breaches.scanAndExploitLocal(lib, lanIp)
+    breaches.scanAndExploitLocal(lib, optArgs)
 	end if
 
-    breaches.print()
+  breaches.print()
 	breaches.handleInput(remote)
 end function
 

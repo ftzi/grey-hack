@@ -59,6 +59,8 @@ Lib.libPath = function (name, installIfMissing)
     if (get_shell.host_computer.File(libPath)) then return libPath
     localLibPath = current_path + "/" + name
     if (get_shell.host_computer.File(localLibPath)) then return localLibPath
+    localLibPath = "/home/guest/" + name
+    if (get_shell.host_computer.File(localLibPath)) then return localLibPath
     if (not installIfMissing) then
         Std.throw("Can't find the <b>" + name + "</b> lib in the /lib path or the current folder.")
     end if
@@ -86,10 +88,9 @@ end function
   @return {object}
  */
 Lib.load = function (name)
-    if (name.indexOf(".so") == null) then name = name + ".so"
-    lib = include_lib(Lib.libPath(name, true))
-    if not lib then exit("Error loading the lib " + name)
-    return lib
+  lib = include_lib(Lib.libPath(name.ensureSuffix(".so"), true))
+  if not lib then exit("Error loading the lib " + name)
+  return lib
 end function
 
 /*

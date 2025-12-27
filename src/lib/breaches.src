@@ -12,7 +12,6 @@
   @property {list<Breach>} withAction - Breaches that have action handlers
   @property {list<Breach>} withShell - Breaches that provide shell access
   @property {list<Breach>} withXFile - Breaches that provide file system access
-  @property {XCrypto} xcrypto - Password caching and decryption utility
  */
 Breachs = {}
 
@@ -29,7 +28,6 @@ Breachs.New = function (publicIp = null)
   breaches.withAction = []
   breaches.withShell = []
   breaches.withXFile = []
-  breaches.xcrypto = XCrypto.New()
   return breaches
 end function
 
@@ -69,12 +67,12 @@ end function
   Internal helper to process scan results and create breaches.
   Scans addresses, exploits vulnerabilities, and categorizes results.
 
-  @param {lib} lib - Library to exploit
-  @param {string} lanIp - LAN IP address
+  @param {metaLib} metaLib - Library to exploit
+  @param {string} optArgs - LAN IP address
  */
-Breachs._processScanResults = function (lib, lanIp)
-	for address in Addresses.addressesFor(lib)
-		scanResult = Lib.metaxploit.scan_address(lib, address)
+Breachs._processScanResults = function (metaLib, optArgs)
+	for address in Addresses.addressesFor(metaLib)
+		scanResult = Lib.metaxploit.scan_address(metaLib, address)
     print(scanResult)
 		if (not scanResult or typeof(scanResult) != "string") then continue
 
@@ -88,13 +86,14 @@ Breachs._processScanResults = function (lib, lanIp)
 			unsecZone = entry.valueBetween("<b>", "</b>")
 			if (not unsecZone) then continue
 
-			data = lib.overflow(address, unsecZone, lanIp)
+      print("Overflowing address <$>, unsecZone <$>, optArgs <$>".f(address, unsecZone, optArgs))
+			data = metaLib.overflow(address, unsecZone, optArgs)
 			print("====================")
 
 			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
 
 			extra = (entry.LF).valuesBetween("* ", Std.LF)
-			breach = Breach.New(data, address, unsecZone, extra, lanIp)
+			breach = Breach.New(data, address, unsecZone, extra)
 			self.all.push(breach)
 		end for
 	end for
@@ -106,29 +105,29 @@ end function
 /*
   Scans and exploits a remote library.
 
-  @param {RemoteLib} remoteLib - Remote library object with lib and lanIp
-  @param {string} lanIp - Optional LAN IP override
+  @param {RemoteLib} remoteLib - Remote library object with metaLib and optArgs
+  @param {string} optArgs - Optional LAN IP override
  */
-Breachs.scanAndExploit = function (remoteLib, lanIp = "")
-	if (not remoteLib or not remoteLib.lib) then
+Breachs.scanAndExploit = function (remoteLib, optArgs = "")
+	if (not remoteLib or not remoteLib.metaLib) then
 		print("Error: Invalid remote library")
 		return
 	end if
-	self._processScanResults(remoteLib.lib, remoteLib.lanIp)
+	self._processScanResults(remoteLib.metaLib, optArgs)
 end function
 
 /*
   Scans and exploits a local library.
 
-  @param {lib} lib - Library to exploit
-  @param {string} lanIp - LAN IP address
+  @param {metaLib} metaLib - Library to exploit
+  @param {string} optArgs - LAN IP address
  */
-Breachs.scanAndExploitLocal = function (lib, lanIp = "")
-	if (not lib) then
+Breachs.scanAndExploitLocal = function (metaLib, optArgs = "")
+	if (not metaLib) then
 		print("Error: Invalid library")
 		return
 	end if
-	self._processScanResults(lib, lanIp)
+	self._processScanResults(metaLib, optArgs)
 end function
 
 module.exports = Breachs

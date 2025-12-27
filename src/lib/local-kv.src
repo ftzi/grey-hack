@@ -14,10 +14,9 @@
 */
 Data = {}
 
-Data.New = function(key, kv)
+Data.New = function(key)
     instance = new Data
     instance.key = key
-    instance.kv = kv
     return instance
 end function
 
@@ -27,11 +26,11 @@ end function
   @return {string|null}
 */
 Data.get = function()
-    data = self.kv.read()
+    data = LocalKv._kv.read()
     if (not data) then return null
 
     for entry in data
-        if (entry.key == self.key) then return entry.value
+        if (entry[0] == self.key) then return entry[1]
     end for
 
     return null
@@ -43,7 +42,7 @@ end function
   @param {string} value
 */
 Data.set = function(value)
-    self.kv.setKv([self.key, value])
+    LocalKv._kv.setKv([self.key, value])
 end function
 
 /*
@@ -52,15 +51,15 @@ end function
   @type LocalKv
 */
 LocalKv = {}
-LocalKv._kv = Kv.New("/root/.local_data.csv")
+LocalKv._kv = Kv.New("/root/local.kv")
 
 /*
   @property {Data} lastIp
 */
 LocalKv.hack = {}
-LocalKv.hack.lastIp = Data.New("hack.lastIp", LocalKv._kv)
+LocalKv.hack.lastIp = Data.New("hack.lastIp")
 
 LocalKv.test = {}
-LocalKv.test.key = Data.New("test.key", LocalKv._kv)
+LocalKv.test.key = Data.New("test.key")
 
 module.exports = LocalKv

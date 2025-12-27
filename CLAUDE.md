@@ -88,6 +88,26 @@ Functions must be testable. They should have parameters and usually at max 30 li
 You **MUST** run `bun run test` to ensure all tests pass after finishing changes.
 
 
+## Debugging Runtime Errors
+
+When the user provides a runtime error with a path like `/root/x line 538`, this points to the **transpiled/built code**, not the source code.
+
+**You MUST** follow this process:
+
+1. Check `/build/x.src` to see the transpiled version and understand the error
+2. Find the corresponding source file (e.g., `src/x.src`)
+3. Fix the source file, not the built file
+
+The error points to the compiled output, but you must edit the source files in `src/`.
+
+Example:
+```
+Runtime Error: Index Error: list index (0) out of range (0 to -1) [/root/x line 538]
+```
+→ Check `/build/x.src` line 538 to understand the issue
+→ Fix `src/x.src` (or the file it includes)
+
+
 If you discover any information in this file that is no longer accurate or has become outdated, you **MUST** update it immediately to reflect the current state of the codebase.
 
 **NEVER commit or push:** Do NOT run `git add`, `git commit`, or `git push`. The user handles all git operations manually.

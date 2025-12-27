@@ -9,7 +9,7 @@ Test.test "Kv.read", function ()
         return "John;25".LF+"Jane;30".LF+"Jack;35"
     end function
 
-    kv = Kv.New("/test/path.csv")
+    kv = Kv.New("/test/path.kv")
     data = kv.read()
 
     Test.expect(data.len).toBe(3)
@@ -37,7 +37,7 @@ Test.test "Kv.setKv", function ()
         state.content = content
     end function
 
-    kv = Kv.New("/test/path.csv")
+    kv = Kv.New("/test/path.kv")
     kv.setKv(["Charlie", "32"])
     Test.expect(state.content).toBe("Alpha;25".LF+"Bravo;30".LF+"Charlie;32".LF+"Delta;35")
 
@@ -64,7 +64,7 @@ Test.test "Kv.setKv overwrites existing key", function ()
     // Initial data
     state.content = "Alice;25".LF+"Bob;30".LF+"Charlie;35"
 
-    kv = Kv.New("/test/path.csv")
+    kv = Kv.New("/test/path.kv")
 
     // Overwrite Bob's age
     kv.setKv(["Bob", "99"])
