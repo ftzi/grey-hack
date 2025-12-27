@@ -16,7 +16,10 @@ Setup.run = function ()
     isHome = (isHome == "" or isHome.lower == "y")
 
     if (isHome) then
-        password = user_input("Enter your root password to setup the Terminal with root on init:".LF, true)
+        password = #envar HOME_PASSWORD
+        if (password == null or password == "") then
+            password = user_input("Enter your root password to setup the Terminal with root on init:".LF, true)
+        end if
         print("Setting up home machine...")
         Setup.setupHome(password)
     else
@@ -28,8 +31,9 @@ Setup.run = function ()
 end function
 
 setupInitD = function (password)
-    program = "print(""Welcome back! 0x31F01"")".LF // Random code that might help to know if the file was compromised or not. Can be later improved.
-    program = program + "get_shell(""root"", """+password+""").start_terminal"
+    program = "shell = get_shell(""root"", """+password+""")".LF
+    program = program + "if (shell.host_computer.File(""/usr/bin/AdminMonitor.exe"") != null) then shell.launch(""/usr/bin/AdminMonitor.exe"", """")".LF
+    program = program + "shell.launch(""/root/x"", """")"
     Fs.createExecutable("/etc/init.d/start", program)
 end function
 

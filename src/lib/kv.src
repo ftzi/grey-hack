@@ -1,0 +1,101 @@
+#import Fs from "fs"
+#import Std from "std"
+
+/*
+  Key-value storage using semicolon-separated file format.
+
+  @type Kv
+*/
+Kv = {}
+
+/*
+  So it won't conflict with lists
+ */
+Kv.separator=";"
+
+/*
+  Creates a new Kv instance with a file path.
+
+  @param {string} path
+  @return {Kv}
+*/
+Kv.New = function(path)
+    instance = new Kv
+    instance.path = path
+    return instance
+end function
+
+/*
+  Instance method: Reads the Kv file and parses it into a list of arrays.
+
+  @return {list<list>}
+ */
+Kv.read = function()
+    content = Fs.read(self.path, false)
+    if (content == null) then return null
+
+    lines = content.split(Std.LF)
+    data = []
+
+    for line in lines
+        if (line.trim == "") then continue
+        data.push(line.split(Kv.separator))
+    end for
+
+    return data
+end function
+
+/*
+  Instance method: Writes one or more entries to the Kv file in sorted order based on the first column.
+  Creates the file if it doesn't exist.
+
+  @param {list} arrOrArrs - Single array [key, value] or array of arrays [[key1, val1], [key2, val2]]
+ */
+Kv.setKv = function(arrOrArrs)
+    // Normalize to array of arrays
+    entries = arrOrArrs
+    if (entries.len > 0 and not entries[0] isa list) then
+        // Single entry like ["key", "value"]
+        entries = [arrOrArrs]
+    end if
+
+    content = Fs.read(self.path, false)
+    lines = []
+    if (content != null) then
+        lines = content.split(Std.LF)
+    end if
+
+    for entry in entries
+        firstColumn = entry[0]
+        newLineStr = entry.join(Kv.separator)
+
+        // Check if entry with same key exists
+        existingIndex = null
+        insertionIndex = 0
+        for line in lines
+            columns = line.split(Kv.separator)
+            if (firstColumn == columns[0]) then
+                // Found exact match - will overwrite
+                existingIndex = insertionIndex
+                break
+            else if (firstColumn < columns[0]) then
+                // Found where to insert
+                break
+            else
+                insertionIndex = insertionIndex + 1
+            end if
+        end for
+
+        if (existingIndex != null) then
+            // Overwrite existing entry
+            lines[existingIndex] = newLineStr
+        else
+            // Insert new entry in sorted order
+            lines.insert(insertionIndex, newLineStr)
+        end if
+    end for
+
+    Fs.write(self.path, lines.join(Std.LF))
+end function
+
+module.exports = Kv

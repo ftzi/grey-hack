@@ -1,0 +1,113 @@
+#import Test from "../test"
+#import Fs from "../fs"
+
+Test.test "Fs.exists returns true for existing file", function ()
+	originalComputer = @Fs.computer
+
+	mockComputer = {}
+	mockComputer.File = function (path)
+		if (path == "/test/file.txt") then return {"path": path}
+		return null
+	end function
+
+	Fs.computer = mockComputer
+
+	result = Fs.exists("/test/file.txt")
+	Test.expect(result).toBe(true)
+
+	Fs.computer = @originalComputer
+end function
+
+Test.test "Fs.exists returns false for missing file", function ()
+	originalComputer = @Fs.computer
+
+	mockComputer = {}
+	mockComputer.File = function (path)
+		return null
+	end function
+
+	Fs.computer = mockComputer
+
+	result = Fs.exists("/missing/file.txt")
+	Test.expect(result).toBe(false)
+
+	Fs.computer = @originalComputer
+end function
+
+Test.test "Fs.file returns file when it exists", function ()
+	originalComputer = @Fs.computer
+
+	mockFile = {"path": "/test/file.txt"}
+	mockComputer = {}
+	mockComputer.File = function (path)
+		if (path == "/test/file.txt") then return mockFile
+		return null
+	end function
+
+	Fs.computer = mockComputer
+
+	result = Fs.file("/test/file.txt", false)
+	Test.expect(result.path).toBe("/test/file.txt")
+
+	Fs.computer = @originalComputer
+end function
+
+Test.test "Fs.file returns null when throwIfMissing is false", function ()
+	originalComputer = @Fs.computer
+
+	mockComputer = {}
+	mockComputer.File = function (path)
+		return null
+	end function
+
+	Fs.computer = mockComputer
+
+	result = Fs.file("/missing.txt", false)
+	Test.expect(result).toBe(null)
+
+	Fs.computer = @originalComputer
+end function
+
+Test.test "Fs.read returns file content", function ()
+	originalComputer = @Fs.computer
+
+	mockFile = {"get_content": "test content"}
+	mockComputer = {}
+	mockComputer.File = function (path)
+		return mockFile
+	end function
+
+	Fs.computer = mockComputer
+
+	result = Fs.read("/test.txt", false)
+	Test.expect(result).toBe("test content")
+
+	Fs.computer = @originalComputer
+end function
+
+Test.test "Fs.read returns null when file doesn't exist and throwIfMissing is false", function ()
+	originalComputer = @Fs.computer
+
+	mockComputer = {}
+	mockComputer.File = function (path)
+		return null
+	end function
+
+	Fs.computer = mockComputer
+
+	result = Fs.read("/missing.txt", false)
+	Test.expect(result).toBe(null)
+
+	Fs.computer = @originalComputer
+end function
+
+Test.test "Fs.New creates instance with custom shell", function ()
+	mockShell = {"host_computer": {"name": "test"}}
+
+	fs = Fs.New(mockShell)
+
+	Test.expect(fs.shell).toBe(mockShell)
+	Test.expect(fs.computer.name).toBe("test")
+end function
+
+Test.runTests()

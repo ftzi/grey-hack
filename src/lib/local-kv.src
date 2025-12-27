@@ -1,0 +1,66 @@
+/*
+  Local Kv storage for persisting data across terminal runs.
+  Data is stored as key-value pairs in a Kv file.
+*/
+#import Kv from "kv"
+#import Fs from "fs"
+
+/*
+  Internal Data class for key-value pairs.
+  Provides get() and set() methods for a specific key.
+
+  @type Data
+  @property {Kv} kv
+*/
+Data = {}
+
+Data.New = function(key, kv)
+    instance = new Data
+    instance.key = key
+    instance.kv = kv
+    return instance
+end function
+
+/*
+  Gets the value for this key.
+
+  @return {string|null}
+*/
+Data.get = function()
+    data = self.kv.read()
+    if (not data) then return null
+
+    for entry in data
+        if (entry.key == self.key) then return entry.value
+    end for
+
+    return null
+end function
+
+/*
+  Sets the value for this key.
+
+  @param {string} value
+*/
+Data.set = function(value)
+    self.kv.setKv([self.key, value])
+end function
+
+/*
+  Local key-value storage for persisting data across terminal runs.
+
+  @type LocalKv
+*/
+LocalKv = {}
+LocalKv._kv = Kv.New("/root/.local_data.csv")
+
+/*
+  @property {Data} lastIp
+*/
+LocalKv.hack = {}
+LocalKv.hack.lastIp = Data.New("hack.lastIp", LocalKv._kv)
+
+LocalKv.test = {}
+LocalKv.test.key = Data.New("test.key", LocalKv._kv)
+
+module.exports = LocalKv

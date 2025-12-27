@@ -1,5 +1,10 @@
 #import Std from "std"
 
+/*
+  Extended file operations.
+
+  @type XFile
+*/
 XFile = {}
 XFile._file = null
 

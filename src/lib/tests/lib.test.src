@@ -1,0 +1,89 @@
+#import Test from "../test"
+#import Lib from "../lib"
+
+Test.test "Lib._getLib caches loaded libraries", function ()
+	originalLoad = @Lib.load
+
+	state = {"loadCount": 0}
+	Lib.load = function (name)
+		state.loadCount = state.loadCount + 1
+		return {"name": name, "version": "1.0"}
+	end function
+
+	// Clear cache
+	Lib._libs = {}
+
+	// First call should load
+	result1 = Lib._getLib("testlib")
+	Test.expect(state.loadCount).toBe(1)
+	Test.expect(result1.name).toBe("testlib")
+
+	// Second call should use cache
+	result2 = Lib._getLib("testlib")
+	Test.expect(state.loadCount).toBe(1)
+	Test.expect(result2.name).toBe("testlib")
+
+	Lib.load = @originalLoad
+	Lib._libs = {}
+end function
+
+Test.test "Lib.libPath checks /lib path first", function ()
+	originalLibPath = @Lib.libPath
+
+	// Mock to test the /lib path priority
+	state = {"checkedPaths": []}
+	Lib.libPath = function (name, installIfMissing)
+		// Simulate the /lib check succeeding
+		if (name == "test.so") then return "/lib/test.so"
+		return "/current/" + name
+	end function
+
+	result = Lib.libPath("test.so", false)
+	Test.expect(result).toBe("/lib/test.so")
+
+	Lib.libPath = @originalLibPath
+end function
+
+Test.test "Lib.load adds .so extension if missing", function ()
+	originalLibPath = @Lib.libPath
+	originalInclude = @include_lib
+
+	state = {"calledWith": null}
+	Lib.libPath = function (name, _)
+		state.calledWith = name
+		return "/lib/" + name
+	end function
+
+	include_lib = function (path)
+		return {"path": path}
+	end function
+
+	Lib.load("testlib")
+	Test.expect(state.calledWith).toBe("testlib.so")
+
+	Lib.libPath = @originalLibPath
+	include_lib = @originalInclude
+end function
+
+Test.test "Lib.load preserves .so extension if present", function ()
+	originalLibPath = @Lib.libPath
+	originalInclude = @include_lib
+
+	state = {"calledWith": null}
+	Lib.libPath = function (name, _)
+		state.calledWith = name
+		return "/lib/" + name
+	end function
+
+	include_lib = function (path)
+		return {"path": path}
+	end function
+
+	Lib.load("testlib.so")
+	Test.expect(state.calledWith).toBe("testlib.so")
+
+	Lib.libPath = @originalLibPath
+	include_lib = @originalInclude
+end function
+
+Test.runTests()

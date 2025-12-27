@@ -1,5 +1,8 @@
-// Common functions and utils.
+/*
+  Common functions and utils.
 
+  @type Std
+*/
 Std = {}
 
 /*
@@ -87,6 +90,16 @@ end function
  */
 number.to_str = function (number)
     return ""+number
+end function
+
+number.min = function (number)
+    if (self < number) then return number
+    return self
+end function
+
+number.max = function (number)
+    if (self > number) then return number
+    return self
 end function
 
 /*
@@ -177,6 +190,15 @@ end function
  */
 string.error = function ()
     return self.color("red")
+end function
+
+/*
+  Colors the string with the warn color (yellow).
+
+  @return {string}
+ */
+string.warn = function ()
+    return self.color("yellow")
 end function
 
 /*
@@ -506,6 +528,8 @@ end function
  */
 list.sort2 = function (compareFn)
     newList = self[:]
+    if (newList.len <= 1) then return newList
+
     for i in range (0, newList.len - 1)
         for j in range(0, newList.len - 2)
             if (compareFn(newList[j], newList[j + 1]) > 0) then

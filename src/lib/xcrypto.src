@@ -1,0 +1,111 @@
+#import Lib from "lib"
+#import Kv from "kv"
+#import Fs from "fs"
+
+/*
+  XCrypto - Extended crypto functionality with password caching
+
+  @type XCrypto
+  @property {string} cachePath - Path to the password cache Kv file
+ */
+XCrypto = {}
+
+/*
+  Creates a new XCrypto instance with a cache file.
+
+  @param {string} cachePath - Path to the Kv cache file
+  @return {XCrypto}
+ */
+XCrypto.New = function ()
+	xcrypto = new XCrypto
+	xcrypto.cachePath = "/root/passwords.csv"
+	xcrypto.kv = Kv.New(xcrypto.cachePath)
+	return xcrypto
+end function
+
+/*
+  Deciphers a password using cache-first approach.
+  Checks the cache first, falls back to crypto.decipher if not found.
+  Automatically caches newly deciphered passwords.
+
+  @param {string} encrypted - The encrypted password hash
+  @return {string|null} - The deciphered password or null if failed
+ */
+XCrypto.decipher = function (encrypted)
+	if (not encrypted) then return null
+
+	// Check cache first
+	cached = self._getFromCache(encrypted)
+	if (cached) then return cached
+
+	// Decipher using crypto library
+	decrypted = Lib.crypto.decipher(encrypted)
+	if (not decrypted) then return null
+
+	// Store in cache for future use
+	self._addToCache(encrypted, decrypted)
+
+	return decrypted
+end function
+
+/*
+  Retrieves a password from the cache.
+
+  @param {string} encrypted - The encrypted password hash
+  @return {string|null} - The cached decrypted password or null
+ */
+XCrypto._getFromCache = function (encrypted)
+	data = self.kv.read()
+	if (not data) then return null
+
+	for entry in data
+		if (entry[0] == encrypted) then
+			return entry[1]
+		end if
+	end for
+
+	return null
+end function
+
+/*
+  Adds a password to the cache.
+
+  @param {string} encrypted - The encrypted password hash
+  @param {string} decrypted - The decrypted password
+  @return {null}
+ */
+XCrypto._addToCache = function (encrypted, decrypted)
+	self.kv.setKv([encrypted, decrypted])
+end function
+
+/*
+  Interactive decipher tool.
+  Prompts user for encrypted text and displays the deciphered result.
+
+  @return {null}
+ */
+XCrypto.decipherTool = function ()
+	encrypted = user_input("Enter the encrypted text: ")
+	// Strip the username prefix if present (format: "user:hash")
+	encryptedHash = encrypted
+	if (encrypted.has(":")) then
+		encryptedHash = encrypted.valueBetween(":")
+	end if
+
+	cached = self._getFromCache(encryptedHash)
+
+	if (cached) then
+		print("Password retrieved from cache: <b>" + cached + "</b>".LF)
+	else
+		print("Deciphering <b>"+encryptedHash+"</b>...")
+		wait(0.01)
+		decrypted = self.decipher(encryptedHash)
+		if (decrypted) then
+			print("Decrypted text: <b>" + decrypted + "</b> (cached for future use)".LF)
+		else
+			print("Error: Failed to decipher password".LF)
+		end if
+	end if
+end function
+
+module.exports = XCrypto

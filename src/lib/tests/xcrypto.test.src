@@ -1,0 +1,119 @@
+#import Test from "../test"
+#import Fs from "../fs"
+#import Kv from "../kv"
+#import Lib from "../lib"
+#import XCrypto from "../xcrypto"
+
+Test.test "XCrypto.New creates instance with default path", function ()
+	originalExists = @Fs.exists
+
+	Fs.exists = function (path)
+		return false
+	end function
+
+	xcrypto = XCrypto.New()
+
+	Test.expect(xcrypto.cachePath).toBe("/root/passwords.csv")
+	Test.expect(xcrypto.kv != null).toBe(true)
+
+	Fs.exists = @originalExists
+end function
+
+Test.test "XCrypto._getFromCache returns cached password", function ()
+	originalRead = @Kv.read
+
+	Kv.read = function ()
+		return [
+			["hash1", "pass1"],
+			["hash2", "pass2"]
+		]
+	end function
+
+	originalExists = @Fs.exists
+	Fs.exists = function (_)
+		return true
+	end function
+
+	xcrypto = XCrypto.New()
+	result = xcrypto._getFromCache("hash2")
+
+	Test.expect(result).toBe("pass2")
+
+	Kv.read = @originalRead
+	Fs.exists = @originalExists
+end function
+
+Test.test "XCrypto._getFromCache returns null for missing hash", function ()
+	originalRead = @Kv.read
+
+	Kv.read = function ()
+		return [
+			["hash1", "pass1"]
+		]
+	end function
+
+	originalExists = @Fs.exists
+	Fs.exists = function (_)
+		return true
+	end function
+
+	xcrypto = XCrypto.New()
+	result = xcrypto._getFromCache("nonexistent")
+
+	Test.expect(result).toBe(null)
+
+	Kv.read = @originalRead
+	Fs.exists = @originalExists
+end function
+
+Test.test "XCrypto._addToCache stores entry correctly", function ()
+	originalWrite = @Kv.setKv
+	originalExists = @Fs.exists
+
+	Fs.exists = function (_)
+		return true
+	end function
+
+	originalRead = @Kv.read
+	Kv.read = function ()
+		return []
+	end function
+
+	state = {"cached": null}
+	Kv.setKv = function (entry)
+		state.cached = entry
+	end function
+
+	xcrypto = XCrypto.New()
+	xcrypto._addToCache("testhash", "testpass")
+
+	Test.expect(state.cached[0]).toBe("testhash")
+	Test.expect(state.cached[1]).toBe("testpass")
+
+	Kv.setKv = @originalWrite
+	Fs.exists = @originalExists
+	Kv.read = @originalRead
+end function
+
+Test.test "XCrypto._getFromCache handles empty cache", function ()
+	originalRead = @Kv.read
+	originalExists = @Fs.exists
+
+	Fs.exists = function (_)
+		return true
+	end function
+
+	Kv.read = function ()
+		return []
+	end function
+
+	xcrypto = XCrypto.New()
+	result = xcrypto._getFromCache("anyhash")
+
+	Test.expect(result).toBe(null)
+
+	Kv.read = @originalRead
+	Fs.exists = @originalExists
+end function
+
+Test.runTests()

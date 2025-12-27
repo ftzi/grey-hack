@@ -1,4 +1,8 @@
 /*
+  Security utilities for system log manipulation.
+
+  @type Security
+
   https://discord.com/channels/415878436104437770/415880860257222656/1339975263018156187
  */
 Security = {}

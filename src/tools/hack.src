@@ -1,20 +1,58 @@
 /*
   Main hacking tool. Either runs remotely using an IP or locally for local exploits.
  */
-#import Breachs from "../lib/breach"
+#import Breachs from "../lib/breaches-ui"
 #import Remote from "../lib/remote"
 #import Lib from "../lib/lib"
+#import LocalKv from "../lib/local-kv"
 
-Y = {}
+Hack = {}
+
+/*
+  Prompts for an IP address with options to use previous IP or local mode.
+
+  @return {string|null} The IP address or null for local mode
+ */
+Hack.promptForIp = function()
+    previousIp = LocalKv.hack.lastIp.get()
+
+    prompt = "IP address (or L for local"
+    if (previousIp) then
+        prompt = prompt + ", P for previous: " + previousIp
+    end if
+    prompt = prompt + "): "
+
+    while true
+        input = user_input(prompt)
+        input = input.trim()
+
+        // Handle empty input - default to local
+        if (input == "") then return null
+
+        // Handle local option
+        if (input.upper == "L") then return null
+
+        // Handle previous IP option
+        if (input.upper == "P" and previousIp) then return previousIp
+
+        // Validate IP address
+        if (is_valid_ip(input)) then
+            LocalKv.hack.lastIp.set(input)
+            return input
+        end if
+
+        // Invalid input - show error and prompt again
+        print("Invalid IP address or option. Please try again.".error)
+    end while
+end function
 
 /*
   Runs the hacking tool. Prompts for IP, port, and other parameters.
  */
-Y.run = function ()
+Hack.run = function ()
     if not get_shell.host_computer.is_network_active then exit("No internet access.")
 
-    ip = user_input("IP address (or press Enter for local): ")
-    if (ip == "") then ip = null
+    ip = Hack.promptForIp()
 
     lanIp = ""
     port = 0
@@ -22,10 +60,6 @@ Y.run = function ()
 	remote = null
 
     if (ip) then
-        if (is_valid_ip(ip) == false) then
-            exit("Invalid IP address.")
-        end if
-
         remote = Remote.New(ip)
         remote.print()
 
@@ -68,4 +102,4 @@ Y.run = function ()
 	breaches.handleInput(remote)
 end function
 
-module.exports = Y
+module.exports = Hack

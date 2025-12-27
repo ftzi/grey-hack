@@ -1,0 +1,82 @@
+#import Test from "../test"
+#import Fs from "../fs"
+#import Std from "../std"
+#import Kv from "../kv"
+
+Test.test "Kv.read", function ()
+    originalRead = @Fs.read
+    Fs.read = function (path, _)
+        return "John;25".LF+"Jane;30".LF+"Jack;35"
+    end function
+
+    kv = Kv.New("/test/path.csv")
+    data = kv.read()
+
+    Test.expect(data.len).toBe(3)
+    Test.expect(data[0][0]).toBe("John")
+    Test.expect(data[0][1]).toBe("25")
+    Test.expect(data[1][0]).toBe("Jane")
+    Test.expect(data[1][1]).toBe("30")
+    Test.expect(data[2][0]).toBe("Jack")
+    Test.expect(data[2][1]).toBe("35")
+
+    Fs.read = @originalRead
+end function
+
+Test.test "Kv.setKv", function ()
+    originalRead = @Fs.read
+    originalWrite = @Fs.write
+
+    Fs.read = function (_, _)
+        return "Alpha;25".LF+"Bravo;30".LF+"Delta;35"
+    end function
+
+    state = {}
+    state.content = "NOT_SET"
+    Fs.write = function (path, content)
+        state.content = content
+    end function
+
+    kv = Kv.New("/test/path.csv")
+    kv.setKv(["Charlie", "32"])
+    Test.expect(state.content).toBe("Alpha;25".LF+"Bravo;30".LF+"Charlie;32".LF+"Delta;35")
+
+    kv.setKv([["Charlie", "32"], ["0zero", "31"], ["Zeta", "18"]])
+    Test.expect(state.content).toBe("0zero;31".LF+"Alpha;25".LF+"Bravo;30".LF+"Charlie;32".LF+"Delta;35".LF+"Zeta;18")
+
+    Fs.read = @originalRead
+    Fs.write = @originalWrite
+end function
+
+Test.test "Kv.setKv overwrites existing key", function ()
+    originalRead = @Fs.read
+    originalWrite = @Fs.write
+
+    state = {}
+    Fs.read = function (_, _)
+        return state.content
+    end function
+
+    Fs.write = function (path, content)
+        state.content = content
+    end function
+
+    // Initial data
+    state.content = "Alice;25".LF+"Bob;30".LF+"Charlie;35"
+
+    kv = Kv.New("/test/path.csv")
+
+    // Overwrite Bob's age
+    kv.setKv(["Bob", "99"])
+    Test.expect(state.content).toBe("Alice;25".LF+"Bob;99".LF+"Charlie;35")
+
+    // Verify no duplicate entries
+    lines = state.content.split(Std.LF)
+    Test.expect(lines.len).toBe(3)
+
+    Fs.read = @originalRead
+    Fs.write = @originalWrite
+end function
+
+
+Test.runTests()

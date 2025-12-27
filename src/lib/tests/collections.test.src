@@ -19,4 +19,43 @@ Test.test "list.sort2", function ()
     Test.expect(data[2]).toBe(3)
 end function
 
+Test.test "list.sort2 with empty list", function ()
+    data = []
+    sortFn = function (a, b)
+        return a - b
+    end function
+    data = data.sort2(@sortFn)
+    Test.expect(data.len).toBe(0)
+end function
+
+Test.test "list.sort2 with single element", function ()
+    data = [42]
+    sortFn = function (a, b)
+        return a - b
+    end function
+    data = data.sort2(@sortFn)
+    Test.expect(data.len).toBe(1)
+    Test.expect(data[0]).toBe(42)
+end function
+
+Test.test "list.sort with empty list (built-in)", function ()
+    data = []
+    if (data.len > 1) then data.sort("self")
+    Test.expect(data.len).toBe(0)
+end function
+
+Test.test "list.sort with single element (built-in)", function ()
+    data = [{"key": "a"}]
+    if (data.len > 1) then data.sort("key")
+    Test.expect(data.len).toBe(1)
+    Test.expect(data[0].key).toBe("a")
+end function
+
+Test.test "list.sort with two elements (built-in)", function ()
+    data = [{"key": "b"}, {"key": "a"}]
+    if (data.len > 1) then data.sort("key")
+    Test.expect(data[0].key).toBe("a")
+    Test.expect(data[1].key).toBe("b")
+end function
+
 Test.runTests()

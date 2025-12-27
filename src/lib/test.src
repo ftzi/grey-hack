@@ -76,6 +76,11 @@ Test.prettyValue = function (value, bold = true)
 	return pretty
 end function
 
+/*
+  Test expectation object for assertions.
+
+  @type Expect
+*/
 Expect = {}
 Expect.value = null
 

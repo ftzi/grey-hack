@@ -1,0 +1,191 @@
+#import Test from "../test"
+#import Breachs from "../breaches"
+#import XFile from "../xfile"
+#import Fs from "../fs"
+
+Test.test "Breachs.New initializes with xcrypto", function ()
+	originalExists = @Fs.exists
+	originalWrite = @Fs.write
+
+	Fs.exists = function (_)
+		return true
+	end function
+
+	Fs.write = function (_, _)
+		// Mock write
+	end function
+
+	breaches = Breachs.New("1.2.3.4")
+
+	Test.expect(breaches.publicIp).toBe("1.2.3.4")
+	Test.expect(breaches.all.len).toBe(0)
+	Test.expect(breaches.withAction.len).toBe(0)
+	Test.expect(breaches.withShell.len).toBe(0)
+	Test.expect(breaches.withXFile.len).toBe(0)
+	Test.expect(breaches.xcrypto != null).toBe(true)
+
+	Fs.exists = @originalExists
+	Fs.write = @originalWrite
+end function
+
+Test.test "Breachs.passwd returns null when no xfile available", function ()
+	originalExists = @Fs.exists
+	originalWrite = @Fs.write
+
+	Fs.exists = function (_)
+		return true
+	end function
+
+	Fs.write = function (_, _)
+		// Mock write
+	end function
+
+	breaches = Breachs.New()
+	result = breaches.passwd
+
+	Test.expect(result).toBe(null)
+
+	Fs.exists = @originalExists
+	Fs.write = @originalWrite
+end function
+
+Test.test "Breachs.passwd filters out permission errors", function ()
+	originalExists = @Fs.exists
+	originalWrite = @Fs.write
+
+	Fs.exists = function (_)
+		return true
+	end function
+
+	Fs.write = function (_, _)
+		// Mock write
+	end function
+
+	mockFile = {"path": "/"}
+	mockXFile = XFile.New(mockFile)
+
+	// Mock contentAt to return an error message
+	mockXFile.contentAt = function (path)
+		if (path == "/etc/passwd") then return "can't open /etc/passwd. Permission denied."
+		return null
+	end function
+
+	mockBreach = {"xfile": mockXFile}
+
+	breaches = Breachs.New()
+	breaches.withXFile = [mockBreach]
+
+	result = breaches.passwd
+
+	Test.expect(result).toBe(null)
+
+	Fs.exists = @originalExists
+	Fs.write = @originalWrite
+end function
+
+Test.test "Breachs.passwd returns valid passwd content", function ()
+	originalExists = @Fs.exists
+	originalWrite = @Fs.write
+
+	Fs.exists = function (_)
+		return true
+	end function
+
+	Fs.write = function (_, _)
+		// Mock write
+	end function
+
+	mockFile = {"path": "/"}
+	mockXFile = XFile.New(mockFile)
+
+	mockXFile.contentAt = function (path)
+		if (path == "/etc/passwd") then return "root:x:0:0:root:/root:/bin/bash".LF+"user:x:1000:1000::/home/user:/bin/bash"
+		return null
+	end function
+
+	mockBreach = {"xfile": mockXFile}
+
+	breaches = Breachs.New()
+	breaches.withXFile = [mockBreach]
+
+	result = breaches.passwd
+
+	Test.expect(result).toHave("root:x:0:0")
+	Test.expect(result).toHave("user:x:1000")
+
+	Fs.exists = @originalExists
+	Fs.write = @originalWrite
+end function
+
+Test.test "Breachs.users extracts usernames from passwd", function ()
+	originalExists = @Fs.exists
+	originalWrite = @Fs.write
+
+	Fs.exists = function (_)
+		return true
+	end function
+
+	Fs.write = function (_, _)
+		// Mock write
+	end function
+
+	mockFile = {"path": "/"}
+	mockXFile = XFile.New(mockFile)
+
+	mockXFile.contentAt = function (path)
+		if (path == "/etc/passwd") then return "root:encrypted1".LF+"alice:encrypted2".LF+"bob:encrypted3"
+		return null
+	end function
+
+	mockBreach = {"xfile": mockXFile}
+
+	breaches = Breachs.New()
+	breaches.withXFile = [mockBreach]
+
+	users = breaches.users
+
+	Test.expect(users.len).toBe(3)
+	Test.expect(users.indexOf("root") != null).toBe(true)
+	Test.expect(users.indexOf("alice") != null).toBe(true)
+	Test.expect(users.indexOf("bob") != null).toBe(true)
+
+	Fs.exists = @originalExists
+	Fs.write = @originalWrite
+end function
+
+Test.test "Breachs.users handles duplicate usernames", function ()
+	originalExists = @Fs.exists
+	originalWrite = @Fs.write
+
+	Fs.exists = function (_)
+		return true
+	end function
+
+	Fs.write = function (_, _)
+		// Mock write
+	end function
+
+	mockFile = {"path": "/"}
+	mockXFile = XFile.New(mockFile)
+
+	mockXFile.contentAt = function (path)
+		if (path == "/etc/passwd") then return "root:hash1".LF+"user:hash2".LF+"root:hash3"
+		return null
+	end function
+
+	mockBreach = {"xfile": mockXFile}
+
+	breaches = Breachs.New()
+	breaches.withXFile = [mockBreach]
+
+	users = breaches.users
+
+	Test.expect(users.len).toBe(2)
+	Test.expect(users.indexOf("root") != null).toBe(true)
+	Test.expect(users.indexOf("user") != null).toBe(true)
+
+	Fs.exists = @originalExists
+	Fs.write = @originalWrite
+end function
+
+Test.runTests()

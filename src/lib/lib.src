@@ -102,7 +102,7 @@ end function
 Lib.fromIpAndPort = function (ip, port)
     net = Lib.metaxploit.net_use(ip, port)
     if not net then exit("Error: can't connect to net session")
-    if (net.is_root_active_user) then exit("Root user is active!")
+    if (net.is_root_active_user) then print("Root user is active!".warn)
     return net.dump_lib
 end function
 

@@ -1,9 +1,14 @@
-#import Csv from "csv"
+#import Kv from "kv"
 #import Lib from "lib"
 
+/*
+  Manages Metaxploit scan addresses for libraries.
+
+  @type Addresses
+*/
 Addresses = {}
 Addresses._addresses = null
-Addresses._filePath = "/root/addresses.csv"
+Addresses.kv = Kv.New("/root/addresses.csv")
 
 /*
   Loads saved addresses from the CSV file.
@@ -11,15 +16,13 @@ Addresses._filePath = "/root/addresses.csv"
   @return {map}
  */
 Addresses._loadSaved = function ()
-    addresses = Csv.read(Addresses._filePath)
-    if not addresses then
-        print("Couldn't find any saved addresses.")
-        return {}
-    end if
+    addresses = Addresses.kv.read()
+    if (not addresses) then return {}
+
     obj = {}
     for address in addresses
-        libName_version = address["libName@version"].split("@")
-        obj.set([libName_version[0], libName_version[1]], address.addresses[1:-1].split(","))
+        libName_version = address[0].split("@")
+        obj.set([libName_version[0], libName_version[1]], address[1][1:-1].split(","))
     end for
     return obj
 end function
@@ -53,9 +56,8 @@ end function
 Addresses.scan = function (lib)
     print("Scanning Addresses for <b>$ $</b> using Metaxploit $.".f(lib.lib_name, lib.version, Lib.versionOf("metaxploit")))
     addresses = Lib.metaxploit.scan(lib)
-    print("Adding new addresses for $ $ to $".f(lib.lib_name, lib.version, Addresses._filePath))
-    data = {"libName@version": lib.lib_name + "@" + lib.version, "addresses": addresses.toString}
-    Csv.writeOrdered(Addresses._filePath, ["libName@version", "addresses"], data)
+    print("Adding new addresses for $ $ to $".f(lib.lib_name, lib.version, "/root/addresses.csv"))
+    Addresses.kv.setKv([lib.lib_name + "@" + lib.version, addresses.toString])
     Addresses.addresses.set([lib.lib_name, lib.version], addresses)
     return addresses
 end function
@@ -67,10 +69,7 @@ end function
   @return {list}
  */
 Addresses.addressesFor = function (lib)
-    libName = lib.lib_name
-    version = lib.version
-
-    addresses = Addresses.addresses.get([libName, version])
+    addresses = Addresses.addresses.get([lib.lib_name, lib.version])
     if (not addresses) then addresses = Addresses.scan(lib)
 
     return addresses

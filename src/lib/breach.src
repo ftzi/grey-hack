@@ -1,24 +1,29 @@
 #import Lib from "lib"
-#import Std from "std"
 #import XFile from "xfile"
-#import Addresses from "addresses"
 
 /*
   @type Breach
 
-  @property {number} address
-  @property {string} unsecZone
-  @property {shell} shell
-  @property {computer} computer
+  @property {string} type - Type of breach data: "shell", "computer", or "file"
+  @property {number} address - Memory address of the vulnerability
+  @property {string} unsecZone - Vulnerable memory zone identifier
+  @property {list} extra - Additional metadata about the breach
+  @property {shell|null} shell - Shell access if available
+  @property {computer|null} computer - Computer access if available
+  @property {XFile|null} xfile - File system access wrapper
+  @property {function|null} action - Action handler for this breach type
+  @property {string|null} lanIp - LAN IP address
  */
 Breach = {}
 
 /*
-  @param {any} data
-  @param {number} address
-  @param {string} unsecZone
-  @param {list} extra
-  @param {string} lanIp
+  Creates a new Breach instance.
+
+  @param {any} data - Shell, computer, or file object
+  @param {number} address - Memory address of the vulnerability
+  @param {string} unsecZone - Vulnerable memory zone identifier
+  @param {list} extra - Additional metadata about the breach
+  @param {string} lanIp - LAN IP address
 
   @return {Breach}
  */
@@ -32,31 +37,49 @@ Breach.New = function(data, address, unsecZone, extra, lanIp = null)
 	breach.computer = null
 	breach.xfile = null
 	breach.action = null
-    breach.lanIp = lanIp
+	breach.lanIp = lanIp
 
 	if (breach.type == "shell") then
 		breach.shell = data
-		breach.computer = breach.shell.host_computer
-		breach.xfile = XFile.New(breach.computer.File("/"))
-		breach.action = @breach.actionShell
+		if (breach.shell.host_computer) then
+			breach.computer = breach.shell.host_computer
+			rootFile = breach.computer.File("/")
+			if (rootFile) then breach.xfile = XFile.New(rootFile)
+		end if
+		breach.action = @Breach.actionShell
 	else if (breach.type == "computer") then
 		breach.computer = data
-		breach.xfile = XFile.New(breach.computer.File("/"))
-		breach.action = @breach.actionComputer
+		rootFile = breach.computer.File("/")
+		if (rootFile) then breach.xfile = XFile.New(rootFile)
+		breach.action = @Breach.actionComputer
 	else if (breach.type == "file") then
 		breach.xfile = XFile.New(data)
+		breach.action = @Breach.actionFile
 	end if
 	return breach
 end function
 
 /*
+  Interactive action for computer-type breaches.
+  Allows browsing and reading files on the compromised computer.
+
   @return {null}
  */
 Breach.actionComputer = function()
 	while (true)
 		input = user_input("Enter the path of the file to be shown or nothing to go back:".LF)
 		if (input == "") then return
+
+		if (input.indexOf("..") != null or input.indexOf("~") != null) then
+			print("Invalid path. Path traversal attempts are not allowed.")
+			continue
+		end if
+
 		file = self.computer.File(input)
+		if (not file) then
+			print("File not found: " + input)
+			continue
+		end if
 
 		if (not file.has_permission("r")) then
 			print("You don't have the permission to read it")
@@ -71,6 +94,9 @@ Breach.actionComputer = function()
 end function
 
 /*
+  Interactive action for shell-type breaches.
+  Copies essential tools and starts an interactive terminal.
+
   @return {null}
  */
 Breach.actionShell = function ()
@@ -81,233 +107,28 @@ Breach.actionShell = function ()
 end function
 
 /*
-  @type Breachs
- */
-Breachs = {}
+  Interactive action for file-type breaches.
+  Displays file metadata and content if readable.
 
-/*
-    Create a new Breachs instance.
-
-    @param {string|null} publicIp
-    @return {Breachs}
- */
-Breachs.New = function (publicIp = null)
-  breaches = new Breachs
-  breaches.publicIp = publicIp
-  breaches.all = []
-  breaches.withAction = []
-  breaches.withShell = []
-  breaches.withXFile = []
-  return breaches
-end function
-
-/*
-  Retrieves the contents of /etc/passwd from the first available xfile.
-
-  @return {string|null}
- */
-Breachs.passwd = function()
-	for breach in self.withXFile
-    return breach.xfile.contentAt("/etc/passwd")
-	end for
-end function
-
-/*
-  Extracts unique usernames from the passwd file.
-
-  @return {list}
- */
-Breachs.users = function ()
-    users = []
-    passwd = self.passwd
-    if (passwd) then
-        for line in passwd.trim.split(Std.LF)
-            users.addUnique(line.valueBetween(null, ":"))
-        end for
-    end if
-    return users
-end function
-
-/*
-  Scans and exploits a remote library.
-
-  @param {RemoteLib} remoteLib
-  @param {string} lanIp
- */
-Breachs.scanAndExploit = function (remoteLib, lanIp = "")
-    lib = remoteLib.lib
-	for address in Addresses.addressesFor(lib)
-		scanResult = Lib.metaxploit.scan_address(lib, address)
-		scanResult = scanResult.replace("decompiling source...\nsearching unsecure values...\n", "")
-		scanResult = scanResult.replace("\n\n\n", "")
-
-		entries = scanResult.split("\n\n")
-		if entries[entries.len -1] == "" then entries.pop()
-
-		for entry in entries
-			unsecZone = entry.valueBetween("<b>", "</b>")
-			data = lib.overflow(address, unsecZone, lanIp)
-			print("====================")
-
-			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
-
-			extra = (entry.LF).valuesBetween("* ", Std.LF)
-			breach = Breach.New(data, address, unsecZone, extra, remoteLib.lanIp)
-			self.all.push(breach)
-		end for
-	end for
-	self.withAction = self.all.filter(Std.Filters.byTruthyProp("action"))
-	self.withShell = self.all.filter(Std.Filters.byTruthyProp("shell"))
-	self.withXFile = self.all.filter(Std.Filters.byTruthyProp("xfile"))
-end function
-
-/*
-  Scans and exploits a local library.
-
-  @param {lib} lib
-  @param {string} lanIp
- */
-Breachs.scanAndExploitLocal = function (lib, lanIp = "")
-	for address in Addresses.addressesFor(lib)
-		scanResult = Lib.metaxploit.scan_address(lib, address)
-		scanResult = scanResult.replace("decompiling source...\nsearching unsecure values...\n", "")
-		scanResult = scanResult.replace("\n\n\n", "")
-
-		entries = scanResult.split("\n\n")
-		if entries[entries.len -1] == "" then entries.pop()
-
-		for entry in entries
-			unsecZone = entry.valueBetween("<b>", "</b>")
-			data = lib.overflow(address, unsecZone, lanIp)
-			print("====================")
-
-			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
-
-			extra = (entry.LF).valuesBetween("* ", Std.LF)
-			breach = Breach.New(data, address, unsecZone, extra, lanIp)
-			self.all.push(breach)
-		end for
-	end for
-	self.withAction = self.all.filter(Std.Filters.byTruthyProp("action"))
-	self.withShell = self.all.filter(Std.Filters.byTruthyProp("shell"))
-	self.withXFile = self.all.filter(Std.Filters.byTruthyProp("xfile"))
-end function
-
-/*
   @return {null}
  */
-Breachs.print = function ()
-	message = "Ix LAN_IP TYPE DATA"
-	i = -1
-	for breach in self.withAction
-		i = i + 1
-		message = message.LF + "$ $ $".f(i, breach.lanIp ,breach.type)
-		if (breach.type == "computer") then message = message + " "+ breach.xfile.user
-		if (breach.type == "shell") then message = message + " "+ breach.xfile.user
-		if (breach.type == "file") then
-			message = message + " " + file.path
-			if (file.is_folder) then message = message + "/"
-			message = message + " " + file.permissions + " " + breach.xfile.user
-		end if
-	end for
-
-	print(format_columns(message).LF)
-
-    if (self.passwd) then
-        message = "Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>].".LF
-        i = 0
-        for line in self.passwd.trim.split(Std.LF)
-            message = "$p $) $".f(message, i, line).LF
-            i = i + 1
-        end for
-        print(message)
+Breach.actionFile = function ()
+	if (not self.xfile or not self.xfile._file) then
+		print("Error: No file available")
+		return
 	end if
-    print("Users: " +self.users.join(", "))
+
+	file = self.xfile._file
+	print("File: " + file.path)
+	print("Permissions: " + file.permissions)
+	print("Owner: " + self.xfile.user)
+	print("Is folder: " + file.is_folder)
+	print("Is binary: " + file.is_binary)
+
+	if (not file.is_folder and not file.is_binary and file.has_permission("r")) then
+		print("".LF + "Content:")
+		print(file.get_content)
+	end if
 end function
 
-/*
-  @param {string} user
-  @param {string} password
-
-  @return {null}
- */
-Breachs._connectSsh = function (user, password)
-    shell = null
-    if (self.publicIp) then
-        shell = get_shell.connect_service(self.publicIp, 22, user, password)
-        if (not shell or shell isa string) then
-            canConnectWithShell = self.withShell.len != 0
-            message = "Using hacked shell to login as this user."
-            if (not canConnectWithShell) then message = "There is no available shell to make the indirect login."
-            print("Couldn't connect with ssh: " + shell + message)
-            if (canConnectWithShell) then self.withShell[0].shell.launch("sudo", "-s " + password)
-            return
-        end if
-    else
-        shell = get_shell(user, password)
-    end if
-    if (shell isa map) then shell.start_terminal else print("Could not connect via ssh to "+user+"@"+password+". Error: "+shell)
-end function
-
-Breachs.inputHandler = {}
-
-/*
-  Handles password-related input commands to decipher and connect via SSH.
-
-  @param {list} inputParams
-  @return {null}
- */
-Breachs.inputHandler.password = function (inputParams)
-    if (not self.passwd) then return
-    decipherOnly = inputParams.has("-d")
-    inputParams.delete("-d")
-
-    indexPasswordOption = inputParams.indexOf("-p")
-    password = null
-    if (indexPasswordOption != null) then
-        password = inputParams[indexPasswordOption + 1]
-        inputParams.remove(indexPasswordOption)
-        inputParams.remove(indexPasswordOption) // It's not +1 as we just removed it!
-    end if
-
-    indexEntry = inputParams.get(1, "0").to_int
-
-    passwds = self.passwd.split(Std.LF)
-    chosenPasswd = passwds[indexEntry]
-    user = chosenPasswd.valueBetween(null, ":")
-
-    if (not password) then
-        print("Deciphering the password of <b>"+user+"</b>...")
-        wait(0.01)
-        password = Lib.crypto.decipher(chosenPasswd.valueBetween(":"))
-        print("Password of <b>" + user + "</b> is <b>" + password + "</b>".LF)
-        if (decipherOnly) then return
-    end if
-
-    self._connectSsh(user, password)
-end function
-
-/*
-  @param {Remote} remote
-
-  @return {null}
- */
-Breachs.handleInput = function (remote)
-	while true
-		inputParams = user_input("Enter the desired method:".LF).split(" ")
-		if (inputParams[0] == "p") then
-            self.inputHandler.password(remote, inputParams)
-		else
-            index = inputParams[0].to_int
-            if (not self.withAction.hasIndex(index)) then
-                print("Invalid option.")
-                continue
-            end if
-
-			self.withAction[index].action()
-		end if
-		print()
-	end while
-end function
-
-module.exports = Breachs
+module.exports = Breach

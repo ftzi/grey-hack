@@ -1,0 +1,58 @@
+#import Test from "../test"
+#import LocalKv from "../local-kv"
+#import Kv from "../kv"
+#import Fs from "../fs"
+#import Std from "../std"
+
+Test.test "Data.get - nonexistent key", function ()
+    originalKvRead = @Kv.read
+
+    Kv.read = function ()
+        return null
+    end function
+
+    value = LocalKv.test.key.get()
+    Test.expect(value).toBe(null)
+
+    Kv.read = @originalKvRead
+end function
+
+Test.test "Data.get - existing key", function ()
+    originalKvRead = @Kv.read
+
+    Kv.read = function ()
+        return [["test.key", "test_value"]]
+    end function
+
+    value = LocalKv.test.key.get()
+    Test.expect(value).toBe("test_value")
+
+    Kv.read = @originalKvRead
+end function
+
+Test.test "Data.set - new key", function ()
+    originalFsRead = @Fs.read
+    originalFsWrite = @Fs.write
+
+    state = {}
+    state.writeCalls = []
+
+    Fs.read = function (path, addLineNumbers)
+        return null
+    end function
+
+    Fs.write = function (path, content)
+        state.writeCalls.push(content)
+    end function
+
+    LocalKv.test.key.set("new_value")
+
+    // Fs.write is called once when set() calls setKv() which auto-creates the file
+    Test.expect(state.writeCalls.len).toBe(1)
+    Test.expect(state.writeCalls[0]).toBe("test.key;new_value")
+
+    Fs.read = @originalFsRead
+    Fs.write = @originalFsWrite
+end function
+
+Test.runTests()

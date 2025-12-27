@@ -1,0 +1,269 @@
+#import Breachs from "breaches"
+#import Std from "std"
+
+/*
+  UI and interaction layer for Breachs.
+  Extends the Breachs type with display and input handling methods.
+ */
+
+/*
+  Formats a single breach entry for display.
+
+  @param {Breach} breach
+  @param {number} index
+  @return {string}
+ */
+Breachs._formatBreachData = function(breach, index)
+    line = "$ $ $".f(index, breach.lanIp, breach.type)
+
+    if (breach.type == "computer" or breach.type == "shell") then
+        if (breach.xfile) then line = line + " " + breach.xfile.user
+        return line
+    end if
+
+    if (breach.type == "file" and breach.xfile and breach.xfile._file) then
+        file = breach.xfile._file
+        line = line + " " + file.path
+        if (file.is_folder) then line = line + "/"
+        line = line + " " + file.permissions + " " + breach.xfile.user
+    end if
+
+    return line
+end function
+
+/*
+  Formats the passwd section for display.
+
+  @return {string}
+ */
+Breachs._formatPasswdSection = function()
+    message = "Found passwd. Usage: p [index = 0] [-d (decipherOnly)] [-p <password>].".LF
+    i = 0
+    for line in self.passwd.trim.split(Std.LF)
+        message = "$p $) $".f(message, i, line).LF
+        i = i + 1
+    end for
+    return message
+end function
+
+/*
+  Displays breaches in a formatted table with passwd information.
+
+  @return {null}
+ */
+Breachs.print = function()
+    message = "Ix LAN_IP TYPE DATA"
+    for i in range(0, self.withAction.len - 1)
+        breach = self.withAction[i]
+        message = message.LF + self._formatBreachData(breach, i)
+    end for
+
+    print(format_columns(message).LF)
+
+    if (self.passwd) then print(self._formatPasswdSection())
+    print("Users: " + self.users.join(", "))
+end function
+
+/*
+  Shows connection failure message with credentials.
+
+  @param {string} user
+  @param {string} password
+  @param {string} error
+  @return {null}
+ */
+Breachs._showConnectionError = function(user, password, error)
+    print("Couldn't connect with ssh: " + error)
+    print("Credentials found: " + user + " / " + password)
+
+    if (self.withShell.len != 0) then
+        print("You can use the hacked shell to try connecting manually.")
+    else
+        print("No available shell for indirect login.")
+    end if
+end function
+
+/*
+  Attempts to connect via SSH with the given credentials.
+  Falls back to displaying credentials if connection fails.
+
+  @param {string} user
+  @param {string} password
+  @return {null}
+ */
+Breachs._connectSsh = function(user, password)
+    shell = null
+    if (self.publicIp) then
+        shell = get_shell.connect_service(self.publicIp, 22, user, password)
+        if (not shell or shell isa string) then
+            self._showConnectionError(user, password, shell)
+            return
+        end if
+    else
+        shell = get_shell(user, password)
+    end if
+
+    if (shell isa map) then
+        shell.start_terminal
+    else
+        print("Could not connect via ssh to " + user + ". Error: " + shell)
+    end if
+end function
+
+/*
+  Parses password command flags from input parameters.
+
+  @param {list} inputParams
+  @return {map} - {decipherOnly: bool, password: string|null, inputParams: list}
+ */
+Breachs._parsePasswordFlags = function(inputParams)
+    decipherOnly = inputParams.has("-d")
+    inputParams.delete("-d")
+
+    password = null
+    indexPasswordOption = inputParams.indexOf("-p")
+    if (indexPasswordOption != null) then
+        if (inputParams.len <= indexPasswordOption + 1) then
+            return {"error": "Error: -p flag requires a password argument"}
+        end if
+        password = inputParams[indexPasswordOption + 1]
+        inputParams.remove(indexPasswordOption)
+        inputParams.remove(indexPasswordOption)
+    end if
+
+    return {"decipherOnly": decipherOnly, "password": password, "inputParams": inputParams}
+end function
+
+/*
+  Gets or deciphers the password for a user.
+
+  @param {string} encryptedPass
+  @param {string} user
+  @return {string|null}
+ */
+Breachs._decipherPassword = function(encryptedPass, user)
+    password = self.xcrypto._getFromCache(encryptedPass)
+    if (password) then
+        print("Password of <b>" + user + "</b> retrieved from cache: <b>" + password + "</b>".LF)
+        return password
+    end if
+
+    print("Deciphering the password of <b>" + user + "</b>...")
+    wait(0.01)
+    password = self.xcrypto.decipher(encryptedPass)
+    if (not password) then
+        print("Error: Failed to decipher password")
+        return null
+    end if
+
+    print("Password of <b>" + user + "</b> is <b>" + password + "</b> (cached for future use)".LF)
+    return password
+end function
+
+/*
+  Handles password-related input commands to decipher and connect via SSH.
+
+  @param {Breachs} breachs
+  @param {list} inputParams
+  @return {null}
+ */
+Breachs.handlePasswordInput = function(breachs, inputParams)
+    if (not breachs.passwd) then
+        print("Error: No passwd file available")
+        return
+    end if
+
+    flags = breachs._parsePasswordFlags(inputParams)
+    if (flags.hasIndex("error")) then
+        print(flags.error)
+        return
+    end if
+
+    indexEntry = flags.inputParams.get(1, "0").to_int
+    if (indexEntry == null) then
+        print("Error: Invalid index provided")
+        return
+    end if
+
+    passwds = breachs.passwd.split(Std.LF)
+    if (indexEntry < 0 or indexEntry >= passwds.len) then
+        print("Error: Index out of bounds. Valid range: 0-" + (passwds.len - 1))
+        return
+    end if
+
+    chosenPasswd = passwds[indexEntry]
+    user = chosenPasswd.valueBetween(null, ":")
+    if (not user) then
+        print("Error: Could not extract username from passwd entry")
+        return
+    end if
+
+    password = flags.password
+    if (not password) then
+        encryptedPass = chosenPasswd.valueBetween(":")
+        if (not encryptedPass) then
+            print("Error: Could not extract encrypted password")
+            return
+        end if
+
+        password = breachs._decipherPassword(encryptedPass, user)
+        if (not password) then return
+        if (flags.decipherOnly) then return
+    end if
+
+    breachs._connectSsh(user, password)
+end function
+
+/*
+  Handles numeric index input to execute breach action.
+
+  @param {string} input
+  @return {bool} - true if handled successfully
+ */
+Breachs._handleIndexInput = function(input)
+    index = input.to_int
+    if (index == null) then
+        print("Invalid input. Enter a number or 'p' for password options.")
+        return false
+    end if
+
+    if (self.withAction.len == 0) then
+        print("No actions available.")
+        return false
+    end if
+
+    if (not self.withAction.hasIndex(index)) then
+        print("Invalid option. Valid indices: 0-" + (self.withAction.len - 1))
+        return false
+    end if
+
+    self.withAction[index].action()
+    return true
+end function
+
+/*
+  Main input handling loop for breach interaction.
+  Allows user to select breaches by index or use password commands.
+
+  @param {Remote} remote - Remote object (unused but kept for compatibility)
+  @return {null}
+ */
+Breachs.handleInput = function(remote)
+    while true
+        inputParams = user_input("Enter the desired method:".LF).split(" ")
+        if (inputParams.len == 0 or not inputParams[0]) then
+            print("No input provided.")
+            continue
+        end if
+
+        if (inputParams[0] == "p") then
+            self.handlePasswordInput(self, inputParams)
+        else
+            self._handleIndexInput(inputParams[0])
+        end if
+
+        print()
+    end while
+end function
+
+module.exports = Breachs

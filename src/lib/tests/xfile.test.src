@@ -1,0 +1,163 @@
+#import Test from "../test"
+#import XFile from "../xfile"
+
+Test.test "XFile.New creates instance with file", function ()
+	mockFile = {"path": "/test/file.txt"}
+
+	xfile = XFile.New(mockFile)
+
+	Test.expect(xfile._file).toBe(mockFile)
+end function
+
+Test.test "XFile.path returns file path", function ()
+	mockFile = {"path": "/home/user/document.txt"}
+	xfile = XFile.New(mockFile)
+
+	result = xfile.path
+
+	Test.expect(result).toBe("/home/user/document.txt")
+end function
+
+Test.test "XFile.get_content returns file content", function ()
+	mockFile = {"get_content": "Hello, World!"}
+	xfile = XFile.New(mockFile)
+
+	result = xfile.get_content
+
+	Test.expect(result).toBe("Hello, World!")
+end function
+
+Test.test "XFile.has_permission checks file permissions", function ()
+	mockFile = {}
+	mockFile.has_permission = function (perm)
+		if (perm == "r") then return true
+		return false
+	end function
+
+	xfile = XFile.New(mockFile)
+
+	Test.expect(xfile.has_permission("r")).toBe(true)
+	Test.expect(xfile.has_permission("w")).toBe(false)
+end function
+
+Test.test "XFile.name returns file name", function ()
+	mockFile = {"name": "document.txt"}
+	xfile = XFile.New(mockFile)
+
+	result = xfile.name
+
+	Test.expect(result).toBe("document.txt")
+end function
+
+Test.test "XFile.get_folders returns XFile instances", function ()
+	mockFolder1 = {"name": "folder1"}
+	mockFolder2 = {"name": "folder2"}
+	mockFile = {"get_folders": [mockFolder1, mockFolder2]}
+
+	xfile = XFile.New(mockFile)
+	folders = xfile.get_folders
+
+	Test.expect(folders.len).toBe(2)
+	Test.expect(folders[0]._file).toBe(mockFolder1)
+	Test.expect(folders[1]._file).toBe(mockFolder2)
+end function
+
+Test.test "XFile.user returns root when has write permission on /", function ()
+	mockRoot = {}
+	mockRoot.has_permission = function (perm)
+		return true
+	end function
+
+	mockFile = {"path": "/test"}
+	mockFile.parent = {"path": "/"}
+
+	xfile = XFile.New(mockFile)
+
+	// Mock getAt to return root with write permission
+	xfile.getAt = function (path)
+		if (path == "/") then
+			rootXFile = XFile.New(mockRoot)
+			rootXFile.has_permission = function (perm)
+				return true
+			end function
+			return rootXFile
+		end if
+		return null
+	end function
+
+	result = xfile.user
+
+	Test.expect(result).toBe("root")
+end function
+
+Test.test "XFile.user returns guest when no write permissions", function ()
+	mockRoot = {}
+	mockRoot.has_permission = function (perm)
+		return false
+	end function
+
+	mockHome = {}
+	mockHomeXFile = XFile.New(mockHome)
+	mockHomeXFile.get_folders = []
+
+	mockFile = {"path": "/test"}
+
+	xfile = XFile.New(mockFile)
+
+	// Mock getAt to return mocked directories
+	xfile.getAt = function (path)
+		if (path == "/") then
+			rootXFile = XFile.New(mockRoot)
+			rootXFile.has_permission = function (perm)
+				return false
+			end function
+			return rootXFile
+		end if
+		if (path == "/home") then
+			return mockHomeXFile
+		end if
+		return null
+	end function
+
+	result = xfile.user
+
+	Test.expect(result).toBe("guest")
+end function
+
+Test.test "XFile.contentAt returns content of file at path", function ()
+	mockTargetFile = {"get_content": "target content"}
+	mockFile = {"path": "/"}
+
+	xfile = XFile.New(mockFile)
+
+	// Mock getAt to return a file with content
+	xfile.getAt = function (path)
+		if (path == "/test/file.txt") then
+			targetXFile = XFile.New(mockTargetFile)
+			targetXFile.get_content = "target content"
+			return targetXFile
+		end if
+		return null
+	end function
+
+	result = xfile.contentAt("/test/file.txt")
+
+	Test.expect(result).toBe("target content")
+end function
+
+Test.test "XFile.contentAt returns null when file not found", function ()
+	mockFile = {"path": "/"}
+
+	xfile = XFile.New(mockFile)
+
+	// Mock getAt to return null
+	xfile.getAt = function (path)
+		return null
+	end function
+
+	result = xfile.contentAt("/missing/file.txt")
+
+	Test.expect(result).toBe(null)
+end function
+
+Test.runTests()

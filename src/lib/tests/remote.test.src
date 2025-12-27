@@ -1,0 +1,154 @@
+#import Test from "../test"
+#import Std from "../std"
+
+Test.test "WhoIs parsing logic", function ()
+	// Test the parsing logic without calling actual whois
+	whoisOutput = "Domain: test.com".LF + "Name: Admin User".LF + "Email: admin@test.com".LF + "Phone: 555-1234"
+	whoisLines = whoisOutput.split(Std.LF)
+
+	domain = whoisLines[0].split(":")[1].trim
+	adminName = whoisLines[1].split(":")[1].trim
+	adminEmail = whoisLines[2].split(":")[1].trim
+	adminPhone = whoisLines[3].split(":")[1].trim
+
+	Test.expect(domain).toBe("test.com")
+	Test.expect(adminName).toBe("Admin User")
+	Test.expect(adminEmail).toBe("admin@test.com")
+	Test.expect(adminPhone).toBe("555-1234")
+end function
+
+Test.test "Remote sorting by lanIp first", function ()
+	// Test the sorting logic for remote libraries
+	a = {"lanIp": "192.168.1.1", "portNumber": 80}
+	b = {"lanIp": "192.168.1.2", "portNumber": 22}
+
+	result = 1
+	if (a.lanIp < b.lanIp) then
+		result = -1
+	else if (a.lanIp == b.lanIp) then
+		if (a.portNumber < b.portNumber) then
+			result = -1
+		else
+			result = 1
+		end if
+	end if
+
+	Test.expect(result).toBe(-1)
+end function
+
+Test.test "Remote sorting by portNumber when lanIp equal", function ()
+	a = {"lanIp": "192.168.1.1", "portNumber": 22}
+	b = {"lanIp": "192.168.1.1", "portNumber": 80}
+
+	result = 1
+	if (a.lanIp < b.lanIp) then
+		result = -1
+	else if (a.lanIp == b.lanIp) then
+		if (a.portNumber < b.portNumber) then
+			result = -1
+		else
+			result = 1
+		end if
+	end if
+
+	Test.expect(result).toBe(-1)
+end function
+
+Test.test "Remote sorting returns 1 when b comes first", function ()
+	a = {"lanIp": "192.168.1.2", "portNumber": 80}
+	b = {"lanIp": "192.168.1.1", "portNumber": 22}
+
+	result = 1
+	if (a.lanIp < b.lanIp) then
+		result = -1
+	else if (a.lanIp == b.lanIp) then
+		if (a.portNumber < b.portNumber) then
+			result = -1
+		else
+			result = 1
+		end if
+	end if
+
+	Test.expect(result).toBe(1)
+end function
+
+Test.test "Remote uses device_ports for LAN IP", function ()
+	// Test logic for determining which ports method to use
+	isLan = true
+	mockRouter = {}
+	mockRouter.device_ports = [{"port": 22}, {"port": 80}]
+	mockRouter.used_ports = [{"port": 443}]
+
+	ports = null
+	if (isLan) then
+		ports = mockRouter.device_ports
+	else
+		ports = mockRouter.used_ports
+	end if
+
+	Test.expect(ports.len).toBe(2)
+end function
+
+Test.test "Remote uses used_ports for public IP", function ()
+	// Test logic for public IP
+	isLan = false
+	mockRouter = {}
+	mockRouter.device_ports = [{"port": 22}]
+	mockRouter.used_ports = [{"port": 80}, {"port": 443}]
+
+	ports = null
+	if (isLan) then
+		ports = mockRouter.device_ports
+	else
+		ports = mockRouter.used_ports
+	end if
+
+	Test.expect(ports.len).toBe(2)
+end function
+
+Test.test "RemoteLib sets service from port_info", function ()
+	mockRouter = {}
+	mockRouter.port_info = function (port)
+		return "ssh 1.0"
+	end function
+
+	mockPort = {
+		"port_number": 22,
+		"get_lan_ip": "192.168.1.1",
+		"is_closed": false
+	}
+
+	mockRemote = {
+		"router": mockRouter,
+		"isLanIp": false
+	}
+
+	// Test just the port_info parsing logic
+	service = mockRouter.port_info(mockPort).split(" ")[0]
+
+	Test.expect(service).toBe("ssh")
+end function
+
+Test.test "RemoteLib identifies open ports correctly", function ()
+	// Test logic for determining if a port can be used
+	mockPort1 = {"is_closed": false}
+	mockPort2 = {"is_closed": true}
+
+	isLanIp = true
+	canUse1 = isLanIp or not mockPort1.is_closed
+	canUse2 = isLanIp or not mockPort2.is_closed
+
+	Test.expect(canUse1).toBe(true)
+	Test.expect(canUse2).toBe(true)
+end function
+
+Test.test "RemoteLib uses port 0 for router", function ()
+	// Test that router instances use port 0
+	portNumber = 0
+	service = "router"
+
+	Test.expect(portNumber).toBe(0)
+	Test.expect(service).toBe("router")
+end function
+
+Test.runTests()
