@@ -73,4 +73,26 @@ Test.test "XCrypto.getFromCache handles empty cache", function ()
 	Kv.read = @originalRead
 end function
 
+Test.test "XCrypto.decipher extracts hash from user:hash format", function ()
+	originalRead = @Kv.read
+	originalGetFromCache = @XCrypto.getFromCache
+
+	state = {"hashChecked": null}
+	Kv.read = function ()
+		return []
+	end function
+
+	XCrypto.getFromCache = function (hash)
+		state.hashChecked = hash
+		return null
+	end function
+
+	result = XCrypto.decipher("alice:myhash456")
+
+	Test.expect(state.hashChecked).toBe("myhash456")
+
+	Kv.read = @originalRead
+	XCrypto.getFromCache = @originalGetFromCache
+end function
+
 Test.runTests()

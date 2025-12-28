@@ -97,13 +97,15 @@ end function
 
 /*
   Returns the content of the file at the given path.
+  Returns null if file not found or read permission denied.
 
   @param {string} path
   @return {string|null}
  */
 XFile.contentAt = function (path)
     xfile = self.getAt(path)
-    if (xfile) then return xfile.get_content
+    if (xfile and xfile.has_permission("r")) then return xfile.get_content()
+    return null
 end function
 
 /*

@@ -5,9 +5,6 @@
   @type Breach
 
   @property {string} type - Type of breach data: "shell", "computer", or "file"
-  @property {number} address - Memory address of the vulnerability
-  @property {string} unsecZone - Vulnerable memory zone identifier
-  @property {list} extra - Additional metadata about the breach
   @property {shell|null} shell - Shell access if available
   @property {computer|null} computer - Computer access if available
   @property {XFile|null} xfile - File system access wrapper
@@ -19,22 +16,18 @@ Breach = {}
   Creates a new Breach instance.
 
   @param {any} data - Shell, computer, or file object
-  @param {number} address - Memory address of the vulnerability
-  @param {string} unsecZone - Vulnerable memory zone identifier
-  @param {list} extra - Additional metadata about the breach
 
   @return {Breach}
  */
-Breach.New = function(data, address, unsecZone, extra)
+Breach.New = function(data)
 	breach = new Breach
 	breach.type = typeof(data)
-	breach.address = address
-	breach.unsecZone = unsecZone
-	breach.extra = extra
 	breach.shell = null
 	breach.computer = null
 	breach.xfile = null
 	breach.action = null
+
+  print("Typeof breach: $".f(typeof(data)))
 
 	if (breach.type == "shell") then
 		breach.shell = data

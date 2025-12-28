@@ -43,8 +43,9 @@ X.getTools = function ()
   return {
     "1": {"name": "Hack", "module": Hack},
     "2": {"name": "Setup", "module": Setup},
-    "3": {"name": "Clean", "module": Clean},
-    "4": {"name": "Decipher", "module": Decipher}
+    "3": {"name": "Security", "module": Security},
+    "4": {"name": "Decipher", "module": Decipher},
+    // "3": {"name": "Clean", "module": Clean},
   }
 end function
 

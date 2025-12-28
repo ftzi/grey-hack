@@ -14,23 +14,44 @@ XCrypto.kv = Kv.New("/root/passwords.kv", true)
   Deciphers a password using cache-first approach.
   Checks the cache first, falls back to crypto.decipher if not found.
   Automatically caches newly deciphered passwords.
+  Prints status and handles user:encrypted format.
 
-  @param {string} encrypted - The encrypted password hash
+  @param {string} encrypted - The encrypted password hash or user:encrypted string
+  @param {string} user - Optional username for printing (extracted from encrypted if in user:format)
   @return {string|null} - The deciphered password or null if failed
  */
-XCrypto.decipher = function (encrypted)
+XCrypto.decipher = function (encrypted, user = null)
 	if (not encrypted) then return null
 
+	encryptedHash = encrypted
+	if (encrypted.has(":")) then
+		if (not user) then user = encrypted.split(":")[0]
+		encryptedHash = encrypted.split(":")[1]
+	end if
+
 	// Check cache first
-	cached = self.getFromCache(encrypted)
-	if (cached) then return cached
+	cached = self.getFromCache(encryptedHash)
+	if (cached) then
+		if (user) then print("Password of <b>" + user + "</b> retrieved from cache: <b>" + cached + "</b>".LF)
+		return cached
+	end if
 
 	// Decipher using crypto library
-	decrypted = Lib.crypto.decipher(encrypted)
-	if (not decrypted) then return null
+	if (user) then
+		print("Deciphering the password of <b>" + user + "</b>...")
+		wait(0.01)
+	end if
+
+	decrypted = Lib.crypto.decipher(encryptedHash)
+	if (not decrypted) then
+		if (user) then print("Error: Failed to decipher password")
+		return null
+	end if
 
 	// Store in cache for future use
-	self._addToCache(encrypted, decrypted)
+	self._addToCache(encryptedHash, decrypted)
+
+	if (user) then print("Password of <b>" + user + "</b> is <b>" + decrypted + "</b> (cached for future use)".LF)
 
 	return decrypted
 end function

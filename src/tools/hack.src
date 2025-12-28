@@ -86,13 +86,13 @@ Hack.run = function ()
     // remoteLibsPrioritized = .sort2(@sortRemoteLibs)
 
     for remoteLib in remote.remoteLibs
-        breaches.scanAndExploit(remoteLib, optArgs)
+        breaches.scanAndProcessMetaLib(remoteLib.metaLib, optArgs)
     end for
 	else
     localLibName = "init.so" // TODO cycle through them automatically if none is specified.
     // Should get their versions and prefer the ones we have addresses for.
 		lib = Lib.metaxploit.load("/lib/"+localLibName)
-    breaches.scanAndExploitLocal(lib, optArgs)
+    breaches.scanAndProcessMetaLib(lib, optArgs)
 	end if
 
   breaches.print()

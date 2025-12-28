@@ -84,7 +84,7 @@ end function
   @type Remote
   @property {string} ip
   @property {bool} isLanIp
-  @property {Router} router
+  @property {router} router
   @property {WhoIs} whoIs
   @property {list<port>} ports
   @property {list<RemoteLib>} remoteLibs

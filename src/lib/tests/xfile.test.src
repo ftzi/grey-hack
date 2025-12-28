@@ -126,16 +126,17 @@ end function
 
 Test.test "XFile.contentAt returns content of file at path", function ()
 	mockTargetFile = {"get_content": "target content"}
+	mockTargetFile.has_permission = function (perm)
+		return perm == "r"
+	end function
 	mockFile = {"path": "/"}
 
 	xfile = XFile.New(mockFile)
 
-	// Mock getAt to return a file with content
+	// Mock getAt to return a file with content and read permission
 	xfile.getAt = function (path)
 		if (path == "/test/file.txt") then
-			targetXFile = XFile.New(mockTargetFile)
-			targetXFile.get_content = "target content"
-			return targetXFile
+			return XFile.New(mockTargetFile)
 		end if
 		return null
 	end function
@@ -156,6 +157,31 @@ Test.test "XFile.contentAt returns null when file not found", function ()
 	end function
 
 	result = xfile.contentAt("/missing/file.txt")
+
+	Test.expect(result).toBe(null)
+end function
+
+Test.test "XFile.contentAt returns null when file lacks read permission", function ()
+	mockFile = {"path": "/", "get_content": "secret content"}
+	mockFile.has_permission = function (perm)
+		return false
+	end function
+
+	xfile = XFile.New(mockFile)
+
+	// Mock getAt to return file without read permission
+	xfile.getAt = function (path)
+		if (path == "/protected/file.txt") then
+			protectedXFile = XFile.New(mockFile)
+			protectedXFile.has_permission = function (perm)
+				return false
+			end function
+			return protectedXFile
+		end if
+		return null
+	end function
+
+	result = xfile.contentAt("/protected/file.txt")
 
 	Test.expect(result).toBe(null)
 end function

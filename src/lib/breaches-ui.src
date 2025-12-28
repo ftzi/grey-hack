@@ -145,31 +145,6 @@ Breachs._parsePasswordFlags = function(inputParams)
     return {"decipherOnly": decipherOnly, "password": password, "inputParams": inputParams}
 end function
 
-/*
-  Gets or deciphers the password for a user.
-
-  @param {string} encryptedPass
-  @param {string} user
-  @return {string|null}
- */
-Breachs._decipherPassword = function(encryptedPass, user)
-    password = XCrypto.getFromCache(encryptedPass)
-    if (password) then
-        print("Password of <b>" + user + "</b> retrieved from cache: <b>" + password + "</b>".LF)
-        return password
-    end if
-
-    print("Deciphering the password of <b>" + user + "</b>...")
-    wait(0.01)
-    password = XCrypto.decipher(encryptedPass)
-    if (not password) then
-        print("Error: Failed to decipher password")
-        return null
-    end if
-
-    print("Password of <b>" + user + "</b> is <b>" + password + "</b> (cached for future use)".LF)
-    return password
-end function
 
 /*
   Handles password-related input commands to decipher and connect via SSH.
@@ -217,7 +192,7 @@ Breachs.handlePasswordInput = function(breachs, inputParams)
             return
         end if
 
-        password = breachs._decipherPassword(encryptedPass, user)
+        password = XCrypto.decipher(encryptedPass, user)
         if (not password) then return
         if (flags.decipherOnly) then return
     end if

@@ -48,7 +48,7 @@ Test.test "Breachs.passwd returns null when no xfile available", function ()
 	Fs.write = @originalWrite
 end function
 
-Test.test "Breachs.passwd filters out permission errors", function ()
+Test.test "Breachs.passwd returns null when no readable passwd file", function ()
 	originalExists = @Fs.exists
 	originalWrite = @Fs.write
 
@@ -63,9 +63,8 @@ Test.test "Breachs.passwd filters out permission errors", function ()
 	mockFile = {"path": "/"}
 	mockXFile = XFile.New(mockFile)
 
-	// Mock contentAt to return an error message
+	// Mock contentAt to return null (permission denied or file not found)
 	mockXFile.contentAt = function (path)
-		if (path == "/etc/passwd") then return "can't open /etc/passwd. Permission denied."
 		return null
 	end function
 
@@ -136,12 +135,12 @@ Test.test "Breachs.users extracts usernames from passwd", function ()
 		return null
 	end function
 
-	mockBreach = {"xfile": mockXFile}
+	mockBreach = {"xfile": mockXFile, "computer": null}
 
 	breaches = Breachs.New()
 	breaches.withXFile = [mockBreach]
 
-	users = breaches.users
+	users = breaches.users()
 
 	Test.expect(users.len).toBe(3)
 	Test.expect(users.indexOf("root") != null).toBe(true)
@@ -172,16 +171,50 @@ Test.test "Breachs.users handles duplicate usernames", function ()
 		return null
 	end function
 
-	mockBreach = {"xfile": mockXFile}
+	mockBreach = {"xfile": mockXFile, "computer": null}
 
 	breaches = Breachs.New()
 	breaches.withXFile = [mockBreach]
 
-	users = breaches.users
+	users = breaches.users()
 
 	Test.expect(users.len).toBe(2)
 	Test.expect(users.indexOf("root") != null).toBe(true)
 	Test.expect(users.indexOf("user") != null).toBe(true)
+
+	Fs.exists = @originalExists
+	Fs.write = @originalWrite
+end function
+
+Test.test "Breachs.xfiles returns all xfiles from breaches", function ()
+	originalExists = @Fs.exists
+	originalWrite = @Fs.write
+
+	Fs.exists = function (_)
+		return true
+	end function
+
+	Fs.write = function (_, _)
+		// Mock write
+	end function
+
+	mockFile1 = {"path": "/"}
+	mockXFile1 = XFile.New(mockFile1)
+
+	mockFile2 = {"path": "/"}
+	mockXFile2 = XFile.New(mockFile2)
+
+	mockBreach1 = {"xfile": mockXFile1, "computer": null}
+	mockBreach2 = {"xfile": mockXFile2, "computer": null}
+
+	breaches = Breachs.New()
+	breaches.withXFile = [mockBreach1, mockBreach2]
+
+	xfiles = breaches.xfiles()
+
+	Test.expect(xfiles.len).toBe(2)
+	Test.expect(xfiles[0]).toBe(mockXFile1)
+	Test.expect(xfiles[1]).toBe(mockXFile2)
 
 	Fs.exists = @originalExists
 	Fs.write = @originalWrite

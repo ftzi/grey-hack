@@ -33,34 +33,46 @@ end function
 
 /*
   Retrieves the contents of /etc/passwd from the first available xfile.
-  Filters out permission errors and returns only valid content.
+  Returns null if no readable passwd file is found.
 
   @return {string|null}
  */
 Breachs.passwd = function()
-	for breach in self.withXFile
-		content = breach.xfile.contentAt("/etc/passwd")
-		if (content and not content.indexOf("Permission denied") and not content.indexOf("can't open")) then
-			return content
-		end if
+	for xfile in self.xfiles()
+		content = xfile.contentAt("/etc/passwd")
+		if (content) then return content
 	end for
-	return null
 end function
 
 /*
   Extracts unique usernames from the passwd file.
+  Uses a map to ensure no duplicates, returns as a sorted list.
 
   @return {list}
  */
 Breachs.users = function ()
-    users = []
+    users = {}
     passwd = self.passwd
     if (passwd) then
         for line in passwd.trim.split(Std.LF)
-            users.addUnique(line.valueBetween(null, ":"))
+            user = line.valueBetween(null, ":")
+            if (user) then users[user] = true
         end for
     end if
-    return users
+    return users.indexes
+end function
+
+/*
+  Returns all xfiles from all breaches with file system access.
+
+  @return {list<XFile>}
+ */
+Breachs.xfiles = function()
+    result = []
+    for breach in self.withXFile
+        result.push(breach.xfile)
+    end for
+    return result
 end function
 
 /*
@@ -70,10 +82,10 @@ end function
   @param {metaLib} metaLib - Library to exploit
   @param {string} optArgs - LAN IP address
  */
-Breachs._processScanResults = function (metaLib, optArgs)
+Breachs.scanAndProcessMetaLib = function (metaLib, optArgs)
 	for address in Addresses.addressesFor(metaLib)
 		scanResult = Lib.metaxploit.scan_address(metaLib, address)
-    print(scanResult)
+    // print(scanResult)
 		if (not scanResult or typeof(scanResult) != "string") then continue
 
 		scanResult = scanResult.replace("decompiling source...\nsearching unsecure values...\n", "")
@@ -86,48 +98,20 @@ Breachs._processScanResults = function (metaLib, optArgs)
 			unsecZone = entry.valueBetween("<b>", "</b>")
 			if (not unsecZone) then continue
 
-      print("Overflowing address <$>, unsecZone <$>, optArgs <$>".f(address, unsecZone, optArgs))
+      // print("Overflowing address <$>, unsecZone <$>, optArgs <$>".f(address, unsecZone, optArgs))
 			data = metaLib.overflow(address, unsecZone, optArgs)
 			print("====================")
 
 			if (not ["computer", "shell", "file"].has(typeof(data))) then continue
 
-			extra = (entry.LF).valuesBetween("* ", Std.LF)
-			breach = Breach.New(data, address, unsecZone, extra)
+			breach = Breach.New(data)
 			self.all.push(breach)
 		end for
 	end for
+
 	self.withAction = self.all.filter(Std.Filters.byTruthyProp("action"))
 	self.withShell = self.all.filter(Std.Filters.byTruthyProp("shell"))
 	self.withXFile = self.all.filter(Std.Filters.byTruthyProp("xfile"))
-end function
-
-/*
-  Scans and exploits a remote library.
-
-  @param {RemoteLib} remoteLib - Remote library object with metaLib and optArgs
-  @param {string} optArgs - Optional LAN IP override
- */
-Breachs.scanAndExploit = function (remoteLib, optArgs = "")
-	if (not remoteLib or not remoteLib.metaLib) then
-		print("Error: Invalid remote library")
-		return
-	end if
-	self._processScanResults(remoteLib.metaLib, optArgs)
-end function
-
-/*
-  Scans and exploits a local library.
-
-  @param {metaLib} metaLib - Library to exploit
-  @param {string} optArgs - LAN IP address
- */
-Breachs.scanAndExploitLocal = function (metaLib, optArgs = "")
-	if (not metaLib) then
-		print("Error: Invalid library")
-		return
-	end if
-	self._processScanResults(metaLib, optArgs)
 end function
 
 module.exports = Breachs

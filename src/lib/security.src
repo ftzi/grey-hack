@@ -16,4 +16,8 @@ Security.corruptLog = function ()
     Fs.write("/var/system.log", "banana")
 end function
 
+Security.run = function ()
+  Security.corruptLog()
+end function
+
 module.exports = Security
