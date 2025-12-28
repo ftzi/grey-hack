@@ -17,12 +17,63 @@ Kv.separator=";"
   Creates a new Kv instance with a file path.
 
   @param {string} path
+  @param {boolean} isRemote - If true, syncs with remote DB server (default: false)
   @return {Kv}
 */
-Kv.New = function(path)
+Kv.New = function(path, isRemote = false)
     instance = new Kv
     instance.path = path
+    instance.isRemote = isRemote
+    if (isRemote) then
+        instance.dbIp = #envar DB_IP
+        instance.dbPassword = #envar DB_PASSWORD
+    end if
     return instance
+end function
+
+/*
+  Gets the remote path for this Kv file.
+  Extracts filename and stores in dedicated KV directory in home.
+
+  @return {string}
+ */
+Kv._getRemotePath = function()
+    fileName = self.path.split("/")[-1]
+    return get_abs_path("~/.kv/" + fileName)
+end function
+
+/*
+  Downloads the Kv file from remote server.
+  Falls back to local data silently if DB credentials not available.
+
+  @return {null}
+ */
+Kv._downloadFromRemote = function()
+    if (not self.dbIp or not self.dbPassword) then return
+
+    remotePath = self._getRemotePath()
+    shell = get_shell.connect_service(self.dbIp, 22, "root", self.dbPassword)
+    if (not shell or shell isa string) then return
+
+    get_shell.scp(remotePath, self.path, shell)
+    shell = null
+end function
+
+/*
+  Uploads the Kv file to remote server.
+  Falls back silently if DB credentials not available.
+
+  @return {null}
+ */
+Kv._uploadToRemote = function()
+    if (not self.dbIp or not self.dbPassword) then return
+
+    remotePath = self._getRemotePath()
+    shell = get_shell.connect_service(self.dbIp, 22, "root", self.dbPassword)
+    if (not shell or shell isa string) then return
+
+    get_shell.scp(self.path, remotePath, shell)
+    shell = null
 end function
 
 /*
@@ -31,6 +82,10 @@ end function
   @return {list<list>}
  */
 Kv.read = function()
+    if (self.isRemote) then
+        self._downloadFromRemote()
+    end if
+
     content = Fs.read(self.path, false)
     if (content == null) then return null
 
@@ -101,6 +156,10 @@ Kv.setKv = function(arrOrArrs)
     end for
 
     Fs.write(self.path, lines.join(Std.LF))
+
+    if (self.isRemote) then
+        self._uploadToRemote()
+    end if
 end function
 
 module.exports = Kv

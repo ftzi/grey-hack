@@ -8,7 +8,7 @@
   @type XCrypto
  */
 XCrypto = {}
-XCrypto.kv = Kv.New("/root/passwords.kv")
+XCrypto.kv = Kv.New("/root/passwords.kv", true)
 
 /*
   Deciphers a password using cache-first approach.

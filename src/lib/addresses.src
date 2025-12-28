@@ -8,7 +8,7 @@
 */
 Addresses = {}
 Addresses._addresses = null
-Addresses.kv = Kv.New("/root/addresses.kv")
+Addresses.kv = Kv.New("/root/addresses.kv", true)
 
 /*
   Loads saved addresses from the CSV file.
